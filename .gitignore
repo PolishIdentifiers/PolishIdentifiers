@@ -1,6 +1,3 @@
-# ==============================
-# .NET / C#
-# ==============================
 bin/
 obj/
 artifacts/
@@ -104,30 +101,14 @@ temp/
 *.tmp
 *.temp
 
-# ==============================
-# OS
-# ==============================
 .DS_Store
-Thumbs.db
-desktop.ini
-
-# ==============================
-# GitHub Copilot / AI tools
-# ==============================
 .copilot/
 .github/copilot/
 copilot-chat/
-
-# ==============================
-# Claude Code / AI agents
-# NOTE: CLAUDE.md (project config) should be committed — do NOT ignore it
-# ==============================
 .claude/cache/
 .claude/tmp/
 .claude-cache/
 .claude-code/
-
-# Generic AI scratch space
 .ai/
 .ai-cache/
 .ai-temp/
