@@ -7,7 +7,7 @@ public static class PeselGenerator
     private static int NextInt(int maxValue) => System.Random.Shared.Next(maxValue);
     private static int NextInt(int minValue, int maxValue) => System.Random.Shared.Next(minValue, maxValue);
 #else
-    private static readonly ThreadLocal<Random> Rng = new(() => new Random());
+    private static readonly ThreadLocal<Random> Rng = new(() => new Random(Guid.NewGuid().GetHashCode()));
 
     private static Random CurrentRng
         => Rng.Value ?? throw new InvalidOperationException("Random generator is not available.");
@@ -32,6 +32,7 @@ public static class PeselGenerator
     /// <summary>
     /// Returns a <see cref="PeselDateBuilder"/> for generating a valid PESEL
     /// for a person born on <paramref name="date"/>.
+    /// Only the date part (year, month, day) is used; any time component is ignored.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
@@ -41,7 +42,7 @@ public static class PeselGenerator
         if (date.Year is < 1800 or > 2299)
             throw new ArgumentOutOfRangeException(nameof(date), "PESEL supports birth years in range 1800-2299.");
 
-        return new PeselDateBuilder(date);
+        return new PeselDateBuilder(date.Date);
     }
 
 #if NET10_0_OR_GREATER
