@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PolishIdentifiers.Tests/PolishIdentifiers.Tests.csproj" />
+    <Project Path="src/PolishIdentifiers/PolishIdentifiers.csproj" />
+  </Folder>
+</Solution>

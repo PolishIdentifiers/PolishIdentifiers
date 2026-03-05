@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+# Cancel in-flight runs for the same branch/PR so pushes don't queue up.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install the exact SDK pinned in global.json.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      # Restore once at the solution level so subsequent steps can use --no-restore.
+      - name: Restore
+        run: dotnet restore PolishIdentifiers.slnx
+
+      # Build the library project explicitly to verify BOTH target frameworks
+      # (netstandard2.0 and net10.0) compile cleanly. TreatWarningsAsErrors=true
+      # means any warning here will fail the build.
+      - name: Build
+        run: dotnet build PolishIdentifiers.slnx --no-restore -c Release
+
+      # Run all tests and collect code coverage via coverlet (already referenced
+      # in the test project as coverlet.collector).
+      - name: Test
+        run: >
+          dotnet test PolishIdentifiers.slnx
+          --no-build -c Release
+          --logger "console;verbosity=normal"
+          --collect:"XPlat Code Coverage"
+          --results-directory coverage
+
+      # Upload the coverage report as an artifact so it is available in the
+      # Actions run summary. Only uploaded once (ubuntu run) to avoid duplicates.
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/**/coverage.cobertura.xml
+          if-no-files-found: ignore

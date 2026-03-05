@@ -1,0 +1,134 @@
+bin/
+obj/
+artifacts/
+TestResults/
+BenchmarkDotNet.Artifacts/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.DotSettings.user
+
+# Runtime / debug
+*.cache
+*.pdb
+*.pidb
+*.svclog
+
+# ==============================
+# Rider / JetBrains
+# ==============================
+.idea/
+
+# Explicit sub-paths (belt-and-suspenders for older Git)
+.idea/.name
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/vcs.xml
+.idea/shelf/
+.idea/sonarlint/
+.idea/dataSources.xml
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+.idea/gradle.xml
+.idea/modules.xml
+.idea_modules/
+*.sln.iml
+
+# ==============================
+# Visual Studio
+# ==============================
+.vs/
+
+# C++ / mixed (harmless to include)
+*.VC.db
+*.VC.opendb
+
+# ==============================
+# NuGet
+# ==============================
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+# NuGet v3+ cache (global, but sometimes local)
+nuget.config.local
+
+# ==============================
+# .NET tools
+# ==============================
+.dotnet/
+# NOTE: .config/dotnet-tools.json should be committed — do NOT ignore it
+
+# ==============================
+# Node / JS tooling (Playwright etc.)
+# ==============================
+node_modules/
+playwright-report/
+
+# ==============================
+# Test / coverage
+# ==============================
+coverage/
+*.coverage
+*.coveragexml
+*.trx
+
+# ==============================
+# Code quality / static analysis
+# ==============================
+.sonarqube/
+.scannerwork/
+
+# ==============================
+# Logs
+# ==============================
+*.log
+logs/
+
+# ==============================
+# Temporary
+# ==============================
+tmp/
+temp/
+*.tmp
+*.temp
+
+.DS_Store
+.copilot/
+.github/copilot/
+copilot-chat/
+.claude/cache/
+.claude/tmp/
+.claude-cache/
+.claude-code/
+.ai/
+.ai-cache/
+.ai-temp/
+.llm/
+.llm-cache/
+
+# ==============================
+# Editors
+# ==============================
+.vscode/
+.history/
+
+# ==============================
+# Local secrets / environment
+# ==============================
+secrets.json
+appsettings.Development.json
+appsettings.Local.json
+Properties/launchSettings.json
+.env
+.env.local
+.env.*
+healthchecksdb
