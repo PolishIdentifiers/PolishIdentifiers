@@ -995,7 +995,7 @@ public class PeselParsingTests
     [Fact]
     public void IParsable_TryParse_ValidPesel_ReturnsTrue()
     {
-        static bool CallTryParse<T>(string? s, out T result) where T : IParsable<T>
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
             => T.TryParse(s, null, out result);
 
         Assert.True(CallTryParse<Pesel>(ValidPesel, out _));
@@ -1031,7 +1031,7 @@ public class PeselParsingTests
     [Fact]
     public void IParsable_TryParse_InvalidPesel_ReturnsFalse()
     {
-        static bool CallTryParse<T>(string? s, out T result) where T : IParsable<T>
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
             => T.TryParse(s, null, out result);
 
         Assert.False(CallTryParse<Pesel>(InvalidChecksumPesel, out _));
@@ -1040,7 +1040,7 @@ public class PeselParsingTests
     [Fact]
     public void IParsable_TryParse_InvalidPesel_SetsOutParamToDefault()
     {
-        static bool CallTryParse<T>(string? s, out T result) where T : IParsable<T>
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
             => T.TryParse(s, null, out result);
 
         CallTryParse<Pesel>(InvalidChecksumPesel, out var pesel);
@@ -1061,7 +1061,7 @@ public class PeselParsingTests
     [Fact]
     public void ISpanParsable_TryParse_ValidPesel_ReturnsTrue()
     {
-        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : ISpanParsable<T>
+        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
         Assert.True(CallTryParse<Pesel>(ValidPesel.AsSpan(), out _));
@@ -1088,7 +1088,7 @@ public class PeselParsingTests
     [Fact]
     public void ISpanParsable_TryParse_InvalidPesel_ReturnsFalse()
     {
-        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : ISpanParsable<T>
+        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
         Assert.False(CallTryParse<Pesel>(InvalidChecksumPesel.AsSpan(), out _));
@@ -1097,7 +1097,7 @@ public class PeselParsingTests
     [Fact]
     public void ISpanParsable_TryParse_InvalidPesel_SetsOutParamToDefault()
     {
-        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : ISpanParsable<T>
+        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
         CallTryParse<Pesel>(InvalidChecksumPesel.AsSpan(), out var pesel);
@@ -1108,7 +1108,7 @@ public class PeselParsingTests
     [Fact]
     public void IParsable_TryParse_Null_ReturnsFalse()
     {
-        static bool CallTryParse<T>(string? s, out T result) where T : IParsable<T>
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
             => T.TryParse(s, null, out result);
 
         Assert.False(CallTryParse<Pesel>(null, out _));
@@ -1117,7 +1117,7 @@ public class PeselParsingTests
     [Fact]
     public void IParsable_TryParse_Null_SetsOutParamToDefault()
     {
-        static bool CallTryParse<T>(string? s, out T result) where T : IParsable<T>
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
             => T.TryParse(s, null, out result);
 
         CallTryParse<Pesel>(null, out var pesel);
@@ -1128,7 +1128,7 @@ public class PeselParsingTests
     [Fact]
     public void ISpanParsable_TryParse_EmptySpan_ReturnsFalse()
     {
-        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : ISpanParsable<T>
+        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
         Assert.False(CallTryParse<Pesel>(ReadOnlySpan<char>.Empty, out _));
@@ -1137,7 +1137,7 @@ public class PeselParsingTests
     [Fact]
     public void ISpanParsable_TryParse_EmptySpan_SetsOutParamToDefault()
     {
-        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : ISpanParsable<T>
+        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
         CallTryParse<Pesel>(ReadOnlySpan<char>.Empty, out var pesel);
