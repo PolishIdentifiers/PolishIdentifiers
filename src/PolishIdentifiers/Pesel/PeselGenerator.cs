@@ -1,5 +1,9 @@
 namespace PolishIdentifiers;
 
+/// <summary>
+/// Provides methods for generating valid and deliberately invalid PESEL numbers,
+/// primarily intended for use in tests and tooling.
+/// </summary>
 public static class PeselGenerator
 {
 #if NET10_0_OR_GREATER
@@ -22,6 +26,7 @@ public static class PeselGenerator
     // --- Valid generators ---
 
     /// <summary>Generates a random valid PESEL with a random birth date and gender.</summary>
+    /// <returns>A valid <see cref="Pesel"/> instance.</returns>
     public static Pesel Random()
     {
         var date   = RandomDate();
@@ -34,6 +39,8 @@ public static class PeselGenerator
     /// for a person born on <paramref name="date"/>.
     /// Only the date part (year, month, day) is used; any time component is ignored.
     /// </summary>
+    /// <param name="date">The birth date to encode. Only the date part is used.</param>
+    /// <returns>A <see cref="PeselDateBuilder"/> for choosing the gender and building the PESEL.</returns>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
     /// </exception>
@@ -50,6 +57,8 @@ public static class PeselGenerator
     /// Returns a <see cref="PeselDateBuilder"/> for generating a valid PESEL
     /// for a person born on <paramref name="date"/>.
     /// </summary>
+    /// <param name="date">The birth date to encode.</param>
+    /// <returns>A <see cref="PeselDateBuilder"/> for choosing the gender and building the PESEL.</returns>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
     /// </exception>
@@ -64,9 +73,18 @@ public static class PeselGenerator
 
     // --- Invalid generators (return string — Pesel.Parse would throw) ---
 
+    /// <summary>
+    /// Provides methods for generating deliberately invalid PESEL strings.
+    /// Each method violates exactly one validation rule while keeping all others correct,
+    /// enabling precise unit testing of individual error codes.
+    /// </summary>
     public static class Invalid
     {
-        /// Valid date, wrong check digit.
+        /// <summary>
+        /// Generates a PESEL string with a valid birth date but a wrong check digit.
+        /// Triggers <see cref="PeselValidationError.InvalidChecksum"/>.
+        /// </summary>
+        /// <returns>An 11-digit string that fails checksum validation.</returns>
         public static string WrongChecksum()
         {
             var chars = PeselGenerator.Random().ToString().ToCharArray();
@@ -74,8 +92,12 @@ public static class PeselGenerator
             return new string(chars);
         }
 
-        /// Impossible date (month 13 — outside every century-encoding range),
-        /// but valid check digit — the validator will stop at InvalidDate.
+        /// <summary>
+        /// Generates a PESEL string with an impossible date (encoded month 13, outside every
+        /// century-encoding range) but a correct check digit.
+        /// Triggers <see cref="PeselValidationError.InvalidDate"/>.
+        /// </summary>
+        /// <returns>An 11-digit string that fails date validation.</returns>
         public static string WrongDate()
         {
             var digits = new int[11];
@@ -93,10 +115,18 @@ public static class PeselGenerator
             return new string(chars);
         }
 
-        /// Too short — 10 digits.
+        /// <summary>
+        /// Returns a fixed 10-digit string that is one character too short.
+        /// Triggers <see cref="PeselValidationError.InvalidLength"/>.
+        /// </summary>
+        /// <returns>A 10-character string that fails length validation.</returns>
         public static string WrongLength() => "4405140145";
 
-        /// 11 characters, one of which is a letter.
+        /// <summary>
+        /// Generates a PESEL string that is 11 characters long but contains a non-digit character.
+        /// Triggers <see cref="PeselValidationError.InvalidCharacters"/>.
+        /// </summary>
+        /// <returns>An 11-character string that fails character validation.</returns>
         public static string NonNumeric()
         {
             var chars = PeselGenerator.Random().ToString().ToCharArray();
