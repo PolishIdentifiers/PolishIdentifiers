@@ -1146,3 +1146,89 @@ public class PeselParsingTests
     }
 #endif
 }
+
+[Collection(CultureSensitiveCollection.Name)]
+public class PeselCultureInvarianceTests
+{
+    private const string ValidPesel = "44051401458";
+    private const string ValidPeselWithLeadingZero = "02070803628";
+
+    [Fact]
+    public void ToString_OutputContainsOnlyAsciiDigits()
+    {
+        var pesel = Pesel.Parse(ValidPeselWithLeadingZero);
+
+        Assert.All(pesel.ToString(), c => Assert.InRange(c, '0', '9'));
+    }
+
+    [Theory]
+    [InlineData("ar-SA")]
+    [InlineData("fa-IR")]
+    public void ToString_WithNativeDigitFormatProvider_OutputContainsOnlyAsciiDigits(string cultureName)
+    {
+        var pesel = Pesel.Parse(ValidPeselWithLeadingZero);
+        var culture = CultureInfo.GetCultureInfo(cultureName);
+
+        Assert.All(pesel.ToString("G", culture), c => Assert.InRange(c, '0', '9'));
+    }
+
+    [Theory]
+    [InlineData("ar-SA")]
+    [InlineData("fa-IR")]
+    public void ToString_FormatProviderIsIgnored_MatchesParameterlessToString(string cultureName)
+    {
+        var pesel = Pesel.Parse(ValidPeselWithLeadingZero);
+        var expected = pesel.ToString();
+        var culture = CultureInfo.GetCultureInfo(cultureName);
+
+        Assert.Equal(expected, pesel.ToString(null, culture));
+        Assert.Equal(expected, pesel.ToString("G", culture));
+        Assert.Equal(expected, pesel.ToString("D11", culture));
+    }
+
+    [Theory]
+    [InlineData("ar-SA")]
+    [InlineData("fa-IR")]
+    public void ToString_WhenCurrentCultureHasNativeDigits_OutputIsRoundtrippable(string cultureName)
+    {
+        var original = Pesel.Parse(ValidPeselWithLeadingZero);
+        var savedCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
+
+            var serialized = original.ToString();
+            Assert.True(Pesel.TryParse(serialized, out var reparsed));
+            Assert.Equal(original, reparsed);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = savedCulture;
+        }
+    }
+
+    [Theory]
+    [InlineData("ar-SA")]
+    [InlineData("fa-IR")]
+    public void BirthDateTime_WhenCurrentCultureHasNativeDigits_ReturnsCorrectDate(string cultureName)
+    {
+        var pesel = Pesel.Parse(ValidPesel);
+        var savedCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
+
+            Assert.Equal(new DateTime(1944, 5, 14), pesel.BirthDateTime);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = savedCulture;
+        }
+    }
+}
+
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class CultureSensitiveCollection
+{
+    public const string Name = "Culture-sensitive tests";
+}

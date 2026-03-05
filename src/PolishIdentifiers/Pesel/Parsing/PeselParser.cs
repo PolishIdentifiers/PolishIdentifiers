@@ -2,8 +2,8 @@ namespace PolishIdentifiers;
 
 internal static class PeselParser
 {
-    // Dekoduje zakodowany miesiąc PESEL na rok i prawdziwy miesiąc.
-    // Zwraca false gdy encodedMonth nie należy do żadnego prawidłowego zakresu.
+    // Decodes the PESEL-encoded month into a full year and the actual calendar month.
+    // Returns false when encodedMonth does not belong to any valid range.
     internal static bool TryDecodeYearMonth(
         int encodedMonth, int yy, out int fullYear, out int actualMonth)
     {
@@ -16,7 +16,7 @@ internal static class PeselParser
         fullYear = 0; actualMonth = 0; return false;
     }
 
-    // Zakłada że value jest już poprawnym (zwalidowanym) PESEL-em.
+    // Assumes value is already a valid (validated) PESEL.
     internal static DateTime DecodeDate(ReadOnlySpan<char> value)
     {
         var yy    = (value[0] - '0') * 10 + (value[1] - '0');

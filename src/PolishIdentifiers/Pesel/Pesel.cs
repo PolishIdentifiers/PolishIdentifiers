@@ -87,7 +87,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
             ThrowIfDefault();
 #if NET10_0_OR_GREATER
             Span<char> chars = stackalloc char[11];
-            _value.TryFormat(chars, out _, "D11");
+            _value.TryFormat(chars, out _, "D11", System.Globalization.CultureInfo.InvariantCulture);
             return PeselParser.DecodeDate(chars);
 #else
             return PeselParser.DecodeDate(ToString().AsSpan());
@@ -117,7 +117,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
 
     // --- Standard overrides ---
 
-    public override string ToString() => _value.ToString("D11");
+    public override string ToString() => _value.ToString("D11", System.Globalization.CultureInfo.InvariantCulture);
 
     public string ToString(string? format, IFormatProvider? formatProvider)
     {
@@ -125,7 +125,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
             || string.Equals(format, "G", StringComparison.OrdinalIgnoreCase)
             || string.Equals(format, "D11", StringComparison.OrdinalIgnoreCase))
         {
-            return _value.ToString("D11", formatProvider);
+            return _value.ToString("D11", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         throw new FormatException($"Unsupported format string '{format}'.");

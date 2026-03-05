@@ -174,7 +174,7 @@ public class PeselValidationTests
         Assert.Equal(PeselValidationError.InvalidLength, result.Error);
     }
 
-    // --- Kodowanie stulecia (pełna specyfikacja 1800–2299) ---
+    // --- Century encoding (full specification 1800–2299) ---
 
     [Theory]
     [MemberData(nameof(CenturyEncodingData))]
@@ -238,5 +238,32 @@ public class PeselValidationTests
         result.Match(onValid: () => { onValidCalled = true; return true; }, onError: _ => false);
 
         Assert.False(onValidCalled);
+    }
+
+    // --- Default struct ---
+
+    [Fact]
+    public void Match_DefaultStruct_ThrowsInvalidOperationException()
+    {
+        var result = default(ValidationResult<PeselValidationError>);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            result.Match(onValid: () => "ok", onError: e => e.ToString()));
+    }
+
+    [Fact]
+    public void DefaultStruct_IsValidIsFalse()
+    {
+        var result = default(ValidationResult<PeselValidationError>);
+
+        Assert.False(result.IsValid);
+    }
+
+    [Fact]
+    public void DefaultStruct_ErrorIsNull()
+    {
+        var result = default(ValidationResult<PeselValidationError>);
+
+        Assert.Null(result.Error);
     }
 }

@@ -62,11 +62,11 @@ public static class PeselGenerator
     }
 #endif
 
-    // --- Invalid generators (zwracają string — Pesel.Parse by rzucił) ---
+    // --- Invalid generators (return string — Pesel.Parse would throw) ---
 
     public static class Invalid
     {
-        /// Poprawna data, błędna cyfra kontrolna.
+        /// Valid date, wrong check digit.
         public static string WrongChecksum()
         {
             var chars = PeselGenerator.Random().ToString().ToCharArray();
@@ -74,13 +74,13 @@ public static class PeselGenerator
             return new string(chars);
         }
 
-        /// Niemożliwa data (miesiąc 13 — poza każdym zakresem kodowania stulecia),
-        /// ale poprawna cyfra kontrolna — validator zatrzyma się na InvalidDate.
+        /// Impossible date (month 13 — outside every century-encoding range),
+        /// but valid check digit — the validator will stop at InvalidDate.
         public static string WrongDate()
         {
             var digits = new int[11];
             digits[0] = 0; digits[1] = 0;  // yy = 00
-            digits[2] = 1; digits[3] = 3;  // encodedMonth = 13 → poza zakresem
+            digits[2] = 1; digits[3] = 3;  // encodedMonth = 13 → outside every valid range
             digits[4] = 0; digits[5] = 1;  // day = 01
             digits[6] = NextDigit();
             digits[7] = NextDigit();
@@ -93,10 +93,10 @@ public static class PeselGenerator
             return new string(chars);
         }
 
-        /// Za krótki — 10 cyfr.
+        /// Too short — 10 digits.
         public static string WrongLength() => "4405140145";
 
-        /// 11 znaków, jeden z nich to litera.
+        /// 11 characters, one of which is a letter.
         public static string NonNumeric()
         {
             var chars = PeselGenerator.Random().ToString().ToCharArray();
@@ -105,7 +105,7 @@ public static class PeselGenerator
         }
     }
 
-    // --- Internal helpers (używane przez PeselDateBuilder) ---
+    // --- Internal helpers (used by PeselDateBuilder) ---
 
     internal static Pesel BuildPesel(DateTime date, Gender gender)
     {
