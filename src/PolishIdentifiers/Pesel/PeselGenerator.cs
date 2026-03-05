@@ -27,6 +27,7 @@ public static class PeselGenerator
 
     /// <summary>Generates a random valid PESEL with a random birth date and gender.</summary>
     /// <returns>A valid <see cref="Pesel"/> instance.</returns>
+    /// <remarks>This method is thread-safe.</remarks>
     public static Pesel Random()
     {
         var date   = RandomDate();

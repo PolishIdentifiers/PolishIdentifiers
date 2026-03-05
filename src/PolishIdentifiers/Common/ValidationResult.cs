@@ -52,7 +52,7 @@ public readonly struct ValidationResult<TError>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the struct was default-initialized (<c>IsValid</c> is <see langword="false"/>
     /// but <c>Error</c> is <see langword="null"/>). Always obtain instances via
-    /// <see cref="Valid"/> or <see cref="Failure"/>.
+    /// <see cref="Valid"/> or <see cref="Failure(TError)"/>.
     /// </exception>
     public TResult Match<TResult>(Func<TResult> onValid, Func<TError, TResult> onError)
     {

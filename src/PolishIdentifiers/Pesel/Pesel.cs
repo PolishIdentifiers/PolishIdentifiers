@@ -100,7 +100,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
         => PeselValidator.Validate(value);
 
     /// <summary>
-    /// Validates a character span against all PESEL rules without allocating.
+    /// Validates a character span against all PESEL rules without throwing exceptions or allocating a <see cref="Pesel"/> instance.
     /// </summary>
     /// <param name="value">The span to validate.</param>
     /// <returns>
@@ -130,9 +130,9 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     // --- Domain properties ---
 
     /// <summary>
-    /// Returns <see langword="true"/> when this instance was created by <c>default</c>
-    /// rather than via <see cref="Parse(string)"/> or <see cref="TryParse(string?, out Pesel)"/>.
-    /// Accessing any other property on a default instance throws <see cref="InvalidOperationException"/>.
+    /// Gets a value indicating whether this instance was obtained via <c>default</c>
+    /// rather than through one of the <c>Parse</c>, <c>TryParse</c>, or <see cref="PeselGenerator"/> methods.
+    /// Accessing any domain property on a default instance throws <see cref="InvalidOperationException"/>.
     /// </summary>
     public bool IsDefault => _value == 0;
 
