@@ -1,0 +1,56 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Pack & Publish to NuGet.org
+    if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Verify release tag matches package version
+        run: |
+          package_version="$(grep -oPm1 '(?<=<Version>)[^<]+' src/PolishIdentifiers/PolishIdentifiers.csproj)"
+          tag_name="${{ github.event.release.tag_name }}"
+          tag_version="${tag_name#v}"
+
+          if [[ "$tag_version" != "$package_version" ]]; then
+            echo "::error::Release tag '$tag_name' does not match package version '$package_version' in src/PolishIdentifiers/PolishIdentifiers.csproj."
+            exit 1
+          fi
+
+      - name: Restore
+        run: dotnet restore PolishIdentifiers.slnx
+
+      - name: Build
+        run: dotnet build PolishIdentifiers.slnx --no-restore -c Release
+
+      # Re-run tests before publishing so a broken release can't reach NuGet.
+      - name: Test
+        run: >
+          dotnet test PolishIdentifiers.slnx
+          --no-build -c Release
+          --logger "console;verbosity=normal"
+
+      - name: Pack
+        run: >
+          dotnet pack src/PolishIdentifiers/PolishIdentifiers.csproj
+          --no-build -c Release
+          -o nupkg
+
+      - name: Push to NuGet.org
+        run: >
+          dotnet nuget push "nupkg/*.nupkg"
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

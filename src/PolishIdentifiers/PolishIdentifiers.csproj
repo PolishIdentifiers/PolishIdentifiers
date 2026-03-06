@@ -6,7 +6,26 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <PropertyGroup Label="NuGet">
+    <PackageId>PolishIdentifiers</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>PolishIdentifiers</Authors>
+    <Copyright>Copyright (c) PolishIdentifiers Contributors</Copyright>
+    <Description>Strongly typed PESEL for .NET. Validation, parsing and generation with structured error codes, DataAnnotations support, and zero-allocation span-based validation. Targets netstandard2.0 and net10.0.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/PolishIdentifiers/PolishIdentifiers</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/PolishIdentifiers/PolishIdentifiers</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>pesel dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.5" />
