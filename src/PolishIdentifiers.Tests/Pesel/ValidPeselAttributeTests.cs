@@ -180,12 +180,12 @@ public class ValidPeselAttributeTests
     // --- unknown type ---
 
     [Fact]
-    public void UnknownType_Int_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(44051401458));
+    public void UnknownType_Long_ReturnsFailure()
+        => Assert.NotEqual(ValidationResult.Success, Validate(44051401458L));
 
     [Fact]
-    public void UnknownType_Int_IsValid_ReturnsFalse()
-        => Assert.False(IsValidDirect(44051401458));
+    public void UnknownType_Long_IsValid_ReturnsFalse()
+        => Assert.False(IsValidDirect(44051401458L));
 
     // --- error result shape ---
 
