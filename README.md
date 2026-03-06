@@ -17,7 +17,8 @@ Most validation libraries give you a `bool IsValid(string pesel)` and leave the 
 - **Structured errors** — validation returns a typed enum (`PeselValidationError`), not a boolean or a magic string.
 - **Zero allocation on the hot path** — validation runs on `ReadOnlySpan<char>`. No intermediate strings, no regex, no boxing.
 - **Covers the full spec** — PESEL encodes birth dates from **1800 to 2299** across five century ranges. Most open-source implementations only cover 1900–2099. This one doesn't cut corners.
-- **Production-grade quality** — 250+ unit tests covering every error code, all 5 century ranges, leap year edge cases, culture invariance, and thread safety. The full spec, not just the happy path.
+- **DataAnnotations out of the box** — `[ValidPesel]` plugs directly into ASP.NET model validation, MVC, minimal APIs and the `Validator` class. Works with both `string` and the `Pesel` struct. No extra packages — it's part of the core library.
+- **Production-grade quality** — 330+ unit tests covering every error code, all 5 century ranges, leap year edge cases, culture invariance, and thread safety. The full spec, not just the happy path.
 
 ---
 
@@ -67,6 +68,57 @@ public class Person
 }
 ```
 
+## DataAnnotations — validate at the boundary
+
+Use `[ValidPesel]` on DTOs and API models. The attribute follows standard DataAnnotations conventions: `null` is treated as valid (compose with `[Required]` when the field is mandatory), and it works with both `string` and the `Pesel` struct.
+
+```csharp
+// DTO / API request model — string is fine here, it's the boundary
+public class RegisterRequest
+{
+    [Required]
+    [ValidPesel]
+    public string? Pesel { get; set; }
+}
+
+// Works with the strongly-typed struct too
+public class PersonDto
+{
+    [ValidPesel]
+    public Pesel Pesel { get; set; }
+}
+```
+
+The `[ValidPesel]` attribute composes naturally with ASP.NET model binding:
+
+```csharp
+// Controller — ModelState.IsValid is false when the PESEL is invalid
+[HttpPost]
+public IActionResult Register(RegisterRequest request)
+{
+    if (!ModelState.IsValid)
+        return ValidationProblem();
+
+    var pesel = Pesel.Parse(request.Pesel!); // safe — already validated
+    // ...
+}
+```
+
+You can also call it manually via the `Validator` class:
+
+```csharp
+var request = new RegisterRequest { Pesel = "44051401457" };
+var results = new List<ValidationResult>();
+var isValid = Validator.TryValidateObject(request, new ValidationContext(request), results, true);
+// isValid == false
+// results[0].ErrorMessage == "The Pesel field is not a valid PESEL."
+```
+
+> **Rule of thumb:** use `[ValidPesel]` on DTOs and input models at the API boundary.
+> Inside the domain, use the `Pesel` struct directly — it can only hold a valid value.
+
+---
+
 ## Match on validation result
 
 ```csharp
@@ -98,7 +150,7 @@ string nonNumeric  = PeselGenerator.Invalid.NonNumeric();
 
 ## Quality
 
-The library takes correctness seriously. The PESEL implementation is backed by **250+ unit tests** covering:
+The library takes correctness seriously. The PESEL implementation is backed by **330+ unit tests** covering:
 
 - Every validation error code with multiple concrete inputs
 - All 9 possible check digits — each tested individually
@@ -112,6 +164,7 @@ The library takes correctness seriously. The PESEL implementation is backed by *
 - Parse → ToString → Parse round-trip fidelity, including leading zeros
 - Thread-safety under parallel load (500 concurrent operations)
 - All `Invalid.*` generator outputs verified to fail on exactly one rule each, independently of the validator
+- `[ValidPesel]` attribute: `string`, `Pesel` struct, nullable struct, `null`, unknown types, `[Required]` composability, error message shape, member name propagation
 
 ---
 
