@@ -18,6 +18,9 @@ namespace PolishIdentifiers;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public sealed class ValidPeselAttribute : ValidationAttribute
 {
+    /// <summary>
+    /// Initializes a new instance of <see cref="ValidPeselAttribute"/>.
+    /// </summary>
     public ValidPeselAttribute()
         : base("The {0} field is not a valid PESEL.")
     {
@@ -35,6 +38,7 @@ public sealed class ValidPeselAttribute : ValidationAttribute
         _        => false,
     };
 
+    /// <inheritdoc />
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
         if (IsValid(value))
