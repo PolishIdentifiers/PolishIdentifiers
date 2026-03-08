@@ -11,7 +11,7 @@
 
   <PropertyGroup Label="NuGet">
     <PackageId>PolishIdentifiers</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>PolishIdentifiers</Authors>
     <Copyright>Copyright (c) PolishIdentifiers Contributors</Copyright>
     <Description>Strongly typed PESEL for .NET. Validation, parsing and generation with structured error codes, DataAnnotations support, and zero-allocation span-based validation. Targets netstandard2.0 and net10.0.</Description>
@@ -21,6 +21,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>pesel dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>v0.1.1: Validation order changed — InvalidCharacters is now reported before InvalidLength. See CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
