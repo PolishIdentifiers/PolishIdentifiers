@@ -17,18 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   New order: **characters → length → date → checksum**.  
   Previously: length → characters → date → checksum.
 - `Pesel.Validate` XML documentation updated to reflect the new order.
-
-#### `PeselValidationError` enum
-
-- Members reordered in source to match check order (`InvalidCharacters` first, `InvalidLength` second).
-- **Explicit integer values added** to all members — future source reorders will not silently change the wire format:
-  - `InvalidCharacters = 0`
-  - `InvalidLength = 1`
-  - `InvalidDate = 2`
-  - `InvalidChecksum = 3`
-
-> **Breaking change (integer values):** in `v0.1.0` the implicit assignments were `InvalidLength = 0` and `InvalidCharacters = 1`. In `v0.1.1` these are swapped. Consumers who persisted `PeselValidationError` as a raw integer (JSON with `JsonNumberEnumConverter`, database column, logs) need to re-map old stored values.
-
 ---
 
 ## [0.1.0] - 2026-03-06
