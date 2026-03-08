@@ -164,14 +164,14 @@ public class PeselValidationTests
         Assert.Equal(PeselValidationError.InvalidChecksum, result.Error);
     }
 
-    // --- Validation order: length → characters → date → checksum ---
+    // --- Validation order: characters → length → date → checksum ---
 
     [Fact]
-    public void Validate_WrongLengthTakesPriorityOverWrongCharacters()
+    public void Validate_InvalidCharactersTakesPriorityOverInvalidLength()
     {
         var result = Pesel.Validate(MultipleValidationIssuesPesel);
 
-        Assert.Equal(PeselValidationError.InvalidLength, result.Error);
+        Assert.Equal(PeselValidationError.InvalidCharacters, result.Error);
     }
 
     // --- Century encoding (full specification 1800–2299) ---

@@ -4,14 +4,14 @@ internal static class PeselValidator
 {
     public static ValidationResult<PeselValidationError> Validate(ReadOnlySpan<char> value)
     {
-        if (value.Length != 11)
-            return ValidationResult<PeselValidationError>.Failure(PeselValidationError.InvalidLength);
-
         foreach (var c in value)
         {
             if (c < '0' || c > '9')
                 return ValidationResult<PeselValidationError>.Failure(PeselValidationError.InvalidCharacters);
         }
+
+        if (value.Length != 11)
+            return ValidationResult<PeselValidationError>.Failure(PeselValidationError.InvalidLength);
 
         if (!IsDateValid(value))
             return ValidationResult<PeselValidationError>.Failure(PeselValidationError.InvalidDate);
