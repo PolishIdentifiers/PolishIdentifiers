@@ -17,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   New order: **characters → length → date → checksum**.  
   Previously: length → characters → date → checksum.
 - `Pesel.Validate` XML documentation updated to reflect the new order.
-
 ---
 
 ## [0.1.0] - 2026-03-06

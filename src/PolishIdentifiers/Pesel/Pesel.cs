@@ -94,7 +94,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// <returns>
     /// A <see cref="ValidationResult{TError}"/> indicating whether the value is valid, and if not,
     /// the first <see cref="PeselValidationError"/> encountered. Validation order:
-    /// length → characters → date → checksum.
+    /// characters → length → date → checksum.
     /// </returns>
     public static ValidationResult<PeselValidationError> Validate(string? value)
         => PeselValidator.Validate(value);
@@ -106,7 +106,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// <returns>
     /// A <see cref="ValidationResult{TError}"/> indicating whether the value is valid, and if not,
     /// the first <see cref="PeselValidationError"/> encountered. Validation order:
-    /// length → characters → date → checksum.
+    /// characters → length → date → checksum.
     /// </returns>
     public static ValidationResult<PeselValidationError> Validate(ReadOnlySpan<char> value)
         => PeselValidator.Validate(value);
