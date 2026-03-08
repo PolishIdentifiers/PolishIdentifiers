@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.1] - 2026-03-07
+
+### Changed
+
+#### Validation order
+
+- `InvalidCharacters` is now reported **before** `InvalidLength` when both rules are violated (e.g. `"12X"`, `" 44051401458"`).  
+  New order: **characters → length → date → checksum**.  
+  Previously: length → characters → date → checksum.
+- `Pesel.Validate` XML documentation updated to reflect the new order.
+
+#### `PeselValidationError` enum
+
+- Members reordered in source to match check order (`InvalidCharacters` first, `InvalidLength` second).
+- **Explicit integer values added** to all members — future source reorders will not silently change the wire format:
+  - `InvalidCharacters = 0`
+  - `InvalidLength = 1`
+  - `InvalidDate = 2`
+  - `InvalidChecksum = 3`
+
+> **Breaking change (integer values):** in `v0.1.0` the implicit assignments were `InvalidLength = 0` and `InvalidCharacters = 1`. In `v0.1.1` these are swapped. Consumers who persisted `PeselValidationError` as a raw integer (JSON with `JsonNumberEnumConverter`, database column, logs) need to re-map old stored values.
+
+---
+
 ## [0.1.0] - 2026-03-06
 
 First public release. PESEL support only — NIP, REGON and NRB are planned for v0.4.
@@ -61,4 +85,5 @@ First public release. PESEL support only — NIP, REGON and NRB are planned for 
 - `netstandard2.0` — compatible with .NET Framework 4.6.1+ and all legacy runtimes
 - `net10.0` — full modern API surface including `DateOnly`, `IParsable<T>`, `ISpanParsable<T>`
 
+[0.1.1]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/releases/tag/v0.1.0
