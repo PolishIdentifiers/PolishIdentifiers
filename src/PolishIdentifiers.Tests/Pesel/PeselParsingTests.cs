@@ -81,8 +81,8 @@ public class PeselParsingTests
 
     public static TheoryData<string, PeselValidationError> WhitespaceInputData => new()
     {
-        { LeadingWhitespacePesel, PeselValidationError.InvalidLength },
-        { TrailingWhitespacePesel, PeselValidationError.InvalidLength },
+        { LeadingWhitespacePesel, PeselValidationError.InvalidCharacters },
+        { TrailingWhitespacePesel, PeselValidationError.InvalidCharacters },
         { MiddleTabPesel, PeselValidationError.InvalidCharacters }
     };
 
@@ -187,7 +187,7 @@ public class PeselParsingTests
     {
         var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(MultipleValidationIssuesPesel));
 
-        Assert.Equal(PeselValidationError.InvalidLength, ex.Error);
+        Assert.Equal(PeselValidationError.InvalidCharacters, ex.Error);
     }
 
     // --- TryParse ---
