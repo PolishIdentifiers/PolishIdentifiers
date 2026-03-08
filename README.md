@@ -149,7 +149,7 @@ The library takes correctness seriously. The PESEL implementation is backed by *
 - February 29 in centuries divisible by 100 but not 400 (non-Gregorian leap years)
 - 31st day in 30-day months (April, June, September)
 - Whitespace, null, empty string, all-zeros, all-nines inputs
-- Validation order: `InvalidCharacters` always reported before `InvalidLength`, `InvalidLength` before `InvalidDate`
+- Deterministic validation order with explicit tests for which error is reported when multiple rules fail
 - `ToString` is culture-invariant — produces ASCII digits even under `ar-SA` or `fa-IR` locale
 - Parse → ToString → Parse round-trip fidelity, including leading zeros
 - Thread-safety under parallel load (500 concurrent operations)
