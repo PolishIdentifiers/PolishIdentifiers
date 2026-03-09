@@ -55,8 +55,8 @@ internal static class NipValidator
 
     /// <summary>
     /// Validates and converts in a single pass. Used by <c>Parse</c> and <c>TryParse</c>
-    /// to avoid iterating the span twice (once for <see cref="Validate"/>, once for <see cref="SpanToUlong"/>).
-    /// Error order matches <see cref="Validate"/>: characters → length → checksum.
+    /// to avoid iterating the span twice (once for <see cref="Validate(ReadOnlySpan{char})"/>, once for <see cref="SpanToUlong"/>).
+    /// Error order matches <see cref="Validate(ReadOnlySpan{char})"/>: characters → length → checksum.
     /// </summary>
     internal static bool TryParseCore(ReadOnlySpan<char> value, out ulong result, out NipValidationError error)
     {
