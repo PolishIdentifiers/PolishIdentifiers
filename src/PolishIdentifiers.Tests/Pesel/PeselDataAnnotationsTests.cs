@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using DataAnnotationsValidationResult = System.ComponentModel.DataAnnotations.ValidationResult;
+using Shouldly;
 
 namespace PolishIdentifiers.Tests;
 
@@ -55,8 +56,8 @@ public class PeselDataAnnotationsTests
 
         var isValid = TryValidate(dto, out var results);
 
-        Assert.True(isValid);
-        Assert.Empty(results);
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -65,11 +66,11 @@ public class PeselDataAnnotationsTests
         var dto = new StringDto { Pesel = InvalidChecksumPesel };
 
         var isValid = TryValidate(dto, out var results);
-        var error = Assert.Single(results);
+        var error = results.ShouldHaveSingleItem();
 
-        Assert.False(isValid);
-        Assert.Contains(nameof(StringDto.Pesel), error.MemberNames);
-        Assert.Equal("The Pesel field is not a valid PESEL.", error.ErrorMessage);
+        isValid.ShouldBeFalse();
+        error.MemberNames.ShouldContain(nameof(StringDto.Pesel));
+        error.ErrorMessage.ShouldBe("The Pesel field is not a valid PESEL.");
     }
 
     [Fact]
@@ -79,8 +80,8 @@ public class PeselDataAnnotationsTests
 
         var isValid = TryValidate(dto, out var results);
 
-        Assert.True(isValid);
-        Assert.Empty(results);
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -89,10 +90,10 @@ public class PeselDataAnnotationsTests
         var dto = new RequiredStringDto { Pesel = null };
 
         var isValid = TryValidate(dto, out var results);
-        var error = Assert.Single(results);
+        var error = results.ShouldHaveSingleItem();
 
-        Assert.False(isValid);
-        Assert.Contains(nameof(RequiredStringDto.Pesel), error.MemberNames);
+        isValid.ShouldBeFalse();
+        error.MemberNames.ShouldContain(nameof(RequiredStringDto.Pesel));
     }
 
     [Fact]
@@ -101,10 +102,10 @@ public class PeselDataAnnotationsTests
         var dto = new StrongTypeDto();
 
         var isValid = TryValidate(dto, out var results);
-        var error = Assert.Single(results);
+        var error = results.ShouldHaveSingleItem();
 
-        Assert.False(isValid);
-        Assert.Contains(nameof(StrongTypeDto.Pesel), error.MemberNames);
+        isValid.ShouldBeFalse();
+        error.MemberNames.ShouldContain(nameof(StrongTypeDto.Pesel));
     }
 
     [Fact]
@@ -114,8 +115,8 @@ public class PeselDataAnnotationsTests
 
         var isValid = TryValidate(dto, out var results);
 
-        Assert.True(isValid);
-        Assert.Empty(results);
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
     }
 
     [Fact]
@@ -124,10 +125,10 @@ public class PeselDataAnnotationsTests
         var dto = new ObjectDto { Pesel = 12345 };
 
         var isValid = TryValidate(dto, out var results);
-        var error = Assert.Single(results);
+        var error = results.ShouldHaveSingleItem();
 
-        Assert.False(isValid);
-        Assert.Contains(nameof(ObjectDto.Pesel), error.MemberNames);
+        isValid.ShouldBeFalse();
+        error.MemberNames.ShouldContain(nameof(ObjectDto.Pesel));
     }
 
     [Theory]
@@ -137,11 +138,11 @@ public class PeselDataAnnotationsTests
         var dto = new StringDto { Pesel = invalidPesel };
 
         var isValid = TryValidate(dto, out var results);
-        var error = Assert.Single(results);
+        var error = results.ShouldHaveSingleItem();
 
-        Assert.False(isValid);
-        Assert.Contains(nameof(StringDto.Pesel), error.MemberNames);
-        Assert.Equal("The Pesel field is not a valid PESEL.", error.ErrorMessage);
+        isValid.ShouldBeFalse();
+        error.MemberNames.ShouldContain(nameof(StringDto.Pesel));
+        error.ErrorMessage.ShouldBe("The Pesel field is not a valid PESEL.");
     }
 
     [Fact]
@@ -150,11 +151,11 @@ public class PeselDataAnnotationsTests
         var dto = new RequiredStringDto { Pesel = InvalidChecksumPesel };
 
         var isValid = TryValidate(dto, out var results);
-        var error = Assert.Single(results);
+        var error = results.ShouldHaveSingleItem();
 
-        Assert.False(isValid);
-        Assert.Contains(nameof(RequiredStringDto.Pesel), error.MemberNames);
-        Assert.Equal("The Pesel field is not a valid PESEL.", error.ErrorMessage);
+        isValid.ShouldBeFalse();
+        error.MemberNames.ShouldContain(nameof(RequiredStringDto.Pesel));
+        error.ErrorMessage.ShouldBe("The Pesel field is not a valid PESEL.");
     }
 
     [Fact]
@@ -168,9 +169,9 @@ public class PeselDataAnnotationsTests
 
         var result = attribute.GetValidationResult(InvalidChecksumPesel, context);
 
-        Assert.NotNull(result);
-        Assert.Equal("The National ID field is not a valid PESEL.", result!.ErrorMessage);
-        Assert.Empty(result.MemberNames);
+        result.ShouldNotBeNull();
+        result!.ErrorMessage.ShouldBe("The National ID field is not a valid PESEL.");
+        result.MemberNames.ShouldBeEmpty();
     }
 
     [Fact]
@@ -178,12 +179,12 @@ public class PeselDataAnnotationsTests
     {
         var attribute = new ValidPeselAttribute();
 
-        Assert.True(attribute.IsValid(null));
-        Assert.True(attribute.IsValid(ValidPesel));
-        Assert.False(attribute.IsValid(InvalidChecksumPesel));
-        Assert.True(attribute.IsValid(Pesel.Parse(ValidPesel)));
-        Assert.False(attribute.IsValid(default(Pesel)));
-        Assert.False(attribute.IsValid(12345));
+        attribute.IsValid(null).ShouldBeTrue();
+        attribute.IsValid(ValidPesel).ShouldBeTrue();
+        attribute.IsValid(InvalidChecksumPesel).ShouldBeFalse();
+        attribute.IsValid(Pesel.Parse(ValidPesel)).ShouldBeTrue();
+        attribute.IsValid(default(Pesel)).ShouldBeFalse();
+        attribute.IsValid(12345).ShouldBeFalse();
     }
 
     private static bool TryValidate(object instance, out List<DataAnnotationsValidationResult> results)
