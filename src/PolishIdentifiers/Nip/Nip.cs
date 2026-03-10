@@ -49,10 +49,10 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// </exception>
     public static Nip Parse(ReadOnlySpan<char> value)
     {
-        var result = NipValidator.Validate(value);
-        if (!result.IsValid)
-            throw new NipValidationException(result.Error!.Value);
-        return new Nip(NipValidator.SpanToUlong(value));
+        if (!NipValidator.TryParseCore(value, out var parsedValue, out var error))
+            throw new NipValidationException(error);
+
+        return new Nip(parsedValue);
     }
 
     /// <summary>
@@ -81,9 +81,13 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
     public static bool TryParse(ReadOnlySpan<char> value, out Nip nip)
     {
-        var result = NipValidator.Validate(value);
-        if (!result.IsValid) { nip = default; return false; }
-        nip = new Nip(NipValidator.SpanToUlong(value));
+        if (!NipValidator.TryParseCore(value, out var parsedValue, out _))
+        {
+            nip = default;
+            return false;
+        }
+
+        nip = new Nip(parsedValue);
         return true;
     }
 
@@ -138,13 +142,10 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// </exception>
     public static Nip ParseFormatted(ReadOnlySpan<char> value)
     {
-        var result = ValidateFormatted(value);
-        if (!result.IsValid)
-            throw new NipValidationException(result.Error!.Value);
-        // Re-normalize to extract digits for construction.
-        Span<char> digits = stackalloc char[10];
-        NipInputNormalizer.ExtractDigits(value, digits);
-        return new Nip(NipValidator.SpanToUlong(digits));
+        if (!TryParseFormattedCore(value, out var nip, out var error))
+            throw new NipValidationException(error);
+
+        return nip;
     }
 
     /// <summary>
@@ -173,12 +174,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
     public static bool TryParseFormatted(ReadOnlySpan<char> value, out Nip nip)
     {
-        var result = ValidateFormatted(value);
-        if (!result.IsValid) { nip = default; return false; }
-        Span<char> digits = stackalloc char[10];
-        NipInputNormalizer.ExtractDigits(value, digits);
-        nip = new Nip(NipValidator.SpanToUlong(digits));
-        return true;
+        return TryParseFormattedCore(value, out nip, out _);
     }
 
     /// <summary>
@@ -193,7 +189,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     public static ValidationResult<NipValidationError> ValidateFormatted(string? value)
     {
         if (value is null)
-            return ValidationResult<NipValidationError>.Failure(NipValidationError.InvalidLength);
+            return ValidationResult<NipValidationError>.Failure(NipValidationError.UnrecognizedFormat);
         return ValidateFormatted(value.AsSpan());
     }
 
@@ -213,6 +209,26 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
             return ValidationResult<NipValidationError>.Failure(NipValidationError.UnrecognizedFormat);
 
         return NipValidator.Validate(digits);
+    }
+
+    private static bool TryParseFormattedCore(ReadOnlySpan<char> value, out Nip nip, out NipValidationError error)
+    {
+        Span<char> digits = stackalloc char[10];
+        if (!NipInputNormalizer.TryNormalize(value, digits))
+        {
+            nip = default;
+            error = NipValidationError.UnrecognizedFormat;
+            return false;
+        }
+
+        if (!NipValidator.TryParseCore(digits, out var parsedValue, out error))
+        {
+            nip = default;
+            return false;
+        }
+
+        nip = new Nip(parsedValue);
+        return true;
     }
 
 #if NET10_0_OR_GREATER
@@ -266,14 +282,21 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// Returns the 10-digit canonical string representation of the NIP number.
     /// </summary>
     public override string ToString()
-        => _value.ToString("D10", System.Globalization.CultureInfo.InvariantCulture);
+    {
+        ThrowIfDefault();
+        return _value.ToString("D10", System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     /// <summary>
     /// Returns the NIP formatted according to the specified <see cref="NipFormat"/>.
     /// </summary>
     /// <param name="format">The output format to use.</param>
     /// <returns>A string representation in the requested format.</returns>
-    public string ToString(NipFormat format) => NipFormatter.Format(_value, format);
+    public string ToString(NipFormat format)
+    {
+        ThrowIfDefault();
+        return NipFormatter.Format(_value, format);
+    }
 
     /// <summary>
     /// Returns the 10-digit canonical string representation of the NIP number using the specified format.
@@ -287,6 +310,8 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <exception cref="FormatException">Thrown when <paramref name="format"/> is not a supported value.</exception>
     public string ToString(string? format, IFormatProvider? formatProvider)
     {
+        ThrowIfDefault();
+
         if (string.IsNullOrEmpty(format)
             || string.Equals(format, "G", StringComparison.OrdinalIgnoreCase)
             || string.Equals(format, "D10", StringComparison.OrdinalIgnoreCase))

@@ -11,16 +11,15 @@ internal static class NipValidator
 
     public static ValidationResult<NipValidationError> Validate(ReadOnlySpan<char> value)
     {
-        foreach (var c in value)
-        {
-            if (c < '0' || c > '9')
-                return ValidationResult<NipValidationError>.Failure(NipValidationError.InvalidCharacters);
-        }
+        // Unlike PESEL, NIP keeps validation inline because the digit scan also accumulates
+        // the weighted sum needed by checksum verification, avoiding a second pass.
+        if (!TryScanDigits(value, out var weightedSum))
+            return ValidationResult<NipValidationError>.Failure(NipValidationError.InvalidCharacters);
 
         if (value.Length != 10)
             return ValidationResult<NipValidationError>.Failure(NipValidationError.InvalidLength);
 
-        if (!IsChecksumValid(value))
+        if (!IsChecksumValid(value, weightedSum))
             return ValidationResult<NipValidationError>.Failure(NipValidationError.InvalidChecksum);
 
         return ValidationResult<NipValidationError>.Valid();
@@ -33,9 +32,8 @@ internal static class NipValidator
         return Validate(value.AsSpan());
     }
 
-    private static bool IsChecksumValid(ReadOnlySpan<char> value)
+    private static bool IsChecksumValid(ReadOnlySpan<char> value, int sum)
     {
-        var sum = ChecksumCalculator.WeightedSum(value, Weights);
         var checksum = sum % 11;
 
         // If checksum == 10, no valid check digit exists for this combination.
@@ -45,44 +43,36 @@ internal static class NipValidator
         return checksum == (value[9] - '0');
     }
 
-    internal static ulong SpanToUlong(ReadOnlySpan<char> value)
+    private static bool TryScanDigits(ReadOnlySpan<char> value, out int weightedSum)
     {
-        ulong result = 0;
-        foreach (var c in value)
-            result = result * 10 + (ulong)(c - '0');
-        return result;
+        weightedSum = 0;
+
+        for (int i = 0; i < value.Length; i++)
+        {
+            var c = value[i];
+            if (c < '0' || c > '9')
+                return false;
+
+            if (i < Weights.Length)
+                weightedSum += (c - '0') * Weights[i];
+        }
+
+        return true;
     }
 
     /// <summary>
-    /// Validates and converts in a single pass. Used by <c>Parse</c> and <c>TryParse</c>
-    /// to avoid iterating the span twice (once for <see cref="Validate(ReadOnlySpan{char})"/>, once for <see cref="SpanToUlong"/>).
+    /// Validates and converts the strict 10-digit NIP representation.
+    /// Used by <c>Parse</c> and <c>TryParse</c> to keep validation and construction in one place.
     /// Error order matches <see cref="Validate(ReadOnlySpan{char})"/>: characters → length → checksum.
     /// </summary>
     internal static bool TryParseCore(ReadOnlySpan<char> value, out ulong result, out NipValidationError error)
     {
         result = 0;
 
-        // Pass 1: scan chars, accumulate ulong, accumulate weighted sum — all in one loop.
-        // We still need the full char scan before we can confirm InvalidLength,
-        // because InvalidCharacters must be reported before InvalidLength per spec.
-        int weightedSum = 0;
-        ulong acc = 0;
-        ReadOnlySpan<int> weights = [6, 5, 7, 2, 3, 4, 5, 6, 7];
-
-        for (int i = 0; i < value.Length; i++)
+        if (!TryScanDigits(value, out var weightedSum))
         {
-            var c = value[i];
-            if (c < '0' || c > '9')
-            {
-                error = NipValidationError.InvalidCharacters;
-                return false;
-            }
-
-            var d = (ulong)(c - '0');
-            acc = acc * 10 + d;
-
-            if (i < 9)
-                weightedSum += (int)d * weights[i];
+            error = NipValidationError.InvalidCharacters;
+            return false;
         }
 
         if (value.Length != 10)
@@ -91,14 +81,13 @@ internal static class NipValidator
             return false;
         }
 
-        var checksum = weightedSum % 11;
-        if (checksum == 10 || checksum != (value[9] - '0'))
+        if (!IsChecksumValid(value, weightedSum))
         {
             error = NipValidationError.InvalidChecksum;
             return false;
         }
 
-        result = acc;
+        result = DigitParser.ParseUInt64(value);
         error = default;
         return true;
     }

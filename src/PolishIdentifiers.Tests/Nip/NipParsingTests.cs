@@ -15,6 +15,7 @@ public class NipParsingTests
 
     private const string TooShortNip = "123456321";
     private const string TooLongNip = "12345632180";
+    private const string VeryLongNumericNip = "123456789012345678901234567890";
     private const string InvalidCharactersNip = "123456321A";
     private const string EmptyNip = "";
     private const string LeadingWhitespaceNip = " 1234563218";
@@ -51,6 +52,16 @@ public class NipParsingTests
     }
 
     [Fact]
+    public void Parse_NipWithLeadingZero_ReturnsCanonicalDigits()
+    {
+        var input = ValidNipWithLeadingZero;
+
+        var nip = Nip.Parse(input);
+
+        nip.ToString().ShouldBe(input);
+    }
+
+    [Fact]
     public void Parse_InvalidNip_ThrowsNipValidationException()
     {
         var ex = Assert.Throws<NipValidationException>(() => Nip.Parse(InvalidChecksumNip));
@@ -65,6 +76,14 @@ public class NipParsingTests
         var ex = Assert.Throws<NipValidationException>(() => Nip.Parse(input));
 
         Assert.Equal(expectedError, ex.Error);
+    }
+
+    [Fact]
+    public void Parse_VeryLongNumericInput_ThrowsNipValidationExceptionWithInvalidLength()
+    {
+        var ex = Should.Throw<NipValidationException>(() => Nip.Parse(VeryLongNumericNip));
+
+        ex.Error.ShouldBe(NipValidationError.InvalidLength);
     }
 
     [Fact]
@@ -129,6 +148,21 @@ public class NipParsingTests
         Assert.False(Nip.TryParse(input, out _));
     }
 
+    [Theory]
+    [MemberData(nameof(InvalidInputStringsData))]
+    public void TryParse_InvalidInput_SetsOutParamToDefault(string input)
+    {
+        Nip.TryParse(input, out var nip);
+
+        Assert.Equal(default, nip);
+    }
+
+    [Fact]
+    public void TryParse_VeryLongNumericInput_ReturnsFalse()
+    {
+        Nip.TryParse(VeryLongNumericNip, out _).ShouldBeFalse();
+    }
+
     [Fact]
     public void TryParse_Null_ReturnsFalse()
     {
@@ -187,6 +221,31 @@ public class NipParsingTests
         Assert.False(Nip.TryParse(ReadOnlySpan<char>.Empty, out _));
     }
 
+    [Theory]
+    [MemberData(nameof(InvalidInputStringsData))]
+    public void TryParse_SpanOverload_InvalidInput_ReturnsFalse(string input)
+    {
+        Assert.False(Nip.TryParse(input.AsSpan(), out _));
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidInputStringsData))]
+    public void TryParse_SpanOverload_InvalidInput_SetsOutParamToDefault(string input)
+    {
+        Nip.TryParse(input.AsSpan(), out var nip);
+
+        Assert.Equal(default, nip);
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidInputData))]
+    public void Parse_SpanOverload_InvalidInput_ThrowsNipValidationExceptionWithExpectedError(string input, NipValidationError expectedError)
+    {
+        var ex = Assert.Throws<NipValidationException>(() => Nip.Parse(input.AsSpan()));
+
+        Assert.Equal(expectedError, ex.Error);
+    }
+
     [Fact]
     public void Parse_SpanOverload_EmptySpan_ThrowsWithInvalidLength()
     {
@@ -236,11 +295,32 @@ public class NipParsingTests
     }
 
     [Fact]
-    public void DefaultNip_ToString_ReturnsZeroPaddedCanonicalString()
+    public void DefaultNip_ToString_ThrowsInvalidOperationException()
     {
         var nip = default(Nip);
 
-        Assert.Equal("0000000000", nip.ToString());
+        Should.Throw<InvalidOperationException>(() => nip.ToString());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("G")]
+    [InlineData("g")]
+    [InlineData("D10")]
+    [InlineData("d10")]
+    public void DefaultNip_ToString_WithSupportedFormat_ThrowsInvalidOperationException(string? format)
+    {
+        var nip = default(Nip);
+
+        Should.Throw<InvalidOperationException>(() => nip.ToString(format, null));
+    }
+
+    [Fact]
+    public void DefaultNip_ToString_WithNipFormat_ThrowsInvalidOperationException()
+    {
+        var nip = default(Nip);
+
+        Should.Throw<InvalidOperationException>(() => nip.ToString(NipFormat.Hyphenated));
     }
 
     [Fact]
@@ -323,6 +403,24 @@ public class NipParsingTests
     }
 
     [Fact]
+    public void EqualityOperator_TwoDefaults_ReturnsTrue()
+    {
+        var a = default(Nip);
+        var b = default(Nip);
+
+        Assert.True(a == b);
+    }
+
+    [Fact]
+    public void InequalityOperator_DefaultAndValidNip_ReturnsTrue()
+    {
+        var valid = Nip.Parse(ValidNip);
+        var def = default(Nip);
+
+        Assert.True(valid != def);
+    }
+
+    [Fact]
     public void HashSet_EqualNips_CountsAsOneEntry()
     {
         var a = Nip.Parse(ValidNip);
@@ -374,12 +472,60 @@ public class NipParsingTests
     }
 
     [Fact]
+    public void CompareTo_IsAntisymmetric()
+    {
+        var a = Nip.Parse(ValidNip);
+        var b = Nip.Parse(AnotherValidNip);
+
+        Assert.Equal(a.CompareTo(b), -b.CompareTo(a));
+    }
+
+    [Fact]
     public void CompareTo_LargerNip_ReturnsPositive()
     {
         var smaller = Nip.Parse(ValidNipWithLeadingZero);
         var larger = Nip.Parse(AnotherValidNip);
 
         Assert.True(larger.CompareTo(smaller) > 0);
+    }
+
+    [Fact]
+    public void CompareTo_DefaultNip_ReturnsPositiveForValidNip()
+    {
+        var nip = Nip.Parse(ValidNip);
+        var defaultNip = default(Nip);
+
+        Assert.True(nip.CompareTo(defaultNip) > 0);
+    }
+
+    [Fact]
+    public void CompareTo_ValidNip_ReturnsNegativeForDefaultNip()
+    {
+        var nip = Nip.Parse(ValidNip);
+        var defaultNip = default(Nip);
+
+        Assert.True(defaultNip.CompareTo(nip) < 0);
+    }
+
+    [Fact]
+    public void CompareTo_TwoDefaults_ReturnsZero()
+    {
+        var a = default(Nip);
+        var b = default(Nip);
+
+        Assert.Equal(0, a.CompareTo(b));
+    }
+
+    [Fact]
+    public void CompareTo_IsTransitive()
+    {
+        var a = Nip.Parse(ValidNipWithLeadingZero); // 0123456789 — smallest
+        var b = Nip.Parse(ValidNip);                // 1234563218 — middle
+        var c = Nip.Parse(AnotherValidNip);         // 7680002466 — largest
+
+        Assert.True(a.CompareTo(b) < 0);
+        Assert.True(b.CompareTo(c) < 0);
+        Assert.True(a.CompareTo(c) < 0);
     }
 
     [Fact]
@@ -470,6 +616,25 @@ public class NipParsingTests
         var nip = Nip.Parse(ValidNipWithLeadingZero);
 
         Assert.Equal(ValidNipWithLeadingZero, nip.ToString(format, null));
+    }
+
+    [Fact]
+    public void ToString_SupportedFormat_WithCulture_ReturnsCanonicalNip()
+    {
+        var nip = Nip.Parse(ValidNipWithLeadingZero);
+
+        Assert.Equal(ValidNipWithLeadingZero, nip.ToString("D10", CultureInfo.GetCultureInfo("pl-PL")));
+    }
+
+    [Theory]
+    [InlineData("pl-PL")]
+    [InlineData("en-US")]
+    [InlineData("fr-FR")]
+    public void ToString_SupportedFormat_WithMultipleCultures_ReturnsCanonicalNip(string cultureName)
+    {
+        var nip = Nip.Parse(ValidNipWithLeadingZero);
+
+        Assert.Equal(ValidNipWithLeadingZero, nip.ToString("D10", CultureInfo.GetCultureInfo(cultureName)));
     }
 
     [Theory]
@@ -614,6 +779,17 @@ public class NipParsingTests
         static T CallParse<T>(string? s) where T : IParsable<T> => T.Parse(s!, null);
 
         Assert.Throws<ArgumentNullException>(() => CallParse<Nip>(null));
+    }
+
+    [Fact]
+    public void IParsable_Parse_WithProvider_ReturnsCanonicalNip()
+    {
+        static T CallParse<T>(string s, IFormatProvider? provider) where T : IParsable<T>
+            => T.Parse(s, provider);
+
+        var nip = CallParse<Nip>(ValidNipWithLeadingZero, CultureInfo.GetCultureInfo("pl-PL"));
+
+        Assert.Equal(ValidNipWithLeadingZero, nip.ToString());
     }
 
     [Fact]

@@ -64,16 +64,6 @@ internal static class NipInputNormalizer
         return false;
     }
 
-    /// <summary>
-    /// Extracts 10 digits from a value known to be in a recognized format.
-    /// Call only after <see cref="TryNormalize"/> returned <c>true</c>.
-    /// </summary>
-    internal static void ExtractDigits(ReadOnlySpan<char> value, Span<char> digits)
-    {
-        // Re-run the same logic. This is called on the success path only.
-        TryNormalize(value, digits);
-    }
-
     private static bool AllDigits(ReadOnlySpan<char> span)
     {
         foreach (var c in span)

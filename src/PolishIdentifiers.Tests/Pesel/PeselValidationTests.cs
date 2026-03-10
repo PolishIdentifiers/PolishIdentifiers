@@ -1,4 +1,5 @@
 using PolishIdentifiers;
+using Shouldly;
 
 namespace PolishIdentifiers.Tests;
 
@@ -7,6 +8,7 @@ public class PeselValidationTests
     private const string ValidPesel = "44051401458";
     private const string ValidPeselWithLeadingZero = "02070803628";
     private const string AnotherValidPesel = "90061502867";
+    private const string ValidChecksumZeroPesel = "44051401410";
 
     private const string EmptyPesel = "";
     private const string TooShortPesel = "4405140145";
@@ -113,6 +115,14 @@ public class PeselValidationTests
 
         Assert.True(result.IsValid);
         Assert.Null(result.Error);
+    }
+
+    [Fact]
+    public void Validate_CheckDigitZeroPesel_ReturnsValid()
+    {
+        var result = Pesel.Validate(ValidChecksumZeroPesel);
+
+        result.IsValid.ShouldBeTrue();
     }
 
     // --- InvalidLength ---

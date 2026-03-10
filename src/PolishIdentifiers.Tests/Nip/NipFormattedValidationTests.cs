@@ -1,4 +1,5 @@
 using PolishIdentifiers;
+using Shouldly;
 
 namespace PolishIdentifiers.Tests;
 
@@ -30,6 +31,20 @@ public class NipFormattedValidationTests
         AnotherValidPlPrefix,
         AnotherValidPlSpacePrefix,
         AnotherValidPlSpaceHyphenated,
+    };
+
+    public static TheoryData<string, string> ValidFormattedCanonicalData => new()
+    {
+        { ValidNip, ValidNip },
+        { ValidHyphenated, ValidNip },
+        { ValidPlPrefix, ValidNip },
+        { ValidPlSpacePrefix, ValidNip },
+        { ValidPlSpaceHyphenated, ValidNip },
+        { AnotherValidNip, AnotherValidNip },
+        { AnotherValidHyphenated, AnotherValidNip },
+        { AnotherValidPlPrefix, AnotherValidNip },
+        { AnotherValidPlSpacePrefix, AnotherValidNip },
+        { AnotherValidPlSpaceHyphenated, AnotherValidNip },
     };
 
     [Theory]
@@ -73,12 +88,12 @@ public class NipFormattedValidationTests
     // --- Null input ---
 
     [Fact]
-    public void ValidateFormatted_Null_ReturnsInvalidLength()
+    public void ValidateFormatted_Null_ReturnsUnrecognizedFormat()
     {
         var result = Nip.ValidateFormatted(null);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidLength, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.UnrecognizedFormat);
     }
 
     // --- Invalid checksum through formatted path ---
@@ -156,6 +171,15 @@ public class NipFormattedValidationTests
         Assert.Null(exception);
     }
 
+    [Theory]
+    [MemberData(nameof(ValidFormattedCanonicalData))]
+    public void ParseFormatted_ValidInput_ReturnsCanonicalNip(string input, string expectedCanonical)
+    {
+        var nip = Nip.ParseFormatted(input);
+
+        nip.ToString().ShouldBe(expectedCanonical);
+    }
+
     [Fact]
     public void ParseFormatted_Null_ThrowsArgumentNullException()
     {
@@ -210,6 +234,15 @@ public class NipFormattedValidationTests
     {
         Assert.True(Nip.TryParseFormatted(ValidPlSpaceHyphenated.AsSpan(), out var nip));
         Assert.Equal("1234563218", nip.ToString());
+    }
+
+    [Theory]
+    [MemberData(nameof(ValidFormattedCanonicalData))]
+    public void TryParseFormatted_ValidInput_SetsCanonicalNip(string input, string expectedCanonical)
+    {
+        Nip.TryParseFormatted(input, out var nip).ShouldBeTrue();
+
+        nip.ToString().ShouldBe(expectedCanonical);
     }
 
     [Fact]

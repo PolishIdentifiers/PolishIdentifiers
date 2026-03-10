@@ -2,22 +2,12 @@ namespace PolishIdentifiers;
 
 internal static class PeselValidator
 {
+    private static ReadOnlySpan<int> Weights => [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+
     public static ValidationResult<PeselValidationError> Validate(ReadOnlySpan<char> value)
     {
-        foreach (var c in value)
-        {
-            if (c < '0' || c > '9')
-                return ValidationResult<PeselValidationError>.Failure(PeselValidationError.InvalidCharacters);
-        }
-
-        if (value.Length != 11)
-            return ValidationResult<PeselValidationError>.Failure(PeselValidationError.InvalidLength);
-
-        if (!IsDateValid(value))
-            return ValidationResult<PeselValidationError>.Failure(PeselValidationError.InvalidDate);
-
-        if (!IsChecksumValid(value))
-            return ValidationResult<PeselValidationError>.Failure(PeselValidationError.InvalidChecksum);
+        if (!TryValidate(value, out var error))
+            return ValidationResult<PeselValidationError>.Failure(error);
 
         return ValidationResult<PeselValidationError>.Valid();
     }
@@ -44,27 +34,53 @@ internal static class PeselValidator
 
     private static bool IsChecksumValid(ReadOnlySpan<char> value)
     {
-        // Weights [1,3,7,9,1,3,7,9,1,3] inlined; check digit folded in so only one % 10 is needed.
-        var sum = (value[0] - '0')
-                + (value[1] - '0') * 3
-                + (value[2] - '0') * 7
-                + (value[3] - '0') * 9
-                + (value[4] - '0')
-                + (value[5] - '0') * 3
-                + (value[6] - '0') * 7
-                + (value[7] - '0') * 9
-                + (value[8] - '0')
-                + (value[9] - '0') * 3
-                + (value[10] - '0');
+        var sum = ChecksumCalculator.WeightedSum(value, Weights);
+        var checksum = (10 - (sum % 10)) % 10;
 
-        return sum % 10 == 0;
+        return checksum == (value[10] - '0');
     }
 
-    internal static ulong SpanToUlong(ReadOnlySpan<char> value)
+    private static bool TryValidate(ReadOnlySpan<char> value, out PeselValidationError error)
     {
-        ulong result = 0;
         foreach (var c in value)
-            result = result * 10 + (ulong)(c - '0');
-        return result;
+        {
+            if (c < '0' || c > '9')
+            {
+                error = PeselValidationError.InvalidCharacters;
+                return false;
+            }
+        }
+
+        if (value.Length != 11)
+        {
+            error = PeselValidationError.InvalidLength;
+            return false;
+        }
+
+        if (!IsDateValid(value))
+        {
+            error = PeselValidationError.InvalidDate;
+            return false;
+        }
+
+        if (!IsChecksumValid(value))
+        {
+            error = PeselValidationError.InvalidChecksum;
+            return false;
+        }
+
+        error = default;
+        return true;
+    }
+
+    internal static bool TryParseCore(ReadOnlySpan<char> value, out ulong result, out PeselValidationError error)
+    {
+        result = 0;
+
+        if (!TryValidate(value, out error))
+            return false;
+
+        result = DigitParser.ParseUInt64(value);
+        return true;
     }
 }
