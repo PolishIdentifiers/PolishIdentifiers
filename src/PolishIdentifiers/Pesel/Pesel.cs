@@ -49,10 +49,10 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// </exception>
     public static Pesel Parse(ReadOnlySpan<char> value)
     {
-        var result = PeselValidator.Validate(value);
-        if (!result.IsValid)
-            throw new PeselValidationException(result.Error!.Value);
-        return new Pesel(PeselValidator.SpanToUlong(value));
+        if (!PeselValidator.TryParseCore(value, out var parsedValue, out var error))
+            throw new PeselValidationException(error);
+
+        return new Pesel(parsedValue);
     }
 
     /// <summary>
@@ -81,9 +81,13 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
     public static bool TryParse(ReadOnlySpan<char> value, out Pesel pesel)
     {
-        var result = PeselValidator.Validate(value);
-        if (!result.IsValid) { pesel = default; return false; }
-        pesel = new Pesel(PeselValidator.SpanToUlong(value));
+        if (!PeselValidator.TryParseCore(value, out var parsedValue, out _))
+        {
+            pesel = default;
+            return false;
+        }
+
+        pesel = new Pesel(parsedValue);
         return true;
     }
 
@@ -204,7 +208,12 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// Returns the 11-digit string representation of the PESEL number.
     /// </summary>
     /// <returns>An 11-character decimal string, left-padded with zeros if necessary.</returns>
-    public override string ToString() => _value.ToString("D11", System.Globalization.CultureInfo.InvariantCulture);
+    /// <exception cref="InvalidOperationException">Thrown when called on a default instance.</exception>
+    public override string ToString()
+    {
+        ThrowIfDefault();
+        return _value.ToString("D11", System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     /// <summary>
     /// Returns the 11-digit string representation of the PESEL number using the specified format.
@@ -215,9 +224,12 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// </param>
     /// <param name="formatProvider">Ignored. PESEL numbers are always formatted with invariant digits.</param>
     /// <returns>An 11-character decimal string, left-padded with zeros if necessary.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when called on a default instance.</exception>
     /// <exception cref="FormatException">Thrown when <paramref name="format"/> is not a supported value.</exception>
     public string ToString(string? format, IFormatProvider? formatProvider)
     {
+        ThrowIfDefault();
+
         if (string.IsNullOrEmpty(format)
             || string.Equals(format, "G", StringComparison.OrdinalIgnoreCase)
             || string.Equals(format, "D11", StringComparison.OrdinalIgnoreCase))

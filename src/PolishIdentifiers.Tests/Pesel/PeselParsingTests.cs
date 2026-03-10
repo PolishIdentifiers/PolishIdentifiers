@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using PolishIdentifiers;
+using Shouldly;
 
 namespace PolishIdentifiers.Tests;
 
@@ -14,6 +15,7 @@ public class PeselParsingTests
 
     private const string TooShortPesel = "4405140145";
     private const string TooLongPesel = "440514014580";
+    private const string VeryLongNumericPesel = "440514014584405140145844051401458";
     private const string InvalidCharactersPesel = "4405140145A";
     private const string InvalidDatePesel = "99223112345";
     private const string EmptyPesel = "";
@@ -86,6 +88,13 @@ public class PeselParsingTests
         { MiddleTabPesel, PeselValidationError.InvalidCharacters }
     };
 
+    public static TheoryData<string> WhitespaceInputStringsData => new()
+    {
+        LeadingWhitespacePesel,
+        TrailingWhitespacePesel,
+        MiddleTabPesel
+    };
+
     public static TheoryData<string> InvalidEncodedMonthData => new()
     {
         InvalidEncodedMonth20Pesel,
@@ -141,6 +150,16 @@ public class PeselParsingTests
     }
 
     [Fact]
+    public void Parse_PeselWithLeadingZero_ReturnsCanonicalDigits()
+    {
+        var input = ValidPeselWithLeadingZero;
+
+        var pesel = Pesel.Parse(input);
+
+        pesel.ToString().ShouldBe(input);
+    }
+
+    [Fact]
     public void Parse_InvalidPesel_ThrowsPeselValidationException()
     {
         var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel));
@@ -171,6 +190,14 @@ public class PeselParsingTests
         var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(EmptyPesel));
 
         Assert.Equal(PeselValidationError.InvalidLength, ex.Error);
+    }
+
+    [Fact]
+    public void Parse_VeryLongNumericInput_ThrowsPeselValidationExceptionWithInvalidLength()
+    {
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(VeryLongNumericPesel));
+
+        ex.Error.ShouldBe(PeselValidationError.InvalidLength);
     }
 
     [Theory]
@@ -250,19 +277,23 @@ public class PeselParsingTests
         Assert.Equal(default, pesel);
     }
 
-    [Theory]
-    [MemberData(nameof(WhitespaceInputData))]
-    public void TryParse_WhitespaceInput_ReturnsFalse(string input, PeselValidationError expectedError)
+    [Fact]
+    public void TryParse_VeryLongNumericInput_ReturnsFalse()
     {
-        _ = expectedError;
+        Pesel.TryParse(VeryLongNumericPesel, out _).ShouldBeFalse();
+    }
+
+    [Theory]
+    [MemberData(nameof(WhitespaceInputStringsData))]
+    public void TryParse_WhitespaceInput_ReturnsFalse(string input)
+    {
         Assert.False(Pesel.TryParse(input, out _));
     }
 
     [Theory]
-    [MemberData(nameof(WhitespaceInputData))]
-    public void TryParse_WhitespaceInput_SetsOutParamToDefault(string input, PeselValidationError expectedError)
+    [MemberData(nameof(WhitespaceInputStringsData))]
+    public void TryParse_WhitespaceInput_SetsOutParamToDefault(string input)
     {
-        _ = expectedError;
         Pesel.TryParse(input, out var pesel);
 
         Assert.Equal(default, pesel);
@@ -485,11 +516,11 @@ public class PeselParsingTests
     }
 
     [Fact]
-    public void DefaultPesel_ToString_ReturnsZeroPaddedCanonicalString()
+    public void DefaultPesel_ToString_ThrowsInvalidOperationException()
     {
         var p = default(Pesel);
 
-        Assert.Equal("00000000000", p.ToString());
+        Should.Throw<InvalidOperationException>(() => p.ToString());
     }
 
     [Theory]
@@ -498,11 +529,11 @@ public class PeselParsingTests
     [InlineData("g")]
     [InlineData("D11")]
     [InlineData("d11")]
-    public void DefaultPesel_ToString_WithSupportedFormat_ReturnsZeroPaddedString(string? format)
+    public void DefaultPesel_ToString_WithSupportedFormat_ThrowsInvalidOperationException(string? format)
     {
         var p = default(Pesel);
 
-        Assert.Equal("00000000000", p.ToString(format, null));
+        Should.Throw<InvalidOperationException>(() => p.ToString(format, null));
     }
 
     [Fact]

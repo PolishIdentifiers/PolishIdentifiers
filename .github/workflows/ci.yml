@@ -26,10 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install the exact SDK pinned in global.json.
+      # Install the exact SDK pinned in global.json plus the .NET 8 SDK required
+      # by the net8.0 test target. Both are needed; global-json-file alone only
+      # installs the pinned version and does not guarantee .NET 8 is present.
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
+          dotnet-version: '8.0.x'
           global-json-file: global.json
 
       # Restore once at the solution level so subsequent steps can use --no-restore.
@@ -42,15 +45,27 @@ jobs:
       - name: Build
         run: dotnet build PolishIdentifiers.slnx --no-restore -c Release
 
-      # Run all tests and collect code coverage via coverlet (already referenced
-      # in the test project as coverlet.collector).
-      - name: Test
+      # Run the net8.0 test target separately so CI explicitly validates the
+      # netstandard2.0-compatible library asset through a concrete runtime.
+      - name: Test (.NET 8)
         run: >
           dotnet test PolishIdentifiers.slnx
+          --framework net8.0
           --no-build -c Release
           --logger "console;verbosity=normal"
           --collect:"XPlat Code Coverage"
-          --results-directory coverage
+          --results-directory coverage/net8
+
+      # Run the net10.0 test target separately so CI explicitly validates the
+      # modern library asset and net10-only API coverage.
+      - name: Test (.NET 10)
+        run: >
+          dotnet test PolishIdentifiers.slnx
+          --framework net10.0
+          --no-build -c Release
+          --logger "console;verbosity=normal"
+          --collect:"XPlat Code Coverage"
+          --results-directory coverage/net10
 
       # Upload the coverage report as an artifact so it is available in the
       # Actions run summary. Only uploaded once (ubuntu run) to avoid duplicates.
