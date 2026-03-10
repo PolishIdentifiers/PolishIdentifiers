@@ -19,10 +19,13 @@ internal static class NipValidator
 
     private static bool TryValidate(ReadOnlySpan<char> value, out NipValidationError error)
     {
-        if (!TryScanDigits(value, out var weightedSum))
+        foreach (var c in value)
         {
-            error = NipValidationError.InvalidCharacters;
-            return false;
+            if (c < '0' || c > '9')
+            {
+                error = NipValidationError.InvalidCharacters;
+                return false;
+            }
         }
 
         if (value.Length != 10)
@@ -31,7 +34,7 @@ internal static class NipValidator
             return false;
         }
 
-        if (!IsChecksumValid(value, weightedSum))
+        if (!IsChecksumValid(value))
         {
             error = NipValidationError.InvalidChecksum;
             return false;
@@ -48,8 +51,9 @@ internal static class NipValidator
         return Validate(value.AsSpan());
     }
 
-    private static bool IsChecksumValid(ReadOnlySpan<char> value, int sum)
+    private static bool IsChecksumValid(ReadOnlySpan<char> value)
     {
+        var sum = ChecksumCalculator.WeightedSum(value.Slice(0, 9), Weights);
         var checksum = sum % 11;
 
         // If checksum == 10, no valid check digit exists for this combination.
@@ -57,23 +61,6 @@ internal static class NipValidator
             return false;
 
         return checksum == (value[9] - '0');
-    }
-
-    private static bool TryScanDigits(ReadOnlySpan<char> value, out int weightedSum)
-    {
-        weightedSum = 0;
-
-        for (int i = 0; i < value.Length; i++)
-        {
-            var c = value[i];
-            if (c < '0' || c > '9')
-                return false;
-
-            if (i < Weights.Length)
-                weightedSum += (c - '0') * Weights[i];
-        }
-
-        return true;
     }
 
     /// <summary>
