@@ -286,6 +286,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <summary>
     /// Returns the 10-digit canonical string representation of the NIP number.
     /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when called on a default instance.</exception>
     public override string ToString()
     {
         ThrowIfDefault();
@@ -297,6 +298,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// </summary>
     /// <param name="format">The output format to use.</param>
     /// <returns>A string representation in the requested format.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when called on a default instance.</exception>
     public string ToString(NipFormat format)
     {
         ThrowIfDefault();
@@ -312,6 +314,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// </param>
     /// <param name="formatProvider">Ignored. NIP numbers are always formatted with invariant digits.</param>
     /// <returns>A 10-character decimal string, left-padded with zeros if necessary.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when called on a default instance.</exception>
     /// <exception cref="FormatException">Thrown when <paramref name="format"/> is not a supported value.</exception>
     public string ToString(string? format, IFormatProvider? formatProvider)
     {

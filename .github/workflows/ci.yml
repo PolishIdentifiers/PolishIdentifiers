@@ -26,10 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install the exact SDK pinned in global.json.
+      # Install the exact SDK pinned in global.json plus the .NET 8 SDK required
+      # by the net8.0 test target. Both are needed; global-json-file alone only
+      # installs the pinned version and does not guarantee .NET 8 is present.
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
+          dotnet-version: '8.0.x'
           global-json-file: global.json
 
       # Restore once at the solution level so subsequent steps can use --no-restore.

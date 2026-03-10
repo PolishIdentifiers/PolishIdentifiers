@@ -208,6 +208,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// Returns the 11-digit string representation of the PESEL number.
     /// </summary>
     /// <returns>An 11-character decimal string, left-padded with zeros if necessary.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when called on a default instance.</exception>
     public override string ToString()
     {
         ThrowIfDefault();
@@ -223,6 +224,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// </param>
     /// <param name="formatProvider">Ignored. PESEL numbers are always formatted with invariant digits.</param>
     /// <returns>An 11-character decimal string, left-padded with zeros if necessary.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when called on a default instance.</exception>
     /// <exception cref="FormatException">Thrown when <paramref name="format"/> is not a supported value.</exception>
     public string ToString(string? format, IFormatProvider? formatProvider)
     {
