@@ -11,6 +11,7 @@ public class NipParsingTests
     private const string ValidNip = "1234563218";
     private const string AnotherValidNip = "7680002466";
     private const string ValidNipWithLeadingZero = "0123456789";
+    private const string AllZeroNip = "0000000000";
     private const string InvalidChecksumNip = "1234563217";
 
     private const string TooShortNip = "123456321";
@@ -59,6 +60,22 @@ public class NipParsingTests
         var nip = Nip.Parse(input);
 
         nip.ToString().ShouldBe(input);
+    }
+
+    [Fact]
+    public void Parse_AllZeroNip_ReturnsInitializedNip()
+    {
+        var nip = Nip.Parse(AllZeroNip);
+
+        nip.IsDefault.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Parse_AllZeroNip_ToString_ReturnsCanonicalDigits()
+    {
+        var nip = Nip.Parse(AllZeroNip);
+
+        nip.ToString().ShouldBe(AllZeroNip);
     }
 
     [Fact]
@@ -125,6 +142,14 @@ public class NipParsingTests
         Nip.TryParse(ValidNip, out var nip);
 
         Assert.Equal(ValidNip, nip.ToString());
+    }
+
+    [Fact]
+    public void TryParse_AllZeroNip_SetsOutParamToInitializedValue()
+    {
+        Nip.TryParse(AllZeroNip, out var nip).ShouldBeTrue();
+
+        nip.IsDefault.ShouldBeFalse();
     }
 
     [Fact]
@@ -266,6 +291,14 @@ public class NipParsingTests
         var nip = Nip.Parse(input);
 
         nip.IssuingTaxOfficePrefix.ShouldBe(expectedPrefix);
+    }
+
+    [Fact]
+    public void IssuingTaxOfficePrefix_AllZeroNip_ReturnsZero()
+    {
+        var nip = Nip.Parse(AllZeroNip);
+
+        nip.IssuingTaxOfficePrefix.ShouldBe(0);
     }
 
     // --- Default struct ---
@@ -421,6 +454,15 @@ public class NipParsingTests
     }
 
     [Fact]
+    public void EqualityOperator_DefaultAndParsedAllZeroNip_ReturnsFalse()
+    {
+        var parsed = Nip.Parse(AllZeroNip);
+        var def = default(Nip);
+
+        (parsed == def).ShouldBeFalse();
+    }
+
+    [Fact]
     public void HashSet_EqualNips_CountsAsOneEntry()
     {
         var a = Nip.Parse(ValidNip);
@@ -505,6 +547,15 @@ public class NipParsingTests
         var defaultNip = default(Nip);
 
         Assert.True(defaultNip.CompareTo(nip) < 0);
+    }
+
+    [Fact]
+    public void CompareTo_DefaultNip_ReturnsPositiveForParsedAllZeroNip()
+    {
+        var nip = Nip.Parse(AllZeroNip);
+        var defaultNip = default(Nip);
+
+        nip.CompareTo(defaultNip).ShouldBeGreaterThan(0);
     }
 
     [Fact]

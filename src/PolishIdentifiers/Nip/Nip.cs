@@ -17,8 +17,13 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
 #endif
 {
     private readonly ulong _value;
+    private readonly bool _isInitialized;
 
-    internal Nip(ulong value) => _value = value;
+    internal Nip(ulong value)
+    {
+        _value = value;
+        _isInitialized = true;
+    }
 
     // --- Strict factories ---
 
@@ -254,11 +259,11 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// rather than through one of the <c>Parse</c>, <c>TryParse</c>, or <see cref="NipGenerator"/> methods.
     /// Accessing any domain property on a default instance throws <see cref="InvalidOperationException"/>.
     /// </summary>
-    public bool IsDefault => _value == 0;
+    public bool IsDefault => !_isInitialized;
 
     private void ThrowIfDefault()
     {
-        if (_value == 0)
+        if (!_isInitialized)
             throw new InvalidOperationException(
                 "Cannot access properties on a default Nip instance. Use Parse or TryParse.");
     }
@@ -329,7 +334,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// </summary>
     /// <param name="other">The instance to compare with.</param>
     /// <returns><see langword="true"/> if both instances represent the same NIP number; otherwise, <see langword="false"/>.</returns>
-    public bool Equals(Nip other) => _value == other._value;
+    public bool Equals(Nip other) => _isInitialized == other._isInitialized && _value == other._value;
 
     /// <summary>
     /// Indicates whether this instance is equal to a specified object.
@@ -345,7 +350,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// Returns the hash code for this instance.
     /// </summary>
     /// <returns>A hash code based on the underlying NIP value.</returns>
-    public override int GetHashCode() => _value.GetHashCode();
+    public override int GetHashCode() => unchecked((_value.GetHashCode() * 397) ^ _isInitialized.GetHashCode());
 
     /// <summary>
     /// Compares this instance to another <see cref="Nip"/> by numeric value.
@@ -355,7 +360,13 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// A negative integer if this instance precedes <paramref name="other"/>,
     /// zero if they are equal, or a positive integer if this instance follows <paramref name="other"/>.
     /// </returns>
-    public int CompareTo(Nip other) => _value.CompareTo(other._value);
+    public int CompareTo(Nip other)
+    {
+        if (_isInitialized != other._isInitialized)
+            return _isInitialized ? 1 : -1;
+
+        return _value.CompareTo(other._value);
+    }
 
     /// <summary>
     /// Determines whether two <see cref="Nip"/> instances represent the same number.

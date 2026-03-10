@@ -11,18 +11,34 @@ internal static class NipValidator
 
     public static ValidationResult<NipValidationError> Validate(ReadOnlySpan<char> value)
     {
-        // Unlike PESEL, NIP keeps validation inline because the digit scan also accumulates
-        // the weighted sum needed by checksum verification, avoiding a second pass.
-        if (!TryScanDigits(value, out var weightedSum))
-            return ValidationResult<NipValidationError>.Failure(NipValidationError.InvalidCharacters);
-
-        if (value.Length != 10)
-            return ValidationResult<NipValidationError>.Failure(NipValidationError.InvalidLength);
-
-        if (!IsChecksumValid(value, weightedSum))
-            return ValidationResult<NipValidationError>.Failure(NipValidationError.InvalidChecksum);
+        if (!TryValidate(value, out var error))
+            return ValidationResult<NipValidationError>.Failure(error);
 
         return ValidationResult<NipValidationError>.Valid();
+    }
+
+    private static bool TryValidate(ReadOnlySpan<char> value, out NipValidationError error)
+    {
+        if (!TryScanDigits(value, out var weightedSum))
+        {
+            error = NipValidationError.InvalidCharacters;
+            return false;
+        }
+
+        if (value.Length != 10)
+        {
+            error = NipValidationError.InvalidLength;
+            return false;
+        }
+
+        if (!IsChecksumValid(value, weightedSum))
+        {
+            error = NipValidationError.InvalidChecksum;
+            return false;
+        }
+
+        error = default;
+        return true;
     }
 
     public static ValidationResult<NipValidationError> Validate(string? value)
@@ -69,26 +85,10 @@ internal static class NipValidator
     {
         result = 0;
 
-        if (!TryScanDigits(value, out var weightedSum))
-        {
-            error = NipValidationError.InvalidCharacters;
+        if (!TryValidate(value, out error))
             return false;
-        }
-
-        if (value.Length != 10)
-        {
-            error = NipValidationError.InvalidLength;
-            return false;
-        }
-
-        if (!IsChecksumValid(value, weightedSum))
-        {
-            error = NipValidationError.InvalidChecksum;
-            return false;
-        }
 
         result = DigitParser.ParseUInt64(value);
-        error = default;
         return true;
     }
 }
