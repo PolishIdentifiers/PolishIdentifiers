@@ -11,17 +11,17 @@
 
   <PropertyGroup Label="NuGet">
     <PackageId>PolishIdentifiers</PackageId>
-    <Version>0.1.1</Version>
+    <Version>0.2.0</Version>
     <Authors>PolishIdentifiers</Authors>
     <Copyright>Copyright (c) PolishIdentifiers Contributors</Copyright>
-    <Description>Strongly typed PESEL for .NET. Validation, parsing and generation with structured error codes, DataAnnotations support, and zero-allocation span-based validation. Targets netstandard2.0 and net10.0.</Description>
+    <Description>Strongly typed PESEL and NIP for .NET. Validation, parsing and generation with structured error codes, DataAnnotations support, and zero-allocation span-based validation. Targets netstandard2.0 and net10.0.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/PolishIdentifiers/PolishIdentifiers</PackageProjectUrl>
     <RepositoryUrl>https://github.com/PolishIdentifiers/PolishIdentifiers</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>pesel dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
+    <PackageTags>pesel nip dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>v0.1.1: Validation order changed — InvalidCharacters is now reported before InvalidLength. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.2.0: Adds Nip — strongly typed NIP identifier with strict and formatted parsing, NipGenerator, and [ValidNip] DataAnnotations attribute. See CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,4 +33,4 @@
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
 
-</Project>
+  </Project>
