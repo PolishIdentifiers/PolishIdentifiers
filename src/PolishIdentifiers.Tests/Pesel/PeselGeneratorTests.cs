@@ -1,4 +1,5 @@
 using PolishIdentifiers;
+using Shouldly;
 
 namespace PolishIdentifiers.Tests;
 
@@ -145,6 +146,22 @@ public class PeselGeneratorTests
         var s = PeselGenerator.Invalid.WrongLength();
 
         Assert.Equal(PeselValidationError.InvalidLength, Pesel.Validate(s).Error);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_HasInvalidLength()
+    {
+        var value = PeselGenerator.Invalid.WrongLength();
+
+        value.Length.ShouldNotBe(11);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_ReturnsOnlyDigits()
+    {
+        var value = PeselGenerator.Invalid.WrongLength();
+
+        value.All(char.IsDigit).ShouldBeTrue();
     }
 
     [Fact]

@@ -8,6 +8,7 @@ public static class NipGenerator
 {
 #if NET10_0_OR_GREATER
     private static int NextDigit() => System.Random.Shared.Next(10);
+    private static int NextInt(int maxValue) => System.Random.Shared.Next(maxValue);
 #else
     private static readonly ThreadLocal<Random> Rng = new(() => new Random(Guid.NewGuid().GetHashCode()));
 
@@ -15,6 +16,7 @@ public static class NipGenerator
         => Rng.Value ?? throw new InvalidOperationException("Random generator is not available.");
 
     private static int NextDigit() => CurrentRng.Next(10);
+    private static int NextInt(int maxValue) => CurrentRng.Next(maxValue);
 #endif
 
     private static readonly int[] ChecksumWeights = [6, 5, 7, 2, 3, 4, 5, 6, 7];
@@ -61,6 +63,8 @@ public static class NipGenerator
     /// </summary>
     public static class Invalid
     {
+        private const int MaxLengthDelta = 3;
+
         /// <summary>
         /// Generates a NIP string with a wrong check digit.
         /// Triggers <see cref="NipValidationError.InvalidChecksum"/>.
@@ -74,11 +78,19 @@ public static class NipGenerator
         }
 
         /// <summary>
-        /// Returns a fixed 9-digit string that is one character too short.
+        /// Returns a digit-only NIP string with an invalid length.
         /// Triggers <see cref="NipValidationError.InvalidLength"/>.
         /// </summary>
-        /// <returns>A 9-character string that fails length validation.</returns>
-        public static string WrongLength() => "123456321";
+        /// <returns>A digit-only string whose length differs from a valid NIP by 1 to 3 characters.</returns>
+        public static string WrongLength()
+        {
+            var value = NipGenerator.Random().ToString();
+            var delta = NextInt(MaxLengthDelta) + 1;
+
+            return NextInt(2) == 0
+                ? value.Substring(0, value.Length - delta)
+                : AppendRandomDigits(value, delta);
+        }
 
         /// <summary>
         /// Generates a NIP string that is 10 characters long but contains a non-digit character.
@@ -89,6 +101,17 @@ public static class NipGenerator
         {
             var chars = NipGenerator.Random().ToString().ToCharArray();
             chars[5] = 'X';
+            return new string(chars);
+        }
+
+        private static string AppendRandomDigits(string value, int count)
+        {
+            var chars = new char[value.Length + count];
+            value.AsSpan().CopyTo(chars);
+
+            for (var i = 0; i < count; i++)
+                chars[value.Length + i] = (char)('0' + NextDigit());
+
             return new string(chars);
         }
     }

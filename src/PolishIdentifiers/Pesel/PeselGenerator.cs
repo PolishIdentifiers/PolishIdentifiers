@@ -81,6 +81,8 @@ public static class PeselGenerator
     /// </summary>
     public static class Invalid
     {
+        private const int MaxLengthDelta = 3;
+
         /// <summary>
         /// Generates a PESEL string with a valid birth date but a wrong check digit.
         /// Triggers <see cref="PeselValidationError.InvalidChecksum"/>.
@@ -117,11 +119,19 @@ public static class PeselGenerator
         }
 
         /// <summary>
-        /// Returns a fixed 10-digit string that is one character too short.
+        /// Returns a digit-only PESEL string with an invalid length.
         /// Triggers <see cref="PeselValidationError.InvalidLength"/>.
         /// </summary>
-        /// <returns>A 10-character string that fails length validation.</returns>
-        public static string WrongLength() => "4405140145";
+        /// <returns>A digit-only string whose length differs from a valid PESEL by 1 to 3 characters.</returns>
+        public static string WrongLength()
+        {
+            var value = PeselGenerator.Random().ToString();
+            var delta = NextInt(MaxLengthDelta) + 1;
+
+            return NextInt(2) == 0
+                ? value.Substring(0, value.Length - delta)
+                : AppendRandomDigits(value, delta);
+        }
 
         /// <summary>
         /// Generates a PESEL string that is 11 characters long but contains a non-digit character.
@@ -132,6 +142,17 @@ public static class PeselGenerator
         {
             var chars = PeselGenerator.Random().ToString().ToCharArray();
             chars[5] = 'X';
+            return new string(chars);
+        }
+
+        private static string AppendRandomDigits(string value, int count)
+        {
+            var chars = new char[value.Length + count];
+            value.AsSpan().CopyTo(chars);
+
+            for (var i = 0; i < count; i++)
+                chars[value.Length + i] = (char)('0' + NextDigit());
+
             return new string(chars);
         }
     }
