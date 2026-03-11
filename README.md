@@ -1,7 +1,6 @@
 # PolishIdentifiers
 
-> .NET library for PESEL validation, parsing and generation.
-> Strongly typed identifier — not just a validation function.
+> Stop stringly-typing your domain. Strongly typed, zero-allocation .NET primitives for PESEL and NIP.
 
 [![CI](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml/badge.svg)](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -9,155 +8,97 @@
 
 ---
 
-Most validation libraries give you a `bool IsValid(string pesel)` and leave the rest to you. **PolishIdentifiers** gives you a proper domain type — a `readonly struct` that can only hold a valid value and carries structured error information.
+Primitive obsession is a code smell. Using a `string` to represent a Polish identifier in your domain model is a bug waiting to happen. Did someone validate the length? Is the checksum correct? Has it been sanitized?
 
-## Why bother with a library?
+**PolishIdentifiers** fixes this. Instead of a basic `bool IsValid(...)` function, it gives you production-grade, tightly constrained `readonly struct` domain primitives that **cannot hold an invalid value**. 
 
-- **Prevent invalid state** — `Pesel` can only be constructed via `Parse` / `TryParse`. There is no way to accidentally store a bad PESEL in your domain model.
-- **Structured errors** — validation returns a typed enum (`PeselValidationError`), not a boolean or a magic string.
-- **Zero allocation on the hot path** — validation runs on `ReadOnlySpan<char>`. No intermediate strings, no regex, no boxing.
-- **Covers the full spec** — PESEL encodes birth dates from **1800 to 2299** across five century ranges. Most open-source implementations only cover 1900–2099. This one doesn't cut corners.
-- **DataAnnotations out of the box** — `[ValidPesel]` plugs directly into ASP.NET model validation, MVC, minimal APIs and the `Validator` class. Works with both `string` and the `Pesel` struct. No extra packages — it's part of the core library.
-- **Production-grade quality** — 330+ unit tests covering every error code, all 5 century ranges, leap year edge cases, culture invariance, and thread safety. The full spec, not just the happy path.
+### Why choose this library?
+
+- **No Invalid State:** `Pesel` and `Nip` are constructed through `Parse` or `TryParse`. Once you have an instance, it's guaranteed mathematically correct.
+- **Zero Allocation on the Hot Path:** Validations run entirely on `ReadOnlySpan<char>`. No regex, no intermediate string allocations, and no boxing. Memory footprint at rest? An 8-byte `ulong`. 
+- **Actionable Validation:** Get structured errors (e.g., `InvalidChecksum`, `InvalidLength`) via the lightweight `ValidationResult` API. You never have to guess *why* a validation failed.
+- **Built-in `[DataAnnotations]`:** Validate directly at your DTO / API boundary with `[ValidPesel]` and `[ValidNip]`. No extra NuGet packages needed.
+- **Battle-Tested:** Hundreds of deterministic unit tests spanning edge cases like 19th-century leap years, malformed input handling, and rigorous thread safety.
+- **Deterministic Test Generators:** Need a faulty PESEL with just the wrong checksum for a unit test? `PeselGenerator.Invalid.WrongChecksum()` creates it instantly. Same for NIP.
 
 ---
 
-## Validate — structured error, no exceptions
+## ⚡ Quick Start
 
-```csharp
-var result = Pesel.Validate("44051401458");
-result.IsValid // true
-result.Error   // null
+Install via NuGet:
 
-var bad = Pesel.Validate("44051401457");
-bad.Error // PeselValidationError.InvalidChecksum
+```bash
+dotnet add package PolishIdentifiers
 ```
 
-Validation order: `InvalidCharacters` → `InvalidLength` → `InvalidDate` → `InvalidChecksum`.
-
-## TryParse — exception-free parsing
+### 1. Extract Domain Information Safely
 
 ```csharp
-if (Pesel.TryParse(input, out var pesel))
+// Unambiguous and Exception-Free
+if (Pesel.TryParse("44051401458", out var pesel))
 {
-    Console.WriteLine(pesel.BirthDateTime); // 1944-05-14
-    Console.WriteLine(pesel.Gender);        // Gender.Male
+    Console.WriteLine(pesel.BirthDateTime); // Full 1800-2299 range supported
+    Console.WriteLine(pesel.Gender);        // Gender.Male / Gender.Female
 }
+
+// NIP fully supports both STRICT and FORMATTED real-world input
+var nip = Nip.ParseFormatted("PL 123-456-32-18");
+Console.WriteLine(nip.IssuingTaxOfficePrefix);     // 123
+Console.WriteLine(nip.ToString(NipFormat.VatEu));  // "PL1234563218"
 ```
 
-## Parse — throw on invalid input
+### 2. Actionable, Explicit Validations 
+
+No allocations, no exceptions. Just an explicit typed enum pointing to the exact problem.
 
 ```csharp
-try
-{
-    var pesel = Pesel.Parse("44051401457");
-}
-catch (PeselValidationException ex)
-{
-    Console.WriteLine(ex.Error); // PeselValidationError.InvalidChecksum
-}
+var badNip = Nip.Validate("1234563219");
+Console.WriteLine(badNip.Error); // NipValidationError.InvalidChecksum
+
+var badPesel = Pesel.Validate("440514X1458");
+Console.WriteLine(badPesel.Error); // PeselValidationError.InvalidCharacters
 ```
 
-## Use it in your domain model
+### 3. API Boundary & DTO Validation
+Stop bad data at the front door using ASP.NET Core bindings and model validation. 
 
 ```csharp
-// Domain entity — always strongly typed, never a string
-public class Person
-{
-    public Pesel Pesel { get; }
-}
-```
-
-## DataAnnotations — validate at the boundary
-
-Use `[ValidPesel]` on DTOs and API models. The attribute follows standard DataAnnotations conventions: `null` is treated as valid (compose with `[Required]` when the field is mandatory), and it works with both `string` and the `Pesel` struct.
-
-```csharp
-// DTO / API request model — string is fine here, it's the boundary
-public class RegisterRequest
+public class RegisterCompanyRequest
 {
     [Required]
-    [ValidPesel]
-    public string? Pesel { get; set; }
-}
+    [ValidNip]   // Accepts strings, `Nip?`, handles multiple real-world formats
+    public string Nip { get; set; }
 
-// Works with the strongly-typed struct too
-public class PersonDto
-{
-    [ValidPesel]
-    public Pesel Pesel { get; set; }
+    [Required]
+    [ValidPesel] // Accepts strings, `Pesel?`
+    public string OwnerPesel { get; set; }
 }
 ```
 
-The `[ValidPesel]` attribute composes naturally with ASP.NET model binding:
+### 4. Flawless Unit Testing Setup
+
+The library features built-in generators that ensure you aren't hunting for correct or incorrect test payloads manually. They mutate **one exact rule at a time**, preventing test-contamination.
 
 ```csharp
-// Controller — ModelState.IsValid is false when the PESEL is invalid
-[HttpPost]
-public IActionResult Register(RegisterRequest request)
-{
-    if (!ModelState.IsValid)
-        return ValidationProblem();
+Pesel validPesel = PeselGenerator.Random();
+Nip validNip     = NipGenerator.Random();
 
-    var pesel = Pesel.Parse(request.Pesel!); // safe — already validated
-    // ...
-}
-```
-
-> **Rule of thumb:** use `[ValidPesel]` on DTOs and input models at the API boundary.
-> Inside the domain, use the `Pesel` struct directly — it can only hold a valid value.
-
----
-
-## Match on validation result
-
-```csharp
-var message = Pesel.Validate(input)
-    .Match(
-        onValid: ()  => "ok",
-        onError: e   => $"invalid: {e}");
+// Pin-pointed edge-case violations. Returns strings for testing endpoints!
+string badDate     = PeselGenerator.Invalid.WrongDate();     
+string badLength   = NipGenerator.Invalid.WrongLength();     
+string badChecksum = NipGenerator.Invalid.WrongChecksum();   
 ```
 
 ---
 
-## Test data generation
+## The Philosophy
 
-`PeselGenerator` is built-in. Each `Invalid.*` method violates **exactly one rule**, making unit tests surgical:
-
-```csharp
-Pesel valid  = PeselGenerator.Random();
-Pesel male   = PeselGenerator.ForBirthDate(new DateTime(1990, 5, 14)).Male();
-Pesel female = PeselGenerator.ForBirthDate(new DateTime(1990, 5, 14)).Female();
-
-// Each breaks exactly one validation rule
-string badChecksum = PeselGenerator.Invalid.WrongChecksum();
-string badDate     = PeselGenerator.Invalid.WrongDate();
-string tooShort    = PeselGenerator.Invalid.WrongLength();
-string nonNumeric  = PeselGenerator.Invalid.NonNumeric();
-```
-
----
-
-## Quality
-
-The library takes correctness seriously. The PESEL implementation is backed by **330+ unit tests** covering:
-
-- Every validation error code with multiple concrete inputs
-- All 9 possible check digits — each tested individually
-- All 5 century ranges (1800–2299), including boundary dates of each
-- Leap year edge cases: valid (2000-02-29, 2004-02-29) and invalid (1900-02-29, 1800-02-29, 2100-02-29, 2200-02-29)
-- February 29 in centuries divisible by 100 but not 400 (non-Gregorian leap years)
-- 31st day in 30-day months (April, June, September)
-- Whitespace, null, empty string, all-zeros, all-nines inputs
-- Deterministic validation order with explicit tests for which error is reported when multiple rules fail
-- `ToString` is culture-invariant — produces ASCII digits even under `ar-SA` or `fa-IR` locale
-- Parse → ToString → Parse round-trip fidelity, including leading zeros
-- Thread-safety under parallel load (500 concurrent operations)
-- All `Invalid.*` generator outputs verified to fail on exactly one rule each, independently of the validator
-- `[ValidPesel]` attribute: `string`, `Pesel` struct, nullable struct, `null`, unknown types, `[Required]` composability, error message shape, member name propagation
+- **Boundary vs Domain:** Use `[ValidPesel]` / `[ValidNip]` on data structures receiving strings (e.g. from JSON). Map internally to strong types like `Pesel` and `Nip` so your core application never worries about validation again.
+- **Offline Only:** The scope of this library bounds itself strictly to mathematical/algorithmic check validation. No unreliable external HTTP queries, database roundtrips, or runtime states are required.
+- **Zero-Dependency Architecture:** Minimal core containing solely `System.Memory` wrappers for legacy targets (`netstandard2.0`). Fully taps into high-performance `ISpanParsable<T>` additions out-of-the-box for `net10.0`.
 
 ---
 
 ## License
 
-MIT
+[MIT](LICENSE)
