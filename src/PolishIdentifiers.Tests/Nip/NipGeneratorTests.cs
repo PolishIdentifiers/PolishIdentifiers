@@ -81,11 +81,19 @@ public class NipGeneratorTests
     // --- WrongLength: structural verification ---
 
     [Fact]
-    public void Invalid_WrongLength_LengthIsNot10()
+    public void Invalid_WrongLength_HasInvalidLength()
     {
         var s = NipGenerator.Invalid.WrongLength();
 
-        Assert.NotEqual(10, s.Length);
+        s.Length.ShouldNotBe(10);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_ReturnsOnlyDigits()
+    {
+        var value = NipGenerator.Invalid.WrongLength();
+
+        value.All(char.IsDigit).ShouldBeTrue();
     }
 
     // --- NonNumeric: structural verification ---

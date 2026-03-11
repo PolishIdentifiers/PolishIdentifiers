@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-03-10
+
+### Added
+
+#### `Nip` — strongly typed identifier
+
+- `Nip` readonly struct backed by `ulong` (no string allocation at rest)
+- Strict factories: `Nip.Parse(string)` / `Nip.Parse(ReadOnlySpan<char>)`, `Nip.TryParse(...)`, `Nip.Validate(...)`
+- Formatted factories: `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, `Nip.ValidateFormatted(...)`
+- Recognized formatted input patterns: canonical digits, hyphenated, `PL1234563218`, `PL 1234563218`, `PL 123-456-32-18`
+- `NipValidationError` enum: `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`, `UnrecognizedFormat`
+- `NipValidationException` — wraps `NipValidationError`, thrown by `Parse` and `ParseFormatted`
+- `Nip.IsDefault` — distinguishes a default struct instance from a parsed one
+- `Nip.IssuingTaxOfficePrefix` — first three digits of the identifier
+- `Nip.ToString()` — always returns the 10-digit canonical form
+- `Nip.ToString(NipFormat)` with `DigitsOnly`, `Hyphenated`, and `VatEu`
+- `IFormattable`, `IEquatable<Nip>`, `IComparable<Nip>`, `==` / `!=` operators
+- `IParsable<Nip>`, `ISpanParsable<Nip>` (net10.0 only)
+- `default(Nip)` is explicitly invalid — domain properties and formatting throw `InvalidOperationException` when accessed on a default instance
+
+#### Validation and generation
+
+- NIP checksum validation using the official mod 11 weighting algorithm (`6, 5, 7, 2, 3, 4, 5, 6, 7`)
+- `checksum == 10` is treated as `InvalidChecksum` (no fallback conversion to `0`)
+- Validation order for strict NIP input: characters → length → checksum
+- `NipGenerator.Random()` — generates a random valid NIP
+- `NipGenerator.Invalid.WrongChecksum()` — valid in all other respects, checksum digit is wrong
+- `NipGenerator.Invalid.WrongLength()` — digit-only value created from a valid NIP by removing or appending 1–3 trailing digits
+- `NipGenerator.Invalid.NonNumeric()` — contains a non-digit character
+
+#### DataAnnotations
+
+- `[ValidNip]` attribute — validates `string`, `Nip`, and `Nip?`
+- For string values, `[ValidNip]` accepts the same canonical and recognized formatted inputs as `Nip.ValidateFormatted(...)`
+- `null` is treated as valid; compose with `[Required]` when the field is mandatory
+- Error message: `"The {0} field is not a valid NIP."`
+- Member name and display name propagated correctly to `ValidationResult`
+
+### Changed
+
+- Introduced explicit format recognition for formatted NIP input instead of heuristic normalization; non-recognized patterns now return `UnrecognizedFormat`
+- `PeselGenerator.Invalid.WrongLength()` now generates digit-only values by removing or appending digits to a valid PESEL, introducing random length variance for better test coverage.
+
+
+---
+
 ## [0.1.1] - 2026-03-07
 
 ### Changed
@@ -73,5 +119,6 @@ First public release. PESEL support only — NIP, REGON and NRB are planned for 
 - `netstandard2.0` — compatible with .NET Framework 4.6.1+ and all legacy runtimes
 - `net10.0` — full modern API surface including `DateOnly`, `IParsable<T>`, `ISpanParsable<T>`
 
+[0.2.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/releases/tag/v0.1.0
