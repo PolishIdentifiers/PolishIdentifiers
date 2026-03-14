@@ -101,11 +101,11 @@ Reference by type:
 
 ## Identifier comparison
 
-| Type | Accepted input forms | Validation errors | Notable domain properties | Generator support |
-|---|---|---|---|---|
-| `Pesel` | Canonical 11-digit input | `InvalidCharacters`, `InvalidLength`, `InvalidDate`, `InvalidChecksum` | `BirthDateTime`, `Gender`, `IsDefault` | `Random()`, `ForBirthDate(...)`, `Invalid.WrongChecksum()`, `Invalid.WrongDate()`, `Invalid.WrongLength()`, `Invalid.NonNumeric()` |
-| `Nip` | Canonical 10-digit input, plus explicit formatted path with 5 supported formats | `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`, `UnrecognizedFormat` for formatted path | `IssuingTaxOfficePrefix`, `IsDefault` | `Random()`, `Invalid.WrongChecksum()`, `Invalid.WrongLength()`, `Invalid.NonNumeric()` |
-| `Regon` | Canonical 9-digit and 14-digit input | `InvalidCharacters`, `InvalidLength`, `InvalidChecksum` | `Kind`, `IsMain`, `IsLocal`, `BaseRegon`, `IsDefault` | `Random()`, `RandomLocal()`, `Invalid.WrongChecksum()`, `Invalid.WrongChecksum14()`, `Invalid.WrongLength()`, `Invalid.NonNumeric()` |
+| Type | Accepted input forms | Notable domain properties | Generator support |
+|---|---|---|---|
+| `Pesel` | Canonical 11-digit input | `BirthDateTime`, `Gender`, `IsDefault` | `Random()`, `ForBirthDate(...)`, `Invalid.WrongChecksum()`, `Invalid.WrongDate()`, `Invalid.WrongLength()`, `Invalid.NonNumeric()` |
+| `Nip` | Canonical 10-digit input, plus explicit formatted path with 5 supported formats | `IssuingTaxOfficePrefix`, `IsDefault` | `Random()`, `Invalid.WrongChecksum()`, `Invalid.WrongLength()`, `Invalid.NonNumeric()` |
+| `Regon` | Canonical 9-digit and 14-digit input | `Kind`, `IsMain`, `IsLocal`, `BaseRegon`, `IsDefault` | `Random()`, `RandomLocal()`, `Invalid.WrongChecksum()`, `Invalid.WrongChecksum14()`, `Invalid.WrongLength()`, `Invalid.NonNumeric()` |
 
 ## Why use this over plain string validators
 
