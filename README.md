@@ -16,7 +16,33 @@ The library is built around one common API shape for every identifier:
 
 The goal is simple: validate once at the boundary, then work with `Pesel`, `Nip`, or `Regon` instead of raw strings inside the domain model.
 
-## What it does
+## Table of contents
+
+- [Overview](#overview)
+    - [What it does](#what-it-does)
+    - [Package](#package)
+- [API model](#api-model)
+    - [Common API](#common-api)
+    - [Implemented identifiers](#implemented-identifiers)
+    - [Error model](#error-model)
+    - [Identifier comparison](#identifier-comparison)
+    - [Why use this over plain string validators](#why-use-this-over-plain-string-validators)
+- [Usage examples](#usage-examples)
+    - [PESEL](#pesel)
+    - [NIP](#nip)
+    - [REGON](#regon)
+    - [DataAnnotations](#dataannotations)
+    - [Boundary to domain example](#boundary-to-domain-example)
+    - [Test data generation](#test-data-generation)
+- [Technical notes](#technical-notes)
+    - [Performance characteristics](#performance-characteristics)
+    - [Technical characteristics](#technical-characteristics)
+    - [Scope](#scope)
+    - [License](#license)
+
+## Overview
+
+### What it does
 
 - Strongly typed identifier value objects: `Pesel`, `Nip`, `Regon`
 - Consistent `Parse` / `TryParse` / `Validate` API across identifiers
@@ -26,7 +52,7 @@ The goal is simple: validate once at the boundary, then work with `Pesel`, `Nip`
 - Built-in generators for valid and intentionally invalid test data
 - Built-in DataAnnotations attributes for DTO and input-layer validation
 
-## Package
+### Package
 
 | Item | Value |
 |---|---|
@@ -37,15 +63,9 @@ The goal is simple: validate once at the boundary, then work with `Pesel`, `Nip`
 
 Compatibility note: `Parse`, `TryParse`, and `Validate` are available on both target frameworks. On `net10.0`, the implemented identifiers also expose modern generic parsing interfaces in addition to the shared API.
 
-## Choose the right entry point
+## API model
 
-| Scenario | Recommended API |
-|---|---|
-| Boundary or input DTO validation | `Validate(...)` or validation attributes |
-| Application service mapping external input to strong types | `TryParse(...)` or `Parse(...)` after validation |
-| Domain model | Store `Pesel`, `Nip`, `Regon`, not raw strings |
-
-## Common API
+### Common API
 
 The same usage pattern applies to each implemented identifier.
 
@@ -72,7 +92,7 @@ Use `Validate` when you need a precise error category.
 Use `TryParse` when you only need success or failure.
 Use `Parse` when invalid input should fail immediately.
 
-## Implemented identifiers
+### Implemented identifiers
 
 | Type | Identifier | Notes |
 |---|---|---|
@@ -80,7 +100,7 @@ Use `Parse` when invalid input should fail immediately.
 | `Nip` | NIP | 10 digits, supports strict and formatted input paths |
 | `Regon` | REGON | 9-digit and 14-digit variants, exposes `Kind` and `BaseRegon` |
 
-## Error model
+### Error model
 
 Validation is deterministic. The first failing rule is returned as a typed enum value.
 
@@ -99,7 +119,7 @@ Reference by type:
 | `Nip` | `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`, `UnrecognizedFormat` on formatted path |
 | `Regon` | `InvalidCharacters`, `InvalidLength`, `InvalidChecksum` |
 
-## Identifier comparison
+### Identifier comparison
 
 | Type | Accepted input forms | Notable domain properties | Generator support |
 |---|---|---|---|
@@ -107,7 +127,7 @@ Reference by type:
 | `Nip` | Canonical 10-digit input, plus explicit formatted path with 5 supported formats | `IssuingTaxOfficePrefix`, `IsDefault` | `Random()`, `Invalid.WrongChecksum()`, `Invalid.WrongLength()`, `Invalid.NonNumeric()` |
 | `Regon` | Canonical 9-digit and 14-digit input | `Kind`, `IsMain`, `IsLocal`, `BaseRegon`, `IsDefault` | `Random()`, `RandomLocal()`, `Invalid.WrongChecksum()`, `Invalid.WrongChecksum14()`, `Invalid.WrongLength()`, `Invalid.NonNumeric()` |
 
-## Why use this over plain string validators
+### Why use this over plain string validators
 
 Using a validator method over raw strings answers only one question: is this text valid right now.
 
@@ -119,17 +139,9 @@ Using `Pesel`, `Nip`, and `Regon` changes the shape of the application model:
 - `Nip` supports a separate formatted-input path instead of heuristic string cleanup, so accepted formats are explicit and testable.
 - `Regon` models both REGON-9 and REGON-14 in one type and exposes the distinction through `Kind` and `BaseRegon`, instead of forcing callers to infer semantics from string length everywhere.
 
-## Performance characteristics
+## Usage examples
 
-The library makes a small set of concrete implementation choices that are relevant for hot-path validation:
-
-- Validation operates on `ReadOnlySpan<char>`.
-- Validation does not depend on regular expressions.
-- Numeric identifiers are stored internally as numeric values rather than strings.
-- `Validate(...)` returns a lightweight typed result instead of allocating a domain object.
-- Implemented target frameworks are `netstandard2.0` and `net10.0`.
-
-## PESEL
+### PESEL
 
 ```csharp
 using PolishIdentifiers;
@@ -144,7 +156,7 @@ ValidationResult<PeselValidationError> result = Pesel.Validate("440514X1458");
 Console.WriteLine(result.Error);         // InvalidCharacters
 ```
 
-## NIP
+### NIP
 
 ```csharp
 using PolishIdentifiers;
@@ -175,7 +187,7 @@ Supported formatted NIP inputs:
 
 Inputs outside these formats return `NipValidationError.UnrecognizedFormat` from the formatted API path.
 
-## REGON
+### REGON
 
 ```csharp
 using PolishIdentifiers;
@@ -198,7 +210,7 @@ ValidationResult<RegonValidationError> result = Regon.Validate("123456780");
 Console.WriteLine(result.Error);      // InvalidChecksum
 ```
 
-## DataAnnotations
+### DataAnnotations
 
 The library also includes validation attributes for input models.
 
@@ -220,7 +232,7 @@ public sealed class CompanyInput
 }
 ```
 
-## Boundary to domain example
+### Boundary to domain example
 
 The intended usage is: accept raw strings at the boundary, validate and convert once, then keep strong types in the core model.
 
@@ -275,7 +287,7 @@ public static class CompanyMapper
 
 After conversion, the domain model no longer stores identifier strings.
 
-## Test data generation
+### Test data generation
 
 Each identifier has a generator for valid values and isolated invalid cases.
 
@@ -291,18 +303,30 @@ string invalidNip = NipGenerator.Invalid.WrongLength();
 string invalidRegon = RegonGenerator.Invalid.WrongChecksum14();
 ```
 
-## Technical characteristics
+## Technical notes
+
+### Performance characteristics
+
+The library makes a small set of concrete implementation choices that are relevant for hot-path validation:
+
+- Validation operates on `ReadOnlySpan<char>`.
+- Validation does not depend on regular expressions.
+- Numeric identifiers are stored internally as numeric values rather than strings.
+- `Validate(...)` returns a lightweight typed result instead of allocating a domain object.
+- Implemented target frameworks are `netstandard2.0` and `net10.0`.
+
+### Technical characteristics
 
 - The shared `Parse`, `TryParse`, and `Validate` API is available on both target frameworks.
 - `default(Pesel)`, `default(Nip)`, and `default(Regon)` are not valid domain instances.
 - On `net10.0`, the implemented identifiers also expose modern generic parsing interfaces in addition to the shared API.
 
-## Scope
+### Scope
 
 This package focuses on deterministic, offline validation of Polish formal identifiers with checksum or structure-based verification.
 
 It is not a registry lookup client and it does not attempt to confirm whether a syntactically valid number is assigned to a real person or business.
 
-## License
+### License
 
 MIT
