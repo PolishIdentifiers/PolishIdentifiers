@@ -2,7 +2,7 @@ namespace PolishIdentifiers;
 
 /// <summary>
 /// A builder for generating valid PESEL numbers for a specific birth date.
-/// Obtain an instance via <see cref="PeselGenerator.ForBirthDate(DateTime)"/>.
+/// Obtain an instance via the <see cref="PeselGenerator.ForBirthDate(DateTime)"/> overloads.
 /// </summary>
 public sealed class PeselDateBuilder
 {

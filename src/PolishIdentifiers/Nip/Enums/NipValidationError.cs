@@ -11,10 +11,16 @@ namespace PolishIdentifiers;
 /// </remarks>
 public enum NipValidationError
 {
-    /// <summary>The input contains one or more characters that are not decimal digits (0–9) after normalization.</summary>
+    /// <summary>
+    /// The validated input contains one or more characters that are not decimal digits (0-9).
+    /// On the formatted path, this is reported only after the input matches a recognized format.
+    /// </summary>
     InvalidCharacters,
 
-    /// <summary>The input does not consist of exactly 10 characters after normalization.</summary>
+    /// <summary>
+    /// The validated input does not consist of exactly 10 digits.
+    /// On the formatted path, this is reported only after the input matches a recognized format.
+    /// </summary>
     InvalidLength,
 
     /// <summary>

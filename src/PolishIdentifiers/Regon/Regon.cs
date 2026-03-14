@@ -5,8 +5,8 @@ namespace PolishIdentifiers;
 /// Supports both 9-digit (REGON-9, primary entity) and 14-digit (REGON-14, local unit) variants.
 /// </summary>
 /// <remarks>
-/// Instances can only be obtained through <see cref="Parse(string)"/>, <see cref="TryParse(string?, out Regon)"/>,
-/// or <see cref="RegonGenerator"/>. The default instance is not valid; accessing domain properties on it
+/// Instances are obtained through the parsing APIs or through <see cref="RegonGenerator"/>.
+/// The default instance is not valid; accessing domain properties on it
 /// throws <see cref="InvalidOperationException"/>. Use <see cref="IsDefault"/> to check before accessing.
 /// </remarks>
 #if NET10_0_OR_GREATER
@@ -266,8 +266,9 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
 
     /// <summary>
     /// Indicates whether this instance is equal to another <see cref="Regon"/> instance.
-    /// Two instances are equal when they are both initialized, have the same <see cref="Kind"/>,
-    /// and represent the same number.
+    /// Two default instances are equal.
+    /// Initialized instances are equal when they have the same <see cref="Kind"/> and represent the same number.
+    /// A default instance is never equal to an initialized instance, including valid all-zero REGON values.
     /// </summary>
     /// <param name="other">The instance to compare with.</param>
     /// <returns><see langword="true"/> if both instances represent the same REGON number; otherwise, <see langword="false"/>.</returns>
@@ -288,8 +289,10 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
         => unchecked((_value.GetHashCode() * 397) ^ (_isLocal.GetHashCode() * 31) ^ _isInitialized.GetHashCode());
 
     /// <summary>
-    /// Compares this instance to another <see cref="Regon"/> by numeric value.
+    /// Compares this instance to another <see cref="Regon"/>.
     /// Default instances sort before initialized instances.
+    /// Initialized instances are ordered first by numeric value, and when the numeric payload matches,
+    /// <see cref="RegonKind.Main"/> sorts before <see cref="RegonKind.Local"/>.
     /// </summary>
     /// <param name="other">The instance to compare with.</param>
     /// <returns>

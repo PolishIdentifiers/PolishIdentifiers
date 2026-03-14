@@ -1,4 +1,5 @@
 using PolishIdentifiers;
+using Shouldly;
 
 namespace PolishIdentifiers.Tests;
 
@@ -90,8 +91,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.True(result.IsValid);
-        Assert.Null(result.Error);
+        result.IsValid.ShouldBeTrue();
+        result.Error.ShouldBeNull();
     }
 
     // --- InvalidCharacters ---
@@ -102,8 +103,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidCharacters, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidCharacters);
     }
 
     // --- InvalidLength ---
@@ -114,8 +115,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidLength, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidLength);
     }
 
     // --- InvalidChecksum ---
@@ -126,8 +127,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidChecksum, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Checksum mod 11 == 10 edge case ---
@@ -137,8 +138,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(ChecksumMod11Equals10);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidChecksum, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Validation order: characters → length → checksum ---
@@ -148,7 +149,7 @@ public class NipValidationTests
     {
         var result = Nip.Validate(MultipleIssuesNip);
 
-        Assert.Equal(NipValidationError.InvalidCharacters, result.Error);
+        result.Error.ShouldBe(NipValidationError.InvalidCharacters);
     }
 
     // --- Span overload ---
@@ -156,15 +157,13 @@ public class NipValidationTests
     [Fact]
     public void Validate_SpanOverload_ValidNip_ReturnsValid()
     {
-        Assert.True(Nip.Validate(ValidNip.AsSpan()).IsValid);
+        Nip.Validate(ValidNip.AsSpan()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
     public void Validate_SpanOverload_InvalidChecksum_ReturnsInvalidChecksum()
     {
-        Assert.Equal(
-            NipValidationError.InvalidChecksum,
-            Nip.Validate(InvalidChecksum7.AsSpan()).Error);
+        Nip.Validate(InvalidChecksum7.AsSpan()).Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Match ---
@@ -176,7 +175,7 @@ public class NipValidationTests
 
         var value = result.Match(onValid: () => "ok", onError: e => e.ToString());
 
-        Assert.Equal("ok", value);
+        value.ShouldBe("ok");
     }
 
     [Fact]
@@ -186,7 +185,7 @@ public class NipValidationTests
 
         var error = result.Match(onValid: () => (NipValidationError?)null, onError: e => (NipValidationError?)e);
 
-        Assert.Equal(NipValidationError.InvalidChecksum, error);
+        error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Strict path does NOT accept formatted input ---
@@ -200,6 +199,6 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.Equal(NipValidationError.InvalidCharacters, result.Error);
+        result.Error.ShouldBe(NipValidationError.InvalidCharacters);
     }
 }

@@ -15,12 +15,30 @@ public class RegonParsingTests
     private const string ValidRegon14 = "12345678512347";
     // "01234567512342": base "012345675" valid; sum=222, 222%11=2, d13=2 ✓
     private const string ValidRegon14WithLeadingZeroBase = "01234567512342";
-    // "49199645300010": base "491996453" valid; sum=220, 220%11=0, d13=0 ✓
-    private const string AnotherValidRegon14 = "49199645300010";
+    private const string ValidRegon9AllZeros = "000000000";
+    private const string ValidRegon14AllZeros = "00000000000000";
 
     private const string InvalidRegon = "123456780";
     private const string InvalidRegonCharacters = "12345678X";
     private const string InvalidRegonWrongLength = "1234567";
+    private const string InvalidChecksum14WithValidBase = "12345678512340";
+    private const string InvalidChecksum14_BadBase = "12345678412347";
+    private const string InvalidBase14WithValid14DigitChecksum = "12345678400007";
+
+    private const string LeadingWhitespaceRegon = " 123456785";
+    private const string TrailingWhitespaceRegon = "123456785 ";
+
+    public static TheoryData<string, RegonValidationError> WhitespaceInputData => new()
+    {
+        { LeadingWhitespaceRegon, RegonValidationError.InvalidCharacters },
+        { TrailingWhitespaceRegon, RegonValidationError.InvalidCharacters },
+    };
+
+    public static TheoryData<string> WhitespaceInputStrings => new()
+    {
+        LeadingWhitespaceRegon,
+        TrailingWhitespaceRegon,
+    };
 
     // ── Parse (strict) ────────────────────────────────────────────────────────
 
@@ -61,6 +79,33 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void Parse_Regon9AllZeros_ReturnsInitializedRoundTrippedInstance()
+    {
+        var regon = Regon.Parse(ValidRegon9AllZeros);
+
+        regon.IsDefault.ShouldBeFalse();
+        regon.ToString().ShouldBe(ValidRegon9AllZeros);
+    }
+
+    [Fact]
+    public void Parse_Regon14AllZeros_ReturnsInitializedRoundTrippedInstance()
+    {
+        var regon = Regon.Parse(ValidRegon14AllZeros);
+
+        regon.IsDefault.ShouldBeFalse();
+        regon.ToString().ShouldBe(ValidRegon14AllZeros);
+    }
+
+    [Theory]
+    [MemberData(nameof(WhitespaceInputData))]
+    public void Parse_WhitespaceInput_ThrowsRegonValidationException(string input, RegonValidationError expectedError)
+    {
+        var ex = Should.Throw<RegonValidationException>(() => Regon.Parse(input));
+
+        ex.Error.ShouldBe(expectedError);
+    }
+
+    [Fact]
     public void Parse_NullString_ThrowsArgumentNullException()
     {
         Should.Throw<ArgumentNullException>(() => Regon.Parse((string)null!));
@@ -70,6 +115,30 @@ public class RegonParsingTests
     public void Parse_InvalidRegon_ThrowsRegonValidationException()
     {
         var ex = Should.Throw<RegonValidationException>(() => Regon.Parse(InvalidRegon));
+
+        ex.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Parse_Regon14WithValidBaseAndBadFinalChecksum_ThrowsRegonValidationException()
+    {
+        var ex = Should.Throw<RegonValidationException>(() => Regon.Parse(InvalidChecksum14WithValidBase));
+
+        ex.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Parse_Regon14WithInvalidBase_ThrowsRegonValidationException()
+    {
+        var ex = Should.Throw<RegonValidationException>(() => Regon.Parse(InvalidChecksum14_BadBase));
+
+        ex.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Parse_Regon14BadBaseWithCoincidentallyValid14DigitChecksum_ThrowsRegonValidationException()
+    {
+        var ex = Should.Throw<RegonValidationException>(() => Regon.Parse(InvalidBase14WithValid14DigitChecksum));
 
         ex.Error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
@@ -99,9 +168,25 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void Parse_SpanOverload_Regon14WithValidBaseAndBadFinalChecksum_ThrowsRegonValidationException()
+    {
+        var ex = Should.Throw<RegonValidationException>(() => Regon.Parse(InvalidChecksum14WithValidBase.AsSpan()));
+
+        ex.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
     public void Parse_SpanOverload_InvalidLength_ThrowsRegonValidationException()
     {
         var ex = Should.Throw<RegonValidationException>(() => Regon.Parse(InvalidRegonWrongLength.AsSpan()));
+
+        ex.Error.ShouldBe(RegonValidationError.InvalidLength);
+    }
+
+    [Fact]
+    public void Parse_SpanOverload_EmptySpan_ThrowsRegonValidationException()
+    {
+        var ex = Should.Throw<RegonValidationException>(() => Regon.Parse(ReadOnlySpan<char>.Empty));
 
         ex.Error.ShouldBe(RegonValidationError.InvalidLength);
     }
@@ -128,6 +213,36 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void TryParse_Regon9AllZeros_ReturnsInitializedRoundTrippedInstance()
+    {
+        var success = Regon.TryParse(ValidRegon9AllZeros, out var regon);
+
+        success.ShouldBeTrue();
+        regon.IsDefault.ShouldBeFalse();
+        regon.ToString().ShouldBe(ValidRegon9AllZeros);
+    }
+
+    [Fact]
+    public void TryParse_Regon14AllZeros_ReturnsInitializedRoundTrippedInstance()
+    {
+        var success = Regon.TryParse(ValidRegon14AllZeros, out var regon);
+
+        success.ShouldBeTrue();
+        regon.IsDefault.ShouldBeFalse();
+        regon.ToString().ShouldBe(ValidRegon14AllZeros);
+    }
+
+    [Theory]
+    [MemberData(nameof(WhitespaceInputStrings))]
+    public void TryParse_WhitespaceInput_ReturnsFalseAndDefault(string input)
+    {
+        var success = Regon.TryParse(input, out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
     public void TryParse_NullString_ReturnsFalseAndDefault()
     {
         var success = Regon.TryParse(null, out var regon);
@@ -146,6 +261,33 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void TryParse_Regon14WithValidBaseAndBadFinalChecksum_ReturnsFalseAndDefault()
+    {
+        var success = Regon.TryParse(InvalidChecksum14WithValidBase, out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_Regon14WithInvalidBase_ReturnsFalseAndDefault()
+    {
+        var success = Regon.TryParse(InvalidChecksum14_BadBase, out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_Regon14BadBaseWithCoincidentallyValid14DigitChecksum_ReturnsFalseAndDefault()
+    {
+        var success = Regon.TryParse(InvalidBase14WithValid14DigitChecksum, out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
     public void TryParse_SpanOverload_ValidRegon9_ReturnsTrueAndInstance()
     {
         var success = Regon.TryParse(ValidRegon9.AsSpan(), out var regon);
@@ -155,9 +297,54 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void TryParse_SpanOverload_ValidRegon14_ReturnsTrueAndInstance()
+    {
+        var success = Regon.TryParse(ValidRegon14.AsSpan(), out var regon);
+
+        success.ShouldBeTrue();
+        regon.ToString().ShouldBe(ValidRegon14);
+    }
+
+    [Fact]
     public void TryParse_SpanOverload_InvalidRegon_ReturnsFalseAndDefault()
     {
         var success = Regon.TryParse(InvalidRegon.AsSpan(), out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_SpanOverload_Regon14WithValidBaseAndBadFinalChecksum_ReturnsFalseAndDefault()
+    {
+        var success = Regon.TryParse(InvalidChecksum14WithValidBase.AsSpan(), out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_SpanOverload_EmptySpan_ReturnsFalseAndDefault()
+    {
+        var success = Regon.TryParse(ReadOnlySpan<char>.Empty, out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_SpanOverload_InvalidCharacters_ReturnsFalseAndDefault()
+    {
+        var success = Regon.TryParse(InvalidRegonCharacters.AsSpan(), out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_SpanOverload_InvalidLength_NonEmpty_ReturnsFalseAndDefault()
+    {
+        var success = Regon.TryParse(InvalidRegonWrongLength.AsSpan(), out var regon);
 
         success.ShouldBeFalse();
         regon.IsDefault.ShouldBeTrue();
@@ -183,6 +370,15 @@ public class RegonParsingTests
         validateResult.IsValid.ShouldBe(tryParseResult);
     }
 
+    [Fact]
+    public void Validate_And_TryParse_AreConsistent_ForValidRegon14()
+    {
+        var validateResult = Regon.Validate(ValidRegon14);
+        var tryParseResult = Regon.TryParse(ValidRegon14, out _);
+
+        validateResult.IsValid.ShouldBe(tryParseResult);
+    }
+
     // ── Domain properties: Kind / IsMain / IsLocal ────────────────────────────
 
     [Fact]
@@ -199,6 +395,13 @@ public class RegonParsingTests
         var regon = Regon.Parse(ValidRegon9);
 
         regon.IsMain.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsLocal_Regon9_ReturnsFalse()
+    {
+        var regon = Regon.Parse(ValidRegon9);
+
         regon.IsLocal.ShouldBeFalse();
     }
 
@@ -216,6 +419,13 @@ public class RegonParsingTests
         var regon = Regon.Parse(ValidRegon14);
 
         regon.IsLocal.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsMain_Regon14_ReturnsFalse()
+    {
+        var regon = Regon.Parse(ValidRegon14);
+
         regon.IsMain.ShouldBeFalse();
     }
 
@@ -269,6 +479,20 @@ public class RegonParsingTests
         var regon14 = Regon.Parse(ValidRegon14WithLeadingZeroBase);
 
         regon14.BaseRegon.ToString().ShouldBe(ValidRegon9WithLeadingZero);
+    }
+
+    [Fact]
+    public void BaseRegon_Regon14AllZeros_ReturnsInitializedMainBaseMatchingFirstNineDigits()
+    {
+        var regon14 = Regon.Parse(ValidRegon14AllZeros);
+        var baseRegon = regon14.BaseRegon;
+
+        var expectedBase9 = ValidRegon14AllZeros.Substring(0, 9);
+
+        baseRegon.IsDefault.ShouldBeFalse();
+        baseRegon.IsMain.ShouldBeTrue();
+        baseRegon.ToString().Length.ShouldBe(9);
+        baseRegon.ToString().ShouldBe(expectedBase9);
     }
 
     // ── IsDefault ────────────────────────────────────────────────────────────
@@ -329,6 +553,14 @@ public class RegonParsingTests
         Should.Throw<InvalidOperationException>(() => regon.ToString());
     }
 
+    [Fact]
+    public void ToString_WithFormat_DefaultInstance_ThrowsInvalidOperationException()
+    {
+        Regon regon = default;
+
+        Should.Throw<InvalidOperationException>(() => regon.ToString("G", null));
+    }
+
     // ── ToString ─────────────────────────────────────────────────────────────
 
     [Fact]
@@ -358,11 +590,27 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void ToString_FormatEmpty_ReturnsCanonical()
+    {
+        var regon = Regon.Parse(ValidRegon9);
+
+        regon.ToString(string.Empty, null).ShouldBe(ValidRegon9);
+    }
+
+    [Fact]
     public void ToString_FormatG_ReturnsCanonical()
     {
         var regon = Regon.Parse(ValidRegon9);
 
         regon.ToString("G", null).ShouldBe(ValidRegon9);
+    }
+
+    [Fact]
+    public void ToString_FormatLowercaseG_ReturnsCanonical()
+    {
+        var regon = Regon.Parse(ValidRegon9);
+
+        regon.ToString("g", null).ShouldBe(ValidRegon9);
     }
 
     [Fact]
@@ -374,11 +622,27 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void ToString_FormatLowercaseD9_Regon9_ReturnsCanonical()
+    {
+        var regon = Regon.Parse(ValidRegon9);
+
+        regon.ToString("d9", null).ShouldBe(ValidRegon9);
+    }
+
+    [Fact]
     public void ToString_FormatD14_Regon14_ReturnsCanonical()
     {
         var regon = Regon.Parse(ValidRegon14);
 
         regon.ToString("D14", null).ShouldBe(ValidRegon14);
+    }
+
+    [Fact]
+    public void ToString_FormatLowercaseD14_Regon14_ReturnsCanonical()
+    {
+        var regon = Regon.Parse(ValidRegon14);
+
+        regon.ToString("d14", null).ShouldBe(ValidRegon14);
     }
 
     [Fact]
@@ -401,6 +665,46 @@ public class RegonParsingTests
     public void ToString_UnsupportedFormat_ThrowsFormatException()
     {
         var regon = Regon.Parse(ValidRegon9);
+
+        Should.Throw<FormatException>(() => regon.ToString("X", null));
+    }
+
+    [Fact]
+    public void ToString_FormatNull_Regon14_ReturnsCanonical()
+    {
+        var regon = Regon.Parse(ValidRegon14);
+
+        regon.ToString(null, null).ShouldBe(ValidRegon14);
+    }
+
+    [Fact]
+    public void ToString_FormatEmpty_Regon14_ReturnsCanonical()
+    {
+        var regon = Regon.Parse(ValidRegon14);
+
+        regon.ToString(string.Empty, null).ShouldBe(ValidRegon14);
+    }
+
+    [Fact]
+    public void ToString_FormatG_Regon14_ReturnsCanonical()
+    {
+        var regon = Regon.Parse(ValidRegon14);
+
+        regon.ToString("G", null).ShouldBe(ValidRegon14);
+    }
+
+    [Fact]
+    public void ToString_FormatLowercaseG_Regon14_ReturnsCanonical()
+    {
+        var regon = Regon.Parse(ValidRegon14);
+
+        regon.ToString("g", null).ShouldBe(ValidRegon14);
+    }
+
+    [Fact]
+    public void ToString_UnsupportedFormat_Regon14_ThrowsFormatException()
+    {
+        var regon = Regon.Parse(ValidRegon14);
 
         Should.Throw<FormatException>(() => regon.ToString("X", null));
     }
@@ -438,6 +742,25 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void Equals_MainAndLocalWithSameNumericPayload_ReturnsNotEqual()
+    {
+        var main = Regon.Parse(ValidRegon9AllZeros);
+        var local = Regon.Parse(ValidRegon14AllZeros);
+
+        (main != local).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CompareTo_MainAndLocalWithSameNumericPayload_UsesKindTieBreaker()
+    {
+        var main = Regon.Parse(ValidRegon9AllZeros);
+        var local = Regon.Parse(ValidRegon14AllZeros);
+
+        main.CompareTo(local).ShouldBeLessThan(0);
+        local.CompareTo(main).ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
     public void Equals_DefaultInstances_AreEqual()
     {
         Regon a = default;
@@ -453,6 +776,42 @@ public class RegonParsingTests
         var parsed = Regon.Parse(ValidRegon9);
 
         defaultRegon.Equals(parsed).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Equals_DefaultAndRegon9AllZeros_ReturnsFalse()
+    {
+        Regon defaultRegon = default;
+        var parsed = Regon.Parse(ValidRegon9AllZeros);
+
+        (defaultRegon == parsed).ShouldBeFalse();
+        (defaultRegon != parsed).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Equals_DefaultAndRegon14AllZeros_ReturnsFalse()
+    {
+        Regon defaultRegon = default;
+        var parsed = Regon.Parse(ValidRegon14AllZeros);
+
+        (defaultRegon == parsed).ShouldBeFalse();
+        (defaultRegon != parsed).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Equals_ObjectNull_ReturnsFalse()
+    {
+        var regon = Regon.Parse(ValidRegon9);
+
+        regon.Equals((object?)null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Equals_ObjectDifferentType_ReturnsFalse()
+    {
+        var regon = Regon.Parse(ValidRegon9);
+
+        regon.Equals((object)"123456785").ShouldBeFalse();
     }
 
     [Fact]
@@ -480,6 +839,26 @@ public class RegonParsingTests
     {
         Regon defaultRegon = default;
         var parsed = Regon.Parse(ValidRegon9);
+
+        defaultRegon.CompareTo(parsed).ShouldBeLessThan(0);
+        parsed.CompareTo(defaultRegon).ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void CompareTo_DefaultBeforeValidZeroRegon9()
+    {
+        Regon defaultRegon = default;
+        var parsed = Regon.Parse(ValidRegon9AllZeros);
+
+        defaultRegon.CompareTo(parsed).ShouldBeLessThan(0);
+        parsed.CompareTo(defaultRegon).ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void CompareTo_DefaultBeforeValidZeroRegon14()
+    {
+        Regon defaultRegon = default;
+        var parsed = Regon.Parse(ValidRegon14AllZeros);
 
         defaultRegon.CompareTo(parsed).ShouldBeLessThan(0);
         parsed.CompareTo(defaultRegon).ShouldBeGreaterThan(0);
@@ -540,6 +919,39 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void IParsable_Parse_Regon9AllZeros_ReturnsInitializedInstance()
+    {
+        static T CallParse<T>(string s) where T : IParsable<T> => T.Parse(s, null);
+
+        var regon = CallParse<Regon>(ValidRegon9AllZeros);
+
+        regon.IsDefault.ShouldBeFalse();
+        regon.ToString().ShouldBe(ValidRegon9AllZeros);
+    }
+
+    [Fact]
+    public void IParsable_Parse_Regon14AllZeros_ReturnsInitializedInstance()
+    {
+        static T CallParse<T>(string s) where T : IParsable<T> => T.Parse(s, null);
+
+        var regon = CallParse<Regon>(ValidRegon14AllZeros);
+
+        regon.IsDefault.ShouldBeFalse();
+        regon.ToString().ShouldBe(ValidRegon14AllZeros);
+    }
+
+    [Theory]
+    [MemberData(nameof(WhitespaceInputData))]
+    public void IParsable_Parse_WhitespaceInput_ThrowsRegonValidationException(string input, RegonValidationError expectedError)
+    {
+        static T CallParse<T>(string s) where T : IParsable<T> => T.Parse(s, null);
+
+        var ex = Should.Throw<RegonValidationException>(() => CallParse<Regon>(input));
+
+        ex.Error.ShouldBe(expectedError);
+    }
+
+    [Fact]
     public void IParsable_Parse_Null_ThrowsArgumentNullException()
     {
         static T CallParse<T>(string s) where T : IParsable<T> => T.Parse(s, null);
@@ -558,6 +970,16 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void IParsable_Parse_InvalidBase14WithValid14DigitChecksum_ThrowsRegonValidationException()
+    {
+        static T CallParse<T>(string s) where T : IParsable<T> => T.Parse(s, null);
+
+        var ex = Should.Throw<RegonValidationException>(() => CallParse<Regon>(InvalidBase14WithValid14DigitChecksum));
+
+        ex.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
     public void IParsable_TryParse_ValidRegon9_ReturnsTrueAndInstance()
     {
         static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
@@ -567,6 +989,32 @@ public class RegonParsingTests
 
         success.ShouldBeTrue();
         result.ToString().ShouldBe(ValidRegon9);
+    }
+
+    [Fact]
+    public void IParsable_TryParse_Regon14AllZeros_ReturnsTrueAndInstance()
+    {
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
+            => T.TryParse(s, null, out result);
+
+        var success = CallTryParse<Regon>(ValidRegon14AllZeros, out var result);
+
+        success.ShouldBeTrue();
+        result.IsDefault.ShouldBeFalse();
+        result.ToString().ShouldBe(ValidRegon14AllZeros);
+    }
+
+    [Theory]
+    [MemberData(nameof(WhitespaceInputStrings))]
+    public void IParsable_TryParse_WhitespaceInput_ReturnsFalseAndDefault(string input)
+    {
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
+            => T.TryParse(s, null, out result);
+
+        var success = CallTryParse<Regon>(input, out var regon);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
     }
 
     [Fact]
@@ -594,6 +1042,18 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void IParsable_TryParse_InvalidBase14WithValid14DigitChecksum_ReturnsFalseAndDefault()
+    {
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
+            => T.TryParse(s, null, out result);
+
+        var success = CallTryParse<Regon>(InvalidBase14WithValid14DigitChecksum, out var result);
+
+        success.ShouldBeFalse();
+        result.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ISpanParsable_Parse_ValidRegon14_ReturnsInstance()
     {
         static T CallParse<T>(ReadOnlySpan<char> s) where T : ISpanParsable<T> => T.Parse(s, null);
@@ -604,11 +1064,32 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void ISpanParsable_Parse_Regon14AllZeros_ReturnsInitializedInstance()
+    {
+        static T CallParse<T>(ReadOnlySpan<char> s) where T : ISpanParsable<T> => T.Parse(s, null);
+
+        var regon = CallParse<Regon>(ValidRegon14AllZeros.AsSpan());
+
+        regon.IsDefault.ShouldBeFalse();
+        regon.ToString().ShouldBe(ValidRegon14AllZeros);
+    }
+
+    [Fact]
     public void ISpanParsable_Parse_InvalidRegon_ThrowsRegonValidationException()
     {
         static T CallParse<T>(ReadOnlySpan<char> s) where T : ISpanParsable<T> => T.Parse(s, null);
 
         var ex = Should.Throw<RegonValidationException>(() => CallParse<Regon>(InvalidRegon.AsSpan()));
+
+        ex.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void ISpanParsable_Parse_InvalidBase14WithValid14DigitChecksum_ThrowsRegonValidationException()
+    {
+        static T CallParse<T>(ReadOnlySpan<char> s) where T : ISpanParsable<T> => T.Parse(s, null);
+
+        var ex = Should.Throw<RegonValidationException>(() => CallParse<Regon>(InvalidBase14WithValid14DigitChecksum.AsSpan()));
 
         ex.Error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
@@ -626,12 +1107,37 @@ public class RegonParsingTests
     }
 
     [Fact]
+    public void ISpanParsable_TryParse_Regon14AllZeros_ReturnsTrueAndInstance()
+    {
+        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
+            => T.TryParse(s, null, out result);
+
+        var success = CallTryParse<Regon>(ValidRegon14AllZeros.AsSpan(), out var result);
+
+        success.ShouldBeTrue();
+        result.IsDefault.ShouldBeFalse();
+        result.ToString().ShouldBe(ValidRegon14AllZeros);
+    }
+
+    [Fact]
     public void ISpanParsable_TryParse_InvalidRegon_ReturnsFalseAndDefault()
     {
         static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
         var success = CallTryParse<Regon>(InvalidRegonCharacters.AsSpan(), out var result);
+
+        success.ShouldBeFalse();
+        result.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ISpanParsable_TryParse_InvalidBase14WithValid14DigitChecksum_ReturnsFalseAndDefault()
+    {
+        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
+            => T.TryParse(s, null, out result);
+
+        var success = CallTryParse<Regon>(InvalidBase14WithValid14DigitChecksum.AsSpan(), out var result);
 
         success.ShouldBeFalse();
         result.IsDefault.ShouldBeTrue();

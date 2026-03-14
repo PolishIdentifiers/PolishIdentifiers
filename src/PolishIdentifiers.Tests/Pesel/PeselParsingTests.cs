@@ -146,7 +146,7 @@ public class PeselParsingTests
         var input = ValidPesel;
         var pesel = Pesel.Parse(input);
 
-        Assert.Equal(input, pesel.ToString());
+        pesel.ToString().ShouldBe(input);
     }
 
     [Fact]
@@ -162,34 +162,34 @@ public class PeselParsingTests
     [Fact]
     public void Parse_InvalidPesel_ThrowsPeselValidationException()
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel));
 
-        Assert.Equal(PeselValidationError.InvalidChecksum, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidChecksum);
     }
 
     [Theory]
     [MemberData(nameof(InvalidInputData))]
     public void Parse_InvalidInput_ThrowsPeselValidationExceptionWithExpectedError(string input, PeselValidationError expectedError)
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(input));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(input));
 
-        Assert.Equal(expectedError, ex.Error);
+        ex.Error.ShouldBe(expectedError);
     }
 
     [Fact]
     public void Parse_NullString_ThrowsArgumentNullException()
     {
-        var ex = Assert.Throws<ArgumentNullException>(() => Pesel.Parse((string)null!));
+        var ex = Should.Throw<ArgumentNullException>(() => Pesel.Parse((string)null!));
 
-        Assert.Equal("value", ex.ParamName);
+        ex.ParamName.ShouldBe("value");
     }
 
     [Fact]
     public void Parse_EmptyString_ThrowsPeselValidationExceptionWithInvalidLength()
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(EmptyPesel));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(EmptyPesel));
 
-        Assert.Equal(PeselValidationError.InvalidLength, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidLength);
     }
 
     [Fact]
@@ -204,17 +204,17 @@ public class PeselParsingTests
     [MemberData(nameof(WhitespaceInputData))]
     public void Parse_WhitespaceInput_ThrowsPeselValidationExceptionWithExpectedError(string input, PeselValidationError expectedError)
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(input));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(input));
 
-        Assert.Equal(expectedError, ex.Error);
+        ex.Error.ShouldBe(expectedError);
     }
 
     [Fact]
     public void Parse_InputWithMultipleValidationIssues_ThrowsFirstExpectedValidationError()
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(MultipleValidationIssuesPesel));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(MultipleValidationIssuesPesel));
 
-        Assert.Equal(PeselValidationError.InvalidCharacters, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidCharacters);
     }
 
     // --- TryParse ---
@@ -222,7 +222,7 @@ public class PeselParsingTests
     [Fact]
     public void TryParse_ValidPesel_ReturnsTrue()
     {
-        Assert.True(Pesel.TryParse(ValidPesel, out _));
+        Pesel.TryParse(ValidPesel, out _).ShouldBeTrue();
     }
 
     [Fact]
@@ -230,13 +230,13 @@ public class PeselParsingTests
     {
         Pesel.TryParse(ValidPesel, out var pesel);
 
-        Assert.Equal(ValidPesel, pesel.ToString());
+        pesel.ToString().ShouldBe(ValidPesel);
     }
 
     [Fact]
     public void TryParse_InvalidChecksumPesel_ReturnsFalse()
     {
-        Assert.False(Pesel.TryParse(InvalidChecksumPesel, out _));
+        Pesel.TryParse(InvalidChecksumPesel, out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -244,14 +244,14 @@ public class PeselParsingTests
     {
         Pesel.TryParse(InvalidChecksumPesel, out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Theory]
     [MemberData(nameof(InvalidInputStringsData))]
     public void TryParse_InvalidInput_ReturnsFalse(string input)
     {
-        Assert.False(Pesel.TryParse(input, out _));
+        Pesel.TryParse(input, out _).ShouldBeFalse();
     }
 
     [Theory]
@@ -260,13 +260,13 @@ public class PeselParsingTests
     {
         Pesel.TryParse(input, out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Fact]
     public void TryParse_Null_ReturnsFalse()
     {
-        Assert.False(Pesel.TryParse(null, out _));
+        Pesel.TryParse(null, out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -274,7 +274,7 @@ public class PeselParsingTests
     {
         Pesel.TryParse(null, out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Fact]
@@ -287,7 +287,7 @@ public class PeselParsingTests
     [MemberData(nameof(WhitespaceInputStringsData))]
     public void TryParse_WhitespaceInput_ReturnsFalse(string input)
     {
-        Assert.False(Pesel.TryParse(input, out _));
+        Pesel.TryParse(input, out _).ShouldBeFalse();
     }
 
     [Theory]
@@ -296,7 +296,7 @@ public class PeselParsingTests
     {
         Pesel.TryParse(input, out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     // --- Span overloads ---
@@ -307,21 +307,21 @@ public class PeselParsingTests
         var input = ValidPesel;
         var pesel = Pesel.Parse(input.AsSpan());
 
-        Assert.Equal(input, pesel.ToString());
+        pesel.ToString().ShouldBe(input);
     }
 
     [Fact]
     public void Parse_SpanOverload_InvalidPesel_ThrowsPeselValidationException()
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel.AsSpan()));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel.AsSpan()));
 
-        Assert.Equal(PeselValidationError.InvalidChecksum, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidChecksum);
     }
 
     [Fact]
     public void TryParse_SpanOverload_ValidPesel_ReturnsTrue()
     {
-        Assert.True(Pesel.TryParse(ValidPesel.AsSpan(), out _));
+        Pesel.TryParse(ValidPesel.AsSpan(), out _).ShouldBeTrue();
     }
 
     [Fact]
@@ -329,13 +329,13 @@ public class PeselParsingTests
     {
         Pesel.TryParse(ValidPesel.AsSpan(), out var pesel);
 
-        Assert.Equal(ValidPesel, pesel.ToString());
+        pesel.ToString().ShouldBe(ValidPesel);
     }
 
     [Fact]
     public void TryParse_SpanOverload_InvalidPesel_ReturnsFalse()
     {
-        Assert.False(Pesel.TryParse(InvalidChecksumPesel.AsSpan(), out _));
+        Pesel.TryParse(InvalidChecksumPesel.AsSpan(), out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -343,13 +343,13 @@ public class PeselParsingTests
     {
         Pesel.TryParse(InvalidChecksumPesel.AsSpan(), out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Fact]
     public void TryParse_SpanOverload_EmptySpan_ReturnsFalse()
     {
-        Assert.False(Pesel.TryParse(ReadOnlySpan<char>.Empty, out _));
+        Pesel.TryParse(ReadOnlySpan<char>.Empty, out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -357,14 +357,14 @@ public class PeselParsingTests
     {
         Pesel.TryParse(ReadOnlySpan<char>.Empty, out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Theory]
     [MemberData(nameof(InvalidInputStringsData))]
     public void TryParse_SpanOverload_InvalidInput_ReturnsFalse(string input)
     {
-        Assert.False(Pesel.TryParse(input.AsSpan(), out _));
+        Pesel.TryParse(input.AsSpan(), out _).ShouldBeFalse();
     }
 
     [Theory]
@@ -373,24 +373,24 @@ public class PeselParsingTests
     {
         Pesel.TryParse(input.AsSpan(), out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Theory]
     [MemberData(nameof(InvalidInputData))]
     public void Parse_SpanOverload_InvalidInput_ThrowsPeselValidationExceptionWithExpectedError(string input, PeselValidationError expectedError)
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(input.AsSpan()));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(input.AsSpan()));
 
-        Assert.Equal(expectedError, ex.Error);
+        ex.Error.ShouldBe(expectedError);
     }
 
     [Fact]
     public void Parse_SpanOverload_EmptySpan_ThrowsWithInvalidLength()
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(ReadOnlySpan<char>.Empty));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(ReadOnlySpan<char>.Empty));
 
-        Assert.Equal(PeselValidationError.InvalidLength, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidLength);
     }
 
     // --- BirthDateTime ---
@@ -401,7 +401,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(input);
 
-        Assert.Equal(new DateTime(year, month, day), pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
     }
 
     [Theory]
@@ -412,7 +412,7 @@ public class PeselParsingTests
         var generated = PeselGenerator.ForBirthDate(new DateTime(year, month, day)).Male();
         var pesel = Pesel.Parse(generated.ToString());
 
-        Assert.Equal(new DateTime(year, month, day), pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
     }
 
     [Theory]
@@ -422,27 +422,27 @@ public class PeselParsingTests
     [InlineData(InvalidLeap2200Pesel)]
     public void Parse_LeapDayInNonLeapYear_ThrowsPeselValidationExceptionWithInvalidDate(string input)
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(input));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(input));
 
-        Assert.Equal(PeselValidationError.InvalidDate, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidDate);
     }
 
     [Theory]
     [MemberData(nameof(InvalidEncodedMonthData))]
     public void Parse_InvalidEncodedMonth_ThrowsPeselValidationExceptionWithInvalidDate(string input)
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(input));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(input));
 
-        Assert.Equal(PeselValidationError.InvalidDate, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidDate);
     }
 
     [Theory]
     [MemberData(nameof(Invalid31stDayFor30DayMonthData))]
     public void Parse_ThirtyFirstDayInThirtyDayMonth_ThrowsPeselValidationExceptionWithInvalidDate(string input)
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(input));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(input));
 
-        Assert.Equal(PeselValidationError.InvalidDate, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidDate);
     }
 
     [Theory]
@@ -453,7 +453,7 @@ public class PeselParsingTests
         var generated = PeselGenerator.ForBirthDate(new DateTime(year, month, day)).Male();
         var pesel = Pesel.Parse(generated.ToString());
 
-        Assert.Equal(new DateTime(year, month, day), pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
     }
 
     [Theory]
@@ -467,7 +467,7 @@ public class PeselParsingTests
         var generated = PeselGenerator.ForBirthDate(new DateTime(year, month, day)).Male();
         var pesel = Pesel.Parse(generated.ToString());
 
-        Assert.Equal(new DateTime(year, month, day), pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
     }
 
     [Fact]
@@ -475,7 +475,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        Assert.Equal(DateTimeKind.Unspecified, pesel.BirthDateTime.Kind);
+        pesel.BirthDateTime.Kind.ShouldBe(DateTimeKind.Unspecified);
     }
 
     [Fact]
@@ -483,7 +483,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        Assert.Equal(TimeSpan.Zero, pesel.BirthDateTime.TimeOfDay);
+        pesel.BirthDateTime.TimeOfDay.ShouldBe(TimeSpan.Zero);
     }
 
     // --- Gender ---
@@ -494,7 +494,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(input);
 
-        Assert.Equal(expected, pesel.Gender);
+        pesel.Gender.ShouldBe(expected);
     }
 
     // --- Default struct ---
@@ -504,7 +504,7 @@ public class PeselParsingTests
     {
         var p = default(Pesel);
 
-        Assert.Throws<InvalidOperationException>(() => { var _ = p.BirthDateTime; });
+        Should.Throw<InvalidOperationException>(() => { var _ = p.BirthDateTime; });
     }
 
     [Fact]
@@ -512,7 +512,7 @@ public class PeselParsingTests
     {
         var p = default(Pesel);
 
-        Assert.Throws<InvalidOperationException>(() => { var _ = p.Gender; });
+        Should.Throw<InvalidOperationException>(() => { var _ = p.Gender; });
     }
 
     [Fact]
@@ -541,7 +541,7 @@ public class PeselParsingTests
     {
         var p = default(Pesel);
 
-        Assert.True(p.IsDefault);
+        p.IsDefault.ShouldBeTrue();
     }
 
     [Fact]
@@ -549,7 +549,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        Assert.False(pesel.IsDefault);
+        pesel.IsDefault.ShouldBeFalse();
     }
 
     [Fact]
@@ -557,7 +557,7 @@ public class PeselParsingTests
     {
         Pesel.TryParse(InvalidChecksumPesel, out var pesel);
 
-        Assert.True(pesel.IsDefault);
+        pesel.IsDefault.ShouldBeTrue();
     }
 
     // --- Equality ---
@@ -568,7 +568,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(ValidPesel);
 
-        Assert.Equal(a, b);
+        a.ShouldBe(b);
     }
 
     [Fact]
@@ -577,7 +577,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(ValidPesel);
 
-        Assert.True(a == b);
+        (a == b).ShouldBeTrue();
     }
 
     [Fact]
@@ -586,7 +586,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(ValidPesel);
 
-        Assert.False(a != b);
+        (a != b).ShouldBeFalse();
     }
 
     [Fact]
@@ -595,7 +595,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(AnotherValidPesel);
 
-        Assert.NotEqual(a, b);
+        a.ShouldNotBe(b);
     }
 
     [Fact]
@@ -604,7 +604,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(AnotherValidPesel);
 
-        Assert.False(a == b);
+        (a == b).ShouldBeFalse();
     }
 
     [Fact]
@@ -613,7 +613,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(AnotherValidPesel);
 
-        Assert.True(a != b);
+        (a != b).ShouldBeTrue();
     }
 
     [Fact]
@@ -621,7 +621,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        Assert.True(pesel.Equals((object)pesel));
+        pesel.Equals((object)pesel).ShouldBeTrue();
     }
 
     [Fact]
@@ -629,7 +629,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        Assert.False(pesel.Equals((object)"not a pesel"));
+        pesel.Equals((object)"not a pesel").ShouldBeFalse();
     }
 
     [Fact]
@@ -638,7 +638,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(ValidPesel);
 
-        Assert.Equal(a.GetHashCode(), b.GetHashCode());
+        a.GetHashCode().ShouldBe(b.GetHashCode());
     }
 
     [Fact]
@@ -647,7 +647,7 @@ public class PeselParsingTests
         var a = default(Pesel);
         var b = default(Pesel);
 
-        Assert.True(a == b);
+        (a == b).ShouldBeTrue();
     }
 
     [Fact]
@@ -656,7 +656,7 @@ public class PeselParsingTests
         var valid = Pesel.Parse(ValidPesel);
         var def   = default(Pesel);
 
-        Assert.True(valid != def);
+        (valid != def).ShouldBeTrue();
     }
 
     [Fact]
@@ -664,7 +664,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        Assert.False(pesel.Equals((object?)null));
+        pesel.Equals((object?)null).ShouldBeFalse();
     }
 
     [Fact]
@@ -675,7 +675,7 @@ public class PeselParsingTests
 
         var set = new HashSet<Pesel> { a, b };
 
-        Assert.Single(set);
+        set.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -686,7 +686,7 @@ public class PeselParsingTests
 
         var set = new HashSet<Pesel> { a, b };
 
-        Assert.Equal(2, set.Count);
+        set.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -695,7 +695,7 @@ public class PeselParsingTests
         var pesel = Pesel.Parse(ValidPesel);
         var dict  = new Dictionary<Pesel, string> { [pesel] = "Jan Kowalski" };
 
-        Assert.Equal("Jan Kowalski", dict[Pesel.Parse(ValidPesel)]);
+        dict[Pesel.Parse(ValidPesel)].ShouldBe("Jan Kowalski");
     }
 
     // --- IComparable ---
@@ -706,7 +706,7 @@ public class PeselParsingTests
         var smaller = Pesel.Parse(ValidPesel);
         var larger  = Pesel.Parse(AnotherValidPesel);
 
-        Assert.True(smaller.CompareTo(larger) < 0);
+        (smaller.CompareTo(larger) < 0).ShouldBeTrue();
     }
 
     [Fact]
@@ -715,7 +715,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(ValidPesel);
 
-        Assert.Equal(0, a.CompareTo(b));
+        a.CompareTo(b).ShouldBe(0);
     }
 
     [Fact]
@@ -724,7 +724,7 @@ public class PeselParsingTests
         var smaller = Pesel.Parse(ValidPesel);
         var larger  = Pesel.Parse(AnotherValidPesel);
 
-        Assert.True(larger.CompareTo(smaller) > 0);
+        (larger.CompareTo(smaller) > 0).ShouldBeTrue();
     }
 
     [Fact]
@@ -733,7 +733,7 @@ public class PeselParsingTests
         var a = Pesel.Parse(ValidPesel);
         var b = Pesel.Parse(AnotherValidPesel);
 
-        Assert.Equal(a.CompareTo(b), -b.CompareTo(a));
+        a.CompareTo(b).ShouldBe(-b.CompareTo(a));
     }
 
     [Fact]
@@ -742,7 +742,7 @@ public class PeselParsingTests
         var pesel = Pesel.Parse(ValidPesel);
         var defaultPesel = default(Pesel);
 
-        Assert.True(pesel.CompareTo(defaultPesel) > 0);
+        (pesel.CompareTo(defaultPesel) > 0).ShouldBeTrue();
     }
 
     [Fact]
@@ -751,7 +751,7 @@ public class PeselParsingTests
         var pesel        = Pesel.Parse(ValidPesel);
         var defaultPesel = default(Pesel);
 
-        Assert.True(defaultPesel.CompareTo(pesel) < 0);
+        (defaultPesel.CompareTo(pesel) < 0).ShouldBeTrue();
     }
 
     [Fact]
@@ -760,7 +760,7 @@ public class PeselParsingTests
         var a = default(Pesel);
         var b = default(Pesel);
 
-        Assert.Equal(0, a.CompareTo(b));
+        a.CompareTo(b).ShouldBe(0);
     }
 
     [Fact]
@@ -770,9 +770,9 @@ public class PeselParsingTests
         var b = Pesel.Parse(ValidPesel);                // 44051401458 — middle
         var c = Pesel.Parse(AnotherValidPesel);         // 90061502867 — largest
 
-        Assert.True(a.CompareTo(b) < 0);
-        Assert.True(b.CompareTo(c) < 0);
-        Assert.True(a.CompareTo(c) < 0);
+        (a.CompareTo(b) < 0).ShouldBeTrue();
+        (b.CompareTo(c) < 0).ShouldBeTrue();
+        (a.CompareTo(c) < 0).ShouldBeTrue();
     }
 
     [Fact]
@@ -785,7 +785,7 @@ public class PeselParsingTests
         var list = new List<Pesel> { c, b, a };
         list.Sort();
 
-        Assert.Equal(new List<Pesel> { a, b, c }, list);
+        list.ShouldBe([a, b, c]);
     }
 
     // --- ToString ---
@@ -796,7 +796,7 @@ public class PeselParsingTests
         var input = ValidPeselWithLeadingZero;
         var pesel = Pesel.Parse(input);
 
-        Assert.Equal(input, pesel.ToString());
+        pesel.ToString().ShouldBe(input);
     }
 
     [Fact]
@@ -806,7 +806,7 @@ public class PeselParsingTests
         var serialized = parsed.ToString();
         var reparsed = Pesel.Parse(serialized);
 
-        Assert.Equal(parsed, reparsed);
+        reparsed.ShouldBe(parsed);
     }
 
     // --- IFormattable ---
@@ -822,7 +822,7 @@ public class PeselParsingTests
         var input = ValidPeselWithLeadingZero;
         var pesel = Pesel.Parse(input);
 
-        Assert.Equal(input, pesel.ToString(format, null));
+        pesel.ToString(format, null).ShouldBe(input);
     }
 
     [Fact]
@@ -831,7 +831,7 @@ public class PeselParsingTests
         var input = ValidPeselWithLeadingZero;
         var pesel = Pesel.Parse(input);
 
-        Assert.Equal(input, pesel.ToString("D11", CultureInfo.GetCultureInfo("pl-PL")));
+        pesel.ToString("D11", CultureInfo.GetCultureInfo("pl-PL")).ShouldBe(input);
     }
 
     [Theory]
@@ -843,7 +843,7 @@ public class PeselParsingTests
         var input = ValidPeselWithLeadingZero;
         var pesel = Pesel.Parse(input);
 
-        Assert.Equal(input, pesel.ToString("D11", CultureInfo.GetCultureInfo(cultureName)));
+        pesel.ToString("D11", CultureInfo.GetCultureInfo(cultureName)).ShouldBe(input);
     }
 
     [Theory]
@@ -859,9 +859,9 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPeselWithLeadingZero);
 
-        var ex = Assert.Throws<FormatException>(() => pesel.ToString(format, null));
+        var ex = Should.Throw<FormatException>(() => pesel.ToString(format, null));
 
-        Assert.Contains(format, ex.Message, StringComparison.Ordinal);
+        ex.Message.ShouldContain(format);
     }
 
     // --- PeselValidationException ---
@@ -869,17 +869,17 @@ public class PeselParsingTests
     [Fact]
     public void PeselValidationException_Message_ContainsErrorName()
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel));
 
-        Assert.Contains(nameof(PeselValidationError.InvalidChecksum), ex.Message, StringComparison.Ordinal);
+        ex.Message.ShouldContain(nameof(PeselValidationError.InvalidChecksum));
     }
 
     [Fact]
     public void PeselValidationException_InnerException_IsNull()
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(InvalidChecksumPesel));
 
-        Assert.Null(ex.InnerException);
+        ex.InnerException.ShouldBeNull();
     }
 
     // --- Validate API ---
@@ -889,8 +889,8 @@ public class PeselParsingTests
     {
         var result = Pesel.Validate(null);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(PeselValidationError.InvalidLength, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(PeselValidationError.InvalidLength);
     }
 
     [Fact]
@@ -899,7 +899,7 @@ public class PeselParsingTests
         var canParse = Pesel.TryParse(ValidPesel, out _);
         var result   = Pesel.Validate(ValidPesel);
 
-        Assert.Equal(canParse, result.IsValid);
+        result.IsValid.ShouldBe(canParse);
     }
 
     [Fact]
@@ -908,7 +908,7 @@ public class PeselParsingTests
         var canParse = Pesel.TryParse(InvalidChecksumPesel, out _);
         var result   = Pesel.Validate(InvalidChecksumPesel);
 
-        Assert.Equal(canParse, result.IsValid);
+        result.IsValid.ShouldBe(canParse);
     }
 
     // --- Pathological values ---
@@ -918,9 +918,9 @@ public class PeselParsingTests
     [InlineData(AllNinesPesel)]
     public void Parse_AllSameDigits_ThrowsPeselValidationExceptionWithInvalidDate(string input)
     {
-        var ex = Assert.Throws<PeselValidationException>(() => Pesel.Parse(input));
+        var ex = Should.Throw<PeselValidationException>(() => Pesel.Parse(input));
 
-        Assert.Equal(PeselValidationError.InvalidDate, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidDate);
     }
 
     // --- Struct semantics ---
@@ -931,7 +931,7 @@ public class PeselParsingTests
         var original = Pesel.Parse(ValidPesel);
         var copy     = original;
 
-        Assert.Equal(original, copy);
+        copy.ShouldBe(original);
     }
 
     [Fact]
@@ -941,14 +941,14 @@ public class PeselParsingTests
         var validB = PeselGenerator.ForBirthDate(new DateTime(2000, 2, 29)).Male().ToString();
         var validC = PeselGenerator.ForBirthDate(new DateTime(2200, 1, 1)).Female().ToString();
 
-        Assert.True(Pesel.TryParse(validA, out _));
-        Assert.True(Pesel.TryParse(validB, out _));
-        Assert.True(Pesel.TryParse(validC, out _));
-        Assert.False(Pesel.TryParse(InvalidChecksumPesel, out _));
-        Assert.False(Pesel.TryParse(TooShortPesel, out _));
-        Assert.False(Pesel.TryParse(InvalidCharactersPesel, out _));
-        Assert.False(Pesel.TryParse(InvalidDatePesel, out _));
-        Assert.False(Pesel.TryParse(LeadingWhitespacePesel, out _));
+        Pesel.TryParse(validA, out _).ShouldBeTrue();
+        Pesel.TryParse(validB, out _).ShouldBeTrue();
+        Pesel.TryParse(validC, out _).ShouldBeTrue();
+        Pesel.TryParse(InvalidChecksumPesel, out _).ShouldBeFalse();
+        Pesel.TryParse(TooShortPesel, out _).ShouldBeFalse();
+        Pesel.TryParse(InvalidCharactersPesel, out _).ShouldBeFalse();
+        Pesel.TryParse(InvalidDatePesel, out _).ShouldBeFalse();
+        Pesel.TryParse(LeadingWhitespacePesel, out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -983,7 +983,7 @@ public class PeselParsingTests
             }
         });
 
-        Assert.Empty(failures);
+        failures.ShouldBeEmpty();
     }
 
     // --- net10 only ---
@@ -994,7 +994,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        Assert.Equal(new DateOnly(1944, 5, 14), pesel.BirthDateOnly);
+        pesel.BirthDateOnly.ShouldBe(new DateOnly(1944, 5, 14));
     }
 
     [Fact]
@@ -1002,7 +1002,7 @@ public class PeselParsingTests
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        Assert.Equal(DateOnly.FromDateTime(pesel.BirthDateTime), pesel.BirthDateOnly);
+        pesel.BirthDateOnly.ShouldBe(DateOnly.FromDateTime(pesel.BirthDateTime));
     }
 
     [Fact]
@@ -1010,7 +1010,7 @@ public class PeselParsingTests
     {
         var p = default(Pesel);
 
-        Assert.Throws<InvalidOperationException>(() => { var _ = p.BirthDateOnly; });
+        Should.Throw<InvalidOperationException>(() => { var _ = p.BirthDateOnly; });
     }
 
     [Fact]
@@ -1020,7 +1020,7 @@ public class PeselParsingTests
 
         var pesel = CallParse<Pesel>(ValidPesel);
 
-        Assert.Equal(ValidPesel, pesel.ToString());
+        pesel.ToString().ShouldBe(ValidPesel);
     }
 
     [Fact]
@@ -1029,7 +1029,7 @@ public class PeselParsingTests
         static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
             => T.TryParse(s, null, out result);
 
-        Assert.True(CallTryParse<Pesel>(ValidPesel, out _));
+        CallTryParse<Pesel>(ValidPesel, out _).ShouldBeTrue();
     }
 
     [Fact]
@@ -1037,7 +1037,7 @@ public class PeselParsingTests
     {
         static T CallParse<T>(string s) where T : IParsable<T> => T.Parse(s, null);
 
-        Assert.Throws<PeselValidationException>(() => CallParse<Pesel>(InvalidChecksumPesel));
+        Should.Throw<PeselValidationException>(() => CallParse<Pesel>(InvalidChecksumPesel));
     }
 
     [Fact]
@@ -1045,7 +1045,7 @@ public class PeselParsingTests
     {
         static T CallParse<T>(string? s) where T : IParsable<T> => T.Parse(s!, null);
 
-        Assert.Throws<ArgumentNullException>(() => CallParse<Pesel>(null));
+        Should.Throw<ArgumentNullException>(() => CallParse<Pesel>(null));
     }
 
     [Fact]
@@ -1056,7 +1056,7 @@ public class PeselParsingTests
 
         var pesel = CallParse<Pesel>(ValidPeselWithLeadingZero, CultureInfo.GetCultureInfo("pl-PL"));
 
-        Assert.Equal(ValidPeselWithLeadingZero, pesel.ToString());
+        pesel.ToString().ShouldBe(ValidPeselWithLeadingZero);
     }
 
     [Fact]
@@ -1065,7 +1065,7 @@ public class PeselParsingTests
         static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
             => T.TryParse(s, null, out result);
 
-        Assert.False(CallTryParse<Pesel>(InvalidChecksumPesel, out _));
+        CallTryParse<Pesel>(InvalidChecksumPesel, out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -1076,7 +1076,7 @@ public class PeselParsingTests
 
         CallTryParse<Pesel>(InvalidChecksumPesel, out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Fact]
@@ -1086,7 +1086,7 @@ public class PeselParsingTests
 
         var pesel = CallParse<Pesel>(ValidPesel.AsSpan());
 
-        Assert.Equal(ValidPesel, pesel.ToString());
+        pesel.ToString().ShouldBe(ValidPesel);
     }
 
     [Fact]
@@ -1095,7 +1095,7 @@ public class PeselParsingTests
         static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
-        Assert.True(CallTryParse<Pesel>(ValidPesel.AsSpan(), out _));
+        CallTryParse<Pesel>(ValidPesel.AsSpan(), out _).ShouldBeTrue();
     }
 
     [Fact]
@@ -1103,7 +1103,7 @@ public class PeselParsingTests
     {
         static T CallParse<T>(ReadOnlySpan<char> s) where T : ISpanParsable<T> => T.Parse(s, null);
 
-        Assert.Throws<PeselValidationException>(() => CallParse<Pesel>(InvalidChecksumPesel.AsSpan()));
+        Should.Throw<PeselValidationException>(() => CallParse<Pesel>(InvalidChecksumPesel.AsSpan()));
     }
 
     [Fact]
@@ -1111,9 +1111,9 @@ public class PeselParsingTests
     {
         static T CallParse<T>(ReadOnlySpan<char> s) where T : ISpanParsable<T> => T.Parse(s, null);
 
-        var ex = Assert.Throws<PeselValidationException>(() => CallParse<Pesel>(ReadOnlySpan<char>.Empty));
+        var ex = Should.Throw<PeselValidationException>(() => CallParse<Pesel>(ReadOnlySpan<char>.Empty));
 
-        Assert.Equal(PeselValidationError.InvalidLength, ex.Error);
+        ex.Error.ShouldBe(PeselValidationError.InvalidLength);
     }
 
     [Fact]
@@ -1122,7 +1122,7 @@ public class PeselParsingTests
         static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
-        Assert.False(CallTryParse<Pesel>(InvalidChecksumPesel.AsSpan(), out _));
+        CallTryParse<Pesel>(InvalidChecksumPesel.AsSpan(), out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -1133,7 +1133,7 @@ public class PeselParsingTests
 
         CallTryParse<Pesel>(InvalidChecksumPesel.AsSpan(), out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Fact]
@@ -1142,7 +1142,7 @@ public class PeselParsingTests
         static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
             => T.TryParse(s, null, out result);
 
-        Assert.False(CallTryParse<Pesel>(null, out _));
+        CallTryParse<Pesel>(null, out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -1153,7 +1153,7 @@ public class PeselParsingTests
 
         CallTryParse<Pesel>(null, out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 
     [Fact]
@@ -1162,7 +1162,7 @@ public class PeselParsingTests
         static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
             => T.TryParse(s, null, out result);
 
-        Assert.False(CallTryParse<Pesel>(ReadOnlySpan<char>.Empty, out _));
+        CallTryParse<Pesel>(ReadOnlySpan<char>.Empty, out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -1173,7 +1173,7 @@ public class PeselParsingTests
 
         CallTryParse<Pesel>(ReadOnlySpan<char>.Empty, out var pesel);
 
-        Assert.Equal(default, pesel);
+        pesel.ShouldBe(default);
     }
 #endif
 }
@@ -1189,7 +1189,7 @@ public class PeselCultureInvarianceTests
     {
         var pesel = Pesel.Parse(ValidPeselWithLeadingZero);
 
-        Assert.All(pesel.ToString(), c => Assert.InRange(c, '0', '9'));
+        pesel.ToString().ShouldAllBe(c => c >= '0' && c <= '9');
     }
 
     [Theory]
@@ -1200,7 +1200,7 @@ public class PeselCultureInvarianceTests
         var pesel = Pesel.Parse(ValidPeselWithLeadingZero);
         var culture = CultureInfo.GetCultureInfo(cultureName);
 
-        Assert.All(pesel.ToString("G", culture), c => Assert.InRange(c, '0', '9'));
+        pesel.ToString("G", culture).ShouldAllBe(c => c >= '0' && c <= '9');
     }
 
     [Theory]
@@ -1212,9 +1212,9 @@ public class PeselCultureInvarianceTests
         var expected = pesel.ToString();
         var culture = CultureInfo.GetCultureInfo(cultureName);
 
-        Assert.Equal(expected, pesel.ToString(null, culture));
-        Assert.Equal(expected, pesel.ToString("G", culture));
-        Assert.Equal(expected, pesel.ToString("D11", culture));
+        pesel.ToString(null, culture).ShouldBe(expected);
+        pesel.ToString("G", culture).ShouldBe(expected);
+        pesel.ToString("D11", culture).ShouldBe(expected);
     }
 
     [Theory]
@@ -1229,8 +1229,8 @@ public class PeselCultureInvarianceTests
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
 
             var serialized = original.ToString();
-            Assert.True(Pesel.TryParse(serialized, out var reparsed));
-            Assert.Equal(original, reparsed);
+            Pesel.TryParse(serialized, out var reparsed).ShouldBeTrue();
+            reparsed.ShouldBe(original);
         }
         finally
         {
@@ -1249,7 +1249,7 @@ public class PeselCultureInvarianceTests
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
 
-            Assert.Equal(new DateTime(1944, 5, 14), pesel.BirthDateTime);
+            pesel.BirthDateTime.ShouldBe(new DateTime(1944, 5, 14));
         }
         finally
         {

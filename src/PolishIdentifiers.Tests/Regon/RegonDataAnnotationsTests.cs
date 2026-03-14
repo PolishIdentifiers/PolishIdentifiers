@@ -9,6 +9,8 @@ public class RegonDataAnnotationsTests
 {
     private const string ValidRegon9 = "123456785";
     private const string ValidRegon14 = "12345678512347";
+    private const string ValidRegon9AllZeros = "000000000";
+    private const string ValidRegon14AllZeros = "00000000000000";
     private const string InvalidRegon = "123456780";
     private const string InvalidRegonWrongLength = "1234567";
     private const string ExpectedErrorMessage = "The Regon field is not a valid REGON.";
@@ -94,6 +96,28 @@ public class RegonDataAnnotationsTests
         results.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void ValidRegonAttribute_Regon9AllZerosString_IsValid()
+    {
+        var dto = new RegonStringDto { Regon = ValidRegon9AllZeros };
+
+        var isValid = TryValidate(dto, out var results);
+
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ValidRegonAttribute_Regon14AllZerosString_IsValid()
+    {
+        var dto = new RegonStringDto { Regon = ValidRegon14AllZeros };
+
+        var isValid = TryValidate(dto, out var results);
+
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
+    }
+
     // ── Invalid strings ───────────────────────────────────────────────────────
 
     [Fact]
@@ -145,6 +169,28 @@ public class RegonDataAnnotationsTests
     }
 
     [Fact]
+    public void ValidRegonAttribute_ParsedRegon9AllZerosStruct_IsValid()
+    {
+        var dto = new RegonStructDto { Regon = Regon.Parse(ValidRegon9AllZeros) };
+
+        var isValid = TryValidate(dto, out var results);
+
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ValidRegonAttribute_ParsedRegon14AllZerosStruct_IsValid()
+    {
+        var dto = new RegonStructDto { Regon = Regon.Parse(ValidRegon14AllZeros) };
+
+        var isValid = TryValidate(dto, out var results);
+
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void ValidRegonAttribute_DefaultRegonStruct_IsInvalid()
     {
         var dto = new RegonStructDto();
@@ -173,17 +219,45 @@ public class RegonDataAnnotationsTests
     // ── IsValid public overload covers all cases ──────────────────────────────
 
     [Fact]
-    public void ValidRegonAttribute_IsValid_ObjectOverload_CoversSupportedAndUnsupportedValues()
+    public void ValidRegonAttribute_IsValid_Null_ReturnsTrue()
     {
-        var attribute = new ValidRegonAttribute();
+        new ValidRegonAttribute().IsValid(null).ShouldBeTrue();
+    }
 
-        attribute.IsValid(null).ShouldBeTrue();
-        attribute.IsValid(ValidRegon9).ShouldBeTrue();
-        attribute.IsValid(ValidRegon14).ShouldBeTrue();
-        attribute.IsValid(InvalidRegon).ShouldBeFalse();
-        attribute.IsValid(Regon.Parse(ValidRegon9)).ShouldBeTrue();
-        attribute.IsValid(default(Regon)).ShouldBeFalse();
-        attribute.IsValid(12345).ShouldBeFalse();
+    [Fact]
+    public void ValidRegonAttribute_IsValid_ValidRegon9String_ReturnsTrue()
+    {
+        new ValidRegonAttribute().IsValid(ValidRegon9).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ValidRegonAttribute_IsValid_ValidRegon14String_ReturnsTrue()
+    {
+        new ValidRegonAttribute().IsValid(ValidRegon14).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ValidRegonAttribute_IsValid_InvalidRegonString_ReturnsFalse()
+    {
+        new ValidRegonAttribute().IsValid(InvalidRegon).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ValidRegonAttribute_IsValid_ParsedRegonStruct_ReturnsTrue()
+    {
+        new ValidRegonAttribute().IsValid(Regon.Parse(ValidRegon9)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ValidRegonAttribute_IsValid_DefaultRegonStruct_ReturnsFalse()
+    {
+        new ValidRegonAttribute().IsValid(default(Regon)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ValidRegonAttribute_IsValid_UnsupportedType_ReturnsFalse()
+    {
+        new ValidRegonAttribute().IsValid(12345).ShouldBeFalse();
     }
 
     // ── GetValidationResult with custom display name ──────────────────────────

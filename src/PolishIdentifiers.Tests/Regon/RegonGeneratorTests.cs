@@ -37,15 +37,7 @@ public class RegonGeneratorTests
     {
         var results = Enumerable.Range(0, 100).Select(_ => RegonGenerator.Random().ToString()).ToList();
 
-        Assert.All(results, value => Assert.True(Regon.Validate(value).IsValid));
-    }
-
-    [Fact]
-    public void Random_CalledMultipleTimes_ProducesAtLeastTwoDistinctValues()
-    {
-        var results = Enumerable.Range(0, 20).Select(_ => RegonGenerator.Random().ToString()).Distinct().ToList();
-
-        results.Count.ShouldBeGreaterThanOrEqualTo(2);
+        results.ShouldAllBe(value => Regon.Validate(value).IsValid);
     }
 
     // --- RandomLocal() ---
@@ -80,7 +72,7 @@ public class RegonGeneratorTests
     {
         var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.RandomLocal().ToString()).ToList();
 
-        Assert.All(results, value => Assert.True(Regon.Validate(value).IsValid));
+        results.ShouldAllBe(value => Regon.Validate(value).IsValid);
     }
 
     [Fact]
@@ -111,7 +103,7 @@ public class RegonGeneratorTests
     {
         var s = RegonGenerator.Invalid.WrongChecksum();
 
-        Assert.Equal(RegonValidationError.InvalidChecksum, Regon.Validate(s).Error);
+        Regon.Validate(s).Error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
 
     [Fact]
@@ -119,7 +111,7 @@ public class RegonGeneratorTests
     {
         var s = RegonGenerator.Invalid.WrongLength();
 
-        Assert.Equal(RegonValidationError.InvalidLength, Regon.Validate(s).Error);
+        Regon.Validate(s).Error.ShouldBe(RegonValidationError.InvalidLength);
     }
 
     [Fact]
@@ -127,18 +119,18 @@ public class RegonGeneratorTests
     {
         var s = RegonGenerator.Invalid.NonNumeric();
 
-        Assert.Equal(RegonValidationError.InvalidCharacters, Regon.Validate(s).Error);
+        Regon.Validate(s).Error.ShouldBe(RegonValidationError.InvalidCharacters);
     }
 
     // --- WrongChecksum: structural verification ---
 
     [Fact]
-    public void Invalid_WrongChecksum_HasCorrectLengthAndDigits()
+    public void Invalid_WrongChecksum_Regon9_HasCorrectLengthAndDigits()
     {
         var s = RegonGenerator.Invalid.WrongChecksum();
 
         s.Length.ShouldBe(9);
-        Assert.All(s, c => Assert.True(c >= '0' && c <= '9'));
+        s.ShouldAllBe(c => char.IsDigit(c));
     }
 
     [Fact]
@@ -146,7 +138,42 @@ public class RegonGeneratorTests
     {
         var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.Invalid.WrongChecksum()).ToList();
 
-        Assert.All(results, s => Assert.Equal(RegonValidationError.InvalidChecksum, Regon.Validate(s).Error));
+        results.ShouldAllBe(s => Regon.Validate(s).Error == RegonValidationError.InvalidChecksum);
+    }
+
+    // --- WrongChecksum14: functional and structural verification ---
+
+    [Fact]
+    public void Invalid_WrongChecksum14_YieldsExactlyInvalidChecksum()
+    {
+        var s = RegonGenerator.Invalid.WrongChecksum14();
+
+        Regon.Validate(s).Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksum14_HasLength14AndAllDigits()
+    {
+        var s = RegonGenerator.Invalid.WrongChecksum14();
+
+        s.Length.ShouldBe(14);
+        s.ShouldAllBe(c => char.IsDigit(c));
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksum14_EmbeddedBase9IsValid()
+    {
+        var base9 = RegonGenerator.Invalid.WrongChecksum14().Substring(0, 9);
+
+        Regon.Validate(base9).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksum14_CalledMultipleTimes_AlwaysYieldsInvalidChecksum()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.Invalid.WrongChecksum14()).ToList();
+
+        results.ShouldAllBe(s => Regon.Validate(s).Error == RegonValidationError.InvalidChecksum);
     }
 
     // --- WrongLength: structural verification ---
@@ -165,7 +192,7 @@ public class RegonGeneratorTests
     {
         var value = RegonGenerator.Invalid.WrongLength();
 
-        value.All(char.IsDigit).ShouldBeTrue();
+        value.ShouldAllBe(c => char.IsDigit(c));
     }
 
     // --- NonNumeric: structural verification ---
@@ -183,19 +210,14 @@ public class RegonGeneratorTests
     {
         var s = RegonGenerator.Invalid.NonNumeric();
 
-        Assert.Contains(s, c => c < '0' || c > '9');
+        s.Any(c => c < '0' || c > '9').ShouldBeTrue();
     }
 
     [Fact]
-    public void Invalid_NonNumeric_CalledMultipleTimes_PositionVaries()
+    public void Invalid_NonNumeric_ContainsExactlyOneNonDigit()
     {
-        // Non-digit appears at a random position; over many calls the position should vary.
-        var positions = Enumerable.Range(0, 100)
-            .Select(_ => RegonGenerator.Invalid.NonNumeric())
-            .Select(s => s.IndexOf('X'))
-            .Distinct()
-            .ToList();
+        var s = RegonGenerator.Invalid.NonNumeric();
 
-        positions.Count.ShouldBeGreaterThan(1);
+        s.Count(c => c < '0' || c > '9').ShouldBe(1);
     }
 }

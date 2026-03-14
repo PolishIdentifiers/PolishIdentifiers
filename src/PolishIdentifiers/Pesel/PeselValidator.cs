@@ -1,9 +1,11 @@
 namespace PolishIdentifiers;
 
+/// <summary>
+/// Internal validation logic for PESEL (Powszechny Elektroniczny System Ewidencji Ludności).
+/// Checksum algorithm uses modulo 10. Also performs logical validation of the encoded birth date.
+/// </summary>
 internal static class PeselValidator
 {
-    private static ReadOnlySpan<int> Weights => [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
-
     public static ValidationResult<PeselValidationError> Validate(ReadOnlySpan<char> value)
     {
         if (!TryValidate(value, out var error))
@@ -34,7 +36,7 @@ internal static class PeselValidator
 
     private static bool IsChecksumValid(ReadOnlySpan<char> value)
     {
-        var sum = ChecksumCalculator.WeightedSum(value, Weights);
+        var sum = ChecksumCalculator.WeightedSum(value, PeselAlgorithm.Weights);
         var checksum = (10 - (sum % 10)) % 10;
 
         return checksum == (value[10] - '0');
@@ -73,6 +75,11 @@ internal static class PeselValidator
         return true;
     }
 
+    /// <summary>
+    /// Validates and converts the strict 11-digit PESEL representation.
+    /// Used by <c>Parse</c> and <c>TryParse</c> to keep validation and construction in one place.
+    /// Error order matches <see cref="Validate(ReadOnlySpan{char})"/>: characters → length → date → checksum.
+    /// </summary>
     internal static bool TryParseCore(ReadOnlySpan<char> value, out ulong result, out PeselValidationError error)
     {
         result = 0;

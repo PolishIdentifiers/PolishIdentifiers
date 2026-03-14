@@ -21,8 +21,6 @@ public static class PeselGenerator
     private static int NextInt(int minValue, int maxValue) => CurrentRng.Next(minValue, maxValue);
 #endif
 
-    private static readonly int[] ChecksumWeights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
-
     // --- Valid generators ---
 
     /// <summary>Generates a random valid PESEL with a random birth date and gender.</summary>
@@ -208,7 +206,7 @@ public static class PeselGenerator
     {
         var sum = 0;
         for (var i = 0; i < 10; i++)
-            sum += digits[i] * ChecksumWeights[i];
+            sum += digits[i] * PeselAlgorithm.Weights[i];
         return (10 - sum % 10) % 10;
     }
 }

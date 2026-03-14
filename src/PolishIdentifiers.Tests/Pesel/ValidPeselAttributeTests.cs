@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using PolishIdentifiers;
+using Shouldly;
 
 namespace PolishIdentifiers.Tests;
 
@@ -40,96 +41,96 @@ public class ValidPeselAttributeTests
 
     [Fact]
     public void Null_ReturnsSuccess()
-        => Assert.Equal(ValidationResult.Success, Validate(null));
+        => Validate(null).ShouldBe(ValidationResult.Success);
 
     [Fact]
     public void Null_IsValid_ReturnsTrue()
-        => Assert.True(IsValidDirect(null));
+        => IsValidDirect(null).ShouldBeTrue();
 
     // --- valid string ---
 
     [Fact]
     public void ValidString_ReturnsSuccess()
-        => Assert.Equal(ValidationResult.Success, Validate(ValidPesel));
+        => Validate(ValidPesel).ShouldBe(ValidationResult.Success);
 
     [Fact]
     public void ValidString_LeadingZero_ReturnsSuccess()
-        => Assert.Equal(ValidationResult.Success, Validate(ValidPeselLeadingZero));
+        => Validate(ValidPeselLeadingZero).ShouldBe(ValidationResult.Success);
 
     [Fact]
     public void ValidString_IsValid_ReturnsTrue()
-        => Assert.True(IsValidDirect(ValidPesel));
+        => IsValidDirect(ValidPesel).ShouldBeTrue();
 
     // --- invalid string: each error code in isolation ---
 
     [Fact]
     public void InvalidChecksum_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(InvalidChecksumPesel));
+        => Validate(InvalidChecksumPesel).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void InvalidChecksum_IsValid_ReturnsFalse()
-        => Assert.False(IsValidDirect(InvalidChecksumPesel));
+        => IsValidDirect(InvalidChecksumPesel).ShouldBeFalse();
 
     [Fact]
     public void InvalidLength_TooShort_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(TooShortPesel));
+        => Validate(TooShortPesel).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void InvalidLength_TooLong_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(TooLongPesel));
+        => Validate(TooLongPesel).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void InvalidLength_Empty_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(string.Empty));
+        => Validate(string.Empty).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void InvalidCharacters_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(InvalidCharactersPesel));
+        => Validate(InvalidCharactersPesel).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void InvalidDate_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(InvalidDatePesel));
+        => Validate(InvalidDatePesel).ShouldNotBe(ValidationResult.Success);
 
     // via Invalid.* generators — each violates exactly one rule
     [Fact]
     public void Invalid_WrongChecksum_Generator_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(PeselGenerator.Invalid.WrongChecksum()));
+        => Validate(PeselGenerator.Invalid.WrongChecksum()).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void Invalid_WrongDate_Generator_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(PeselGenerator.Invalid.WrongDate()));
+        => Validate(PeselGenerator.Invalid.WrongDate()).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void Invalid_WrongLength_Generator_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(PeselGenerator.Invalid.WrongLength()));
+        => Validate(PeselGenerator.Invalid.WrongLength()).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void Invalid_NonNumeric_Generator_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(PeselGenerator.Invalid.NonNumeric()));
+        => Validate(PeselGenerator.Invalid.NonNumeric()).ShouldNotBe(ValidationResult.Success);
 
     // --- whitespace edge cases ---
 
     [Fact]
     public void LeadingWhitespace_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(LeadingWhitespacePesel));
+        => Validate(LeadingWhitespacePesel).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void TrailingWhitespace_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(TrailingWhitespacePesel));
+        => Validate(TrailingWhitespacePesel).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void MiddleTab_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(MiddleTabPesel));
+        => Validate(MiddleTabPesel).ShouldNotBe(ValidationResult.Success);
 
     // --- pathological strings ---
 
     [Fact]
     public void AllZeros_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(AllZerosPesel));
+        => Validate(AllZerosPesel).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void AllNines_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(AllNinesPesel));
+        => Validate(AllNinesPesel).ShouldNotBe(ValidationResult.Success);
 
     // --- Pesel struct ---
 
@@ -137,28 +138,28 @@ public class ValidPeselAttributeTests
     public void ValidPeselStruct_ReturnsSuccess()
     {
         object value = Pesel.Parse(ValidPesel); // boxed Pesel
-        Assert.Equal(ValidationResult.Success, Validate(value));
+        Validate(value).ShouldBe(ValidationResult.Success);
     }
 
     [Fact]
     public void ValidPeselStruct_IsValid_ReturnsTrue()
     {
         object value = Pesel.Parse(ValidPesel);
-        Assert.True(IsValidDirect(value));
+        IsValidDirect(value).ShouldBeTrue();
     }
 
     [Fact]
     public void DefaultPeselStruct_ReturnsFailure()
     {
         object value = default(Pesel); // boxed default
-        Assert.NotEqual(ValidationResult.Success, Validate(value));
+        Validate(value).ShouldNotBe(ValidationResult.Success);
     }
 
     [Fact]
     public void DefaultPeselStruct_IsValid_ReturnsFalse()
     {
         object value = default(Pesel);
-        Assert.False(IsValidDirect(value));
+        IsValidDirect(value).ShouldBeFalse();
     }
 
     // --- nullable Pesel struct ---
@@ -167,25 +168,25 @@ public class ValidPeselAttributeTests
     public void NullablePeselStruct_WithValue_ReturnsSuccess()
     {
         Pesel? nullable = Pesel.Parse(ValidPesel);
-        Assert.Equal(ValidationResult.Success, Validate(nullable)); // boxed as Pesel
+        Validate(nullable).ShouldBe(ValidationResult.Success); // boxed as Pesel
     }
 
     [Fact]
     public void NullablePeselStruct_Null_ReturnsSuccess()
     {
         Pesel? nullable = null;
-        Assert.Equal(ValidationResult.Success, Validate(nullable)); // null object
+        Validate(nullable).ShouldBe(ValidationResult.Success); // null object
     }
 
     // --- unknown type ---
 
     [Fact]
     public void UnknownType_Long_ReturnsFailure()
-        => Assert.NotEqual(ValidationResult.Success, Validate(44051401458L));
+        => Validate(44051401458L).ShouldNotBe(ValidationResult.Success);
 
     [Fact]
     public void UnknownType_Long_IsValid_ReturnsFalse()
-        => Assert.False(IsValidDirect(44051401458L));
+        => IsValidDirect(44051401458L).ShouldBeFalse();
 
     // --- error result shape ---
 
@@ -195,7 +196,8 @@ public class ValidPeselAttributeTests
         const string memberName = "PeselNumber";
         var result = Validate(InvalidChecksumPesel, memberName: memberName);
 
-        Assert.Contains(memberName, result!.MemberNames);
+        result.ShouldNotBeNull();
+        result.MemberNames.ShouldContain(memberName);
     }
 
     [Fact]
@@ -204,7 +206,8 @@ public class ValidPeselAttributeTests
         const string displayName = "PESEL Number";
         var result = Validate(InvalidChecksumPesel, displayName: displayName);
 
-        Assert.Contains(displayName, result!.ErrorMessage, StringComparison.Ordinal);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldContain(displayName);
     }
 
     [Fact]
@@ -216,9 +219,10 @@ public class ValidPeselAttributeTests
 
         var result = Validate(InvalidChecksumPesel, memberName: memberName, displayName: displayName);
 
-        Assert.Contains(displayName, result!.ErrorMessage, StringComparison.Ordinal);
-        Assert.Contains(memberName,  result.MemberNames);
-        Assert.DoesNotContain(memberName, result.ErrorMessage, StringComparison.Ordinal);
+        result.ShouldNotBeNull();
+        result.ErrorMessage.ShouldContain(displayName);
+        result.MemberNames.ShouldContain(memberName);
+        result.ErrorMessage.ShouldNotContain(memberName);
     }
 
     [Fact]
@@ -226,7 +230,8 @@ public class ValidPeselAttributeTests
     {
         var result = Validate(InvalidChecksumPesel, memberName: null);
 
-        Assert.Empty(result!.MemberNames);
+        result.ShouldNotBeNull();
+        result.MemberNames.ShouldBeEmpty();
     }
 
     // --- IsValid(object?) direct calls are consistent with context-based path ---
@@ -250,8 +255,8 @@ public class ValidPeselAttributeTests
         var contextResult = Validate(input);
         var contextIsValid = contextResult == ValidationResult.Success;
 
-        Assert.Equal(expected, directResult);
-        Assert.Equal(expected, contextIsValid);
+        directResult.ShouldBe(expected);
+        contextIsValid.ShouldBe(expected);
     }
 
     // --- composability with [Required] ---
@@ -259,9 +264,9 @@ public class ValidPeselAttributeTests
     [Fact]
     public void NullPesel_PassesValidPeselAttribute_ButFailsRequiredAttribute()
     {
-        Assert.True(IsValidDirect(null));
+        IsValidDirect(null).ShouldBeTrue();
 
         var required = new RequiredAttribute();
-        Assert.False(required.IsValid(null));
+        required.IsValid(null).ShouldBeFalse();
     }
 }

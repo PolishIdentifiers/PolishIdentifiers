@@ -12,7 +12,7 @@ public class PeselGeneratorTests
     {
         var pesel = PeselGenerator.Random();
 
-        Assert.True(Pesel.Validate(pesel.ToString()).IsValid);
+        Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
@@ -20,7 +20,7 @@ public class PeselGeneratorTests
     {
         var results = Enumerable.Range(0, 100).Select(_ => PeselGenerator.Random().ToString()).ToList();
 
-        Assert.All(results, value => Assert.True(Pesel.Validate(value).IsValid));
+        results.ShouldAllBe(value => Pesel.Validate(value).IsValid);
     }
 
     // --- ForBirthDate().Male() / .Female() ---
@@ -31,7 +31,7 @@ public class PeselGeneratorTests
         var date = new DateTime(1990, 5, 14);
         var pesel = PeselGenerator.ForBirthDate(date).Male();
 
-        Assert.Equal(date, pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class PeselGeneratorTests
     {
         var pesel = PeselGenerator.ForBirthDate(new DateTime(1990, 5, 14)).Male();
 
-        Assert.Equal(Gender.Male, pesel.Gender);
+        pesel.Gender.ShouldBe(Gender.Male);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class PeselGeneratorTests
         var date = new DateTime(1985, 11, 3);
         var pesel = PeselGenerator.ForBirthDate(date).Female();
 
-        Assert.Equal(date, pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class PeselGeneratorTests
     {
         var pesel = PeselGenerator.ForBirthDate(new DateTime(1985, 11, 3)).Female();
 
-        Assert.Equal(Gender.Female, pesel.Gender);
+        pesel.Gender.ShouldBe(Gender.Female);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class PeselGeneratorTests
     {
         var pesel = PeselGenerator.ForBirthDate(new DateTime(2001, 3, 21)).Female();
 
-        Assert.True(Pesel.Validate(pesel.ToString()).IsValid);
+        Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
     }
 
     // --- Century encoding ---
@@ -78,7 +78,7 @@ public class PeselGeneratorTests
         var date  = new DateTime(year, month, day);
         var pesel = PeselGenerator.ForBirthDate(date).Male();
 
-        Assert.Equal(date, pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Theory]
@@ -90,7 +90,7 @@ public class PeselGeneratorTests
         var date  = new DateTime(year, month, day);
         var pesel = PeselGenerator.ForBirthDate(date).Female();
 
-        Assert.Equal(date, pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Theory]
@@ -101,7 +101,7 @@ public class PeselGeneratorTests
         var date  = new DateTime(year, month, day);
         var pesel = PeselGenerator.ForBirthDate(date).Male();
 
-        Assert.Equal(date, pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Theory]
@@ -109,7 +109,7 @@ public class PeselGeneratorTests
     [InlineData(2300, 1, 1)]
     public void ForBirthDate_YearOutOfSupportedRange_ThrowsArgumentOutOfRangeException(int year, int month, int day)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => PeselGenerator.ForBirthDate(new DateTime(year, month, day)));
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.ForBirthDate(new DateTime(year, month, day)));
     }
 
     [Theory]
@@ -119,7 +119,7 @@ public class PeselGeneratorTests
     {
         var exception = Record.Exception(() => PeselGenerator.ForBirthDate(new DateTime(year, month, day)));
 
-        Assert.Null(exception);
+        exception.ShouldBeNull();
     }
 
     // --- Invalid generators ---
@@ -129,7 +129,7 @@ public class PeselGeneratorTests
     {
         var s = PeselGenerator.Invalid.WrongChecksum();
 
-        Assert.Equal(PeselValidationError.InvalidChecksum, Pesel.Validate(s).Error);
+        Pesel.Validate(s).Error.ShouldBe(PeselValidationError.InvalidChecksum);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class PeselGeneratorTests
     {
         var s = PeselGenerator.Invalid.WrongDate();
 
-        Assert.Equal(PeselValidationError.InvalidDate, Pesel.Validate(s).Error);
+        Pesel.Validate(s).Error.ShouldBe(PeselValidationError.InvalidDate);
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public class PeselGeneratorTests
     {
         var s = PeselGenerator.Invalid.WrongLength();
 
-        Assert.Equal(PeselValidationError.InvalidLength, Pesel.Validate(s).Error);
+        Pesel.Validate(s).Error.ShouldBe(PeselValidationError.InvalidLength);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class PeselGeneratorTests
     {
         var value = PeselGenerator.Invalid.WrongLength();
 
-        value.All(char.IsDigit).ShouldBeTrue();
+        value.ShouldAllBe(c => char.IsDigit(c));
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public class PeselGeneratorTests
     {
         var s = PeselGenerator.Invalid.NonNumeric();
 
-        Assert.Equal(PeselValidationError.InvalidCharacters, Pesel.Validate(s).Error);
+        Pesel.Validate(s).Error.ShouldBe(PeselValidationError.InvalidCharacters);
     }
 
     // --- WrongChecksum: structural verification (independent of the validator) ---
@@ -179,8 +179,8 @@ public class PeselGeneratorTests
     {
         var s = PeselGenerator.Invalid.WrongChecksum();
 
-        Assert.Equal(11, s.Length);
-        Assert.All(s, c => Assert.True(c >= '0' && c <= '9'));
+        s.Length.ShouldBe(11);
+        s.ShouldAllBe(c => c >= '0' && c <= '9');
     }
 
     // --- WrongDate: verifies the date is invalid while the checksum is valid ---
@@ -195,14 +195,14 @@ public class PeselGeneratorTests
         var sum = 0;
         for (var i = 0; i < 10; i++) sum += (s[i] - '0') * weights[i];
         var expectedChecksum = (10 - sum % 10) % 10;
-        Assert.Equal(expectedChecksum, s[10] - '0');
+        (s[10] - '0').ShouldBe(expectedChecksum);
 
         // Encoded month (positions 2-3) must be outside all valid century ranges
         var month = (s[2] - '0') * 10 + (s[3] - '0');
         var isValidRange = (month >= 1 && month <= 12) || (month >= 21 && month <= 32) ||
                            (month >= 41 && month <= 52) || (month >= 61 && month <= 72) ||
                            (month >= 81 && month <= 92);
-        Assert.False(isValidRange);
+        isValidRange.ShouldBeFalse();
     }
 
     // --- WithGender ---
@@ -216,7 +216,7 @@ public class PeselGeneratorTests
 
         var pesel = PeselGenerator.ForBirthDate(date).WithGender(gender);
 
-        Assert.Equal(gender, pesel.Gender);
+        pesel.Gender.ShouldBe(gender);
     }
 
     [Theory]
@@ -228,7 +228,7 @@ public class PeselGeneratorTests
 
         var pesel = PeselGenerator.ForBirthDate(date).WithGender(gender);
 
-        Assert.Equal(date, pesel.BirthDateTime);
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Theory]
@@ -238,7 +238,7 @@ public class PeselGeneratorTests
     {
         var pesel = PeselGenerator.ForBirthDate(new DateTime(2001, 3, 21)).WithGender(gender);
 
-        Assert.True(Pesel.Validate(pesel.ToString()).IsValid);
+        Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
@@ -249,8 +249,8 @@ public class PeselGeneratorTests
 
         var pesel = PeselGenerator.ForBirthDate(date).WithGender(Gender.Male);
 
-        Assert.Equal(Gender.Male, pesel.Gender);
-        Assert.Equal(date, pesel.BirthDateTime);
+        pesel.Gender.ShouldBe(Gender.Male);
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Fact]
@@ -260,8 +260,8 @@ public class PeselGeneratorTests
 
         var pesel = PeselGenerator.ForBirthDate(date).WithGender(Gender.Female);
 
-        Assert.Equal(Gender.Female, pesel.Gender);
-        Assert.Equal(date, pesel.BirthDateTime);
+        pesel.Gender.ShouldBe(Gender.Female);
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     // --- ForBirthDate(DateOnly) — net10 only ---
@@ -274,7 +274,7 @@ public class PeselGeneratorTests
 
         var pesel = PeselGenerator.ForBirthDate(date).Male();
 
-        Assert.Equal(date, DateOnly.FromDateTime(pesel.BirthDateTime));
+        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public class PeselGeneratorTests
 
         var pesel = PeselGenerator.ForBirthDate(date).Female();
 
-        Assert.Equal(date, DateOnly.FromDateTime(pesel.BirthDateTime));
+        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
     }
 
     [Fact]
@@ -294,8 +294,8 @@ public class PeselGeneratorTests
 
         var pesel = PeselGenerator.ForBirthDate(date).WithGender(Gender.Male);
 
-        Assert.Equal(Gender.Male, pesel.Gender);
-        Assert.Equal(date, DateOnly.FromDateTime(pesel.BirthDateTime));
+        pesel.Gender.ShouldBe(Gender.Male);
+        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
     }
 
     [Fact]
@@ -305,7 +305,7 @@ public class PeselGeneratorTests
 
         var pesel = PeselGenerator.ForBirthDate(date).Female();
 
-        Assert.True(Pesel.Validate(pesel.ToString()).IsValid);
+        Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Theory]
@@ -313,7 +313,7 @@ public class PeselGeneratorTests
     [InlineData(2300, 1, 1)]
     public void ForBirthDate_DateOnly_YearOutOfRange_ThrowsArgumentOutOfRangeException(int year, int month, int day)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => PeselGenerator.ForBirthDate(new DateOnly(year, month, day)));
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.ForBirthDate(new DateOnly(year, month, day)));
     }
 
     [Fact]
@@ -325,7 +325,7 @@ public class PeselGeneratorTests
         var fromDateOnly = PeselGenerator.ForBirthDate(dateOnly).Male();
         var fromDateTime = PeselGenerator.ForBirthDate(dateTime).Male();
 
-        Assert.Equal(DateOnly.FromDateTime(fromDateOnly.BirthDateTime), DateOnly.FromDateTime(fromDateTime.BirthDateTime));
+        DateOnly.FromDateTime(fromDateOnly.BirthDateTime).ShouldBe(DateOnly.FromDateTime(fromDateTime.BirthDateTime));
     }
 #endif
 }

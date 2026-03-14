@@ -19,12 +19,6 @@ public static class RegonGenerator
     private static int NextInt(int maxValue) => CurrentRng.Next(maxValue);
 #endif
 
-    // REGON-9 weights for d0–d7; d8 is the check digit.
-    private static readonly int[] Weights9 = [8, 9, 2, 3, 4, 5, 6, 7];
-
-    // REGON-14 weights for d0–d12; d13 is the check digit.
-    private static readonly int[] Weights14 = [2, 4, 8, 5, 0, 9, 7, 3, 6, 1, 2, 4, 8];
-
     // --- Valid generators ---
 
     /// <summary>Generates a random valid 9-digit REGON (REGON-9, primary entity).</summary>
@@ -39,7 +33,7 @@ public static class RegonGenerator
 
         var sum = 0;
         for (var i = 0; i < 8; i++)
-            sum += digits[i] * Weights9[i];
+            sum += digits[i] * RegonAlgorithm.Weights9[i];
 
         var r = sum % 11;
         digits[8] = r == 10 ? 0 : r;
@@ -68,7 +62,7 @@ public static class RegonGenerator
 
         var sum = 0;
         for (var i = 0; i < 13; i++)
-            sum += digits[i] * Weights14[i];
+            sum += digits[i] * RegonAlgorithm.Weights14[i];
 
         var r = sum % 11;
         digits[13] = r == 10 ? 0 : r;
@@ -100,6 +94,21 @@ public static class RegonGenerator
         {
             var chars = RegonGenerator.Random().ToString().ToCharArray();
             chars[8] = (char)('0' + (chars[8] - '0' + 1) % 10);
+            return new string(chars);
+        }
+
+        /// <summary>
+        /// Generates a REGON-14 string with a valid embedded REGON-9 base but a wrong final check digit.
+        /// Triggers <see cref="RegonValidationError.InvalidChecksum"/>.
+        /// </summary>
+        /// <returns>
+        /// A 14-digit string whose embedded REGON-9 base (first 9 digits) is valid,
+        /// but the REGON-14 check digit (position 13) is wrong.
+        /// </returns>
+        public static string WrongChecksum14()
+        {
+            var chars = RegonGenerator.RandomLocal().ToString().ToCharArray();
+            chars[13] = (char)('0' + (chars[13] - '0' + 1) % 10);
             return new string(chars);
         }
 

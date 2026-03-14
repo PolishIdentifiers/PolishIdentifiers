@@ -22,11 +22,17 @@ public class RegonValidationTests
     // Edge case: r==10 → checkDigit=0 (NOT InvalidChecksum)
     // "000000030": 0*8+0*9+0*2+0*3+0*4+0*5+0*6+3*7=21, 21%11=10, checkDigit=0, d8=0 ✓
     private const string ValidRegon9WithChecksumR10 = "000000030";
+    // "000000000": sum=0, 0%11=0, d8=0 ✓ — _value=0 is a valid REGON, distinct from default(Regon)
+    private const string ValidRegon9AllZeros = "000000000";
+    // "00000000000000": base "000000000" valid; sum=0, 0%11=0, d13=0 ✓
+    private const string ValidRegon14AllZeros = "00000000000000";
 
     // --- Invalid: wrong characters ---
     private const string InvalidCharacterAtEnd = "12345678X";
     private const string InvalidCharacterAtStart = "X23456785";
     private const string InvalidCharacterSpace = "12345678 ";
+    private const string InvalidCharacterLeadingSpace = " 123456785";
+    private const string InvalidCharacterTrailingSpace = "123456785 ";
     private const string InvalidCharacterDash = "123-56785";
     private const string InvalidCharacterInRegon14 = "1234567851234X";
 
@@ -51,6 +57,9 @@ public class RegonValidationTests
     // --- Invalid: REGON-14 with invalid base REGON-9 ---
     // Base "123456784" has wrong d8 (should be 5, not 4)
     private const string InvalidChecksum14_BadBase = "12345678412347";
+    // Same invalid base; suffix chosen so the full 14-digit checksum is coincidentally valid
+    // (1*2+2*4+3*8+4*5+5*0+6*9+7*7+8*3+4*6=205, 205%11=7, d13=7 ✓) — must not pass two-step validation
+    private const string InvalidBase14WithValid14DigitChecksum = "12345678400007";
 
     // --- Multiple issues ---
     private const string MultipleIssuesRegon = "12X";
@@ -61,6 +70,7 @@ public class RegonValidationTests
         ValidRegon9WithLeadingZero,
         AnotherValidRegon9,
         ValidRegon9WithChecksumR10,
+        ValidRegon9AllZeros,
     };
 
     public static TheoryData<string> ValidRegon14Data => new()
@@ -68,6 +78,7 @@ public class RegonValidationTests
         ValidRegon14,
         ValidRegon14WithLeadingZeroBase,
         ValidRegon14WithChecksumR10,
+        ValidRegon14AllZeros,
     };
 
     public static TheoryData<string> InvalidCharactersData => new()
@@ -75,6 +86,8 @@ public class RegonValidationTests
         InvalidCharacterAtEnd,
         InvalidCharacterAtStart,
         InvalidCharacterSpace,
+        InvalidCharacterLeadingSpace,
+        InvalidCharacterTrailingSpace,
         InvalidCharacterDash,
         InvalidCharacterInRegon14,
     };
@@ -96,7 +109,6 @@ public class RegonValidationTests
         InvalidChecksum9_d8is9,
         InvalidChecksum14_d13is0,
         InvalidChecksum14_d13is1,
-        InvalidChecksum14_BadBase,
     };
 
     // --- Happy path: REGON-9 ---
@@ -107,8 +119,8 @@ public class RegonValidationTests
     {
         var result = Regon.Validate(regon);
 
-        Assert.True(result.IsValid);
-        Assert.Null(result.Error);
+        result.IsValid.ShouldBeTrue();
+        result.Error.ShouldBeNull();
     }
 
     // --- Happy path: REGON-14 ---
@@ -118,25 +130,6 @@ public class RegonValidationTests
     public void Validate_ValidRegon14_ReturnsValid(string regon)
     {
         var result = Regon.Validate(regon);
-
-        Assert.True(result.IsValid);
-        Assert.Null(result.Error);
-    }
-
-    // --- Edge case: r==10 maps to checkDigit=0 (not rejected like NIP) ---
-
-    [Fact]
-    public void Validate_ChecksumR10MapsToZero_ReturnsValid()
-    {
-        var result = Regon.Validate(ValidRegon9WithChecksumR10);
-
-        Assert.True(result.IsValid);
-    }
-
-    [Fact]
-    public void Validate_Regon14ChecksumR10MapsToZero_ReturnsValid()
-    {
-        var result = Regon.Validate(ValidRegon14WithChecksumR10);
 
         result.IsValid.ShouldBeTrue();
         result.Error.ShouldBeNull();
@@ -150,8 +143,8 @@ public class RegonValidationTests
     {
         var result = Regon.Validate(regon);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(RegonValidationError.InvalidCharacters, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(RegonValidationError.InvalidCharacters);
     }
 
     // --- InvalidLength ---
@@ -162,8 +155,8 @@ public class RegonValidationTests
     {
         var result = Regon.Validate(regon);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(RegonValidationError.InvalidLength, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(RegonValidationError.InvalidLength);
     }
 
     // --- InvalidChecksum ---
@@ -174,8 +167,8 @@ public class RegonValidationTests
     {
         var result = Regon.Validate(regon);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(RegonValidationError.InvalidChecksum, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
 
     // --- REGON-14 two-step: bad base checksum also returns InvalidChecksum ---
@@ -185,7 +178,24 @@ public class RegonValidationTests
     {
         var result = Regon.Validate(InvalidChecksum14_BadBase);
 
-        Assert.Equal(RegonValidationError.InvalidChecksum, result.Error);
+        result.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Validate_Regon14BadBaseWithCoincidentallyValid14DigitChecksum_ReturnsInvalidChecksum()
+    {
+        // Base fails; 14-digit checksum is coincidentally valid — validator must short-circuit at base failure.
+        var result = Regon.Validate(InvalidBase14WithValid14DigitChecksum);
+
+        result.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Validate_SpanOverload_Regon14WithInvalidBase_ReturnsInvalidChecksum()
+    {
+        var result = Regon.Validate(InvalidChecksum14_BadBase.AsSpan());
+
+        result.Error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
 
     // --- Validation order: characters → length → checksum ---
@@ -195,7 +205,7 @@ public class RegonValidationTests
     {
         var result = Regon.Validate(MultipleIssuesRegon);
 
-        Assert.Equal(RegonValidationError.InvalidCharacters, result.Error);
+        result.Error.ShouldBe(RegonValidationError.InvalidCharacters);
     }
 
     // --- Span overload ---
@@ -203,21 +213,39 @@ public class RegonValidationTests
     [Fact]
     public void Validate_SpanOverload_ValidRegon9_ReturnsValid()
     {
-        Assert.True(Regon.Validate(ValidRegon9.AsSpan()).IsValid);
+        Regon.Validate(ValidRegon9.AsSpan()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
     public void Validate_SpanOverload_ValidRegon14_ReturnsValid()
     {
-        Assert.True(Regon.Validate(ValidRegon14.AsSpan()).IsValid);
+        Regon.Validate(ValidRegon14.AsSpan()).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_SpanOverload_InvalidCharacters_ReturnsInvalidCharacters()
+    {
+        Regon.Validate(InvalidCharacterAtEnd.AsSpan()).Error.ShouldBe(RegonValidationError.InvalidCharacters);
     }
 
     [Fact]
     public void Validate_SpanOverload_InvalidChecksum_ReturnsInvalidChecksum()
     {
-        Assert.Equal(
-            RegonValidationError.InvalidChecksum,
-            Regon.Validate(InvalidChecksum9_d8is0.AsSpan()).Error);
+        Regon.Validate(InvalidChecksum9_d8is0.AsSpan()).Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Validate_SpanOverload_Regon14BadBaseWithCoincidentallyValid14DigitChecksum_ReturnsInvalidChecksum()
+    {
+        var result = Regon.Validate(InvalidBase14WithValid14DigitChecksum.AsSpan());
+
+        result.Error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Validate_SpanOverload_EmptySpan_ReturnsInvalidLength()
+    {
+        Regon.Validate(ReadOnlySpan<char>.Empty).Error.ShouldBe(RegonValidationError.InvalidLength);
     }
 
     // --- Match ---
@@ -229,7 +257,7 @@ public class RegonValidationTests
 
         var value = result.Match(onValid: () => "ok", onError: e => e.ToString());
 
-        Assert.Equal("ok", value);
+        value.ShouldBe("ok");
     }
 
     [Fact]
@@ -239,6 +267,6 @@ public class RegonValidationTests
 
         var error = result.Match(onValid: () => (RegonValidationError?)null, onError: e => (RegonValidationError?)e);
 
-        Assert.Equal(RegonValidationError.InvalidChecksum, error);
+        error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
 }

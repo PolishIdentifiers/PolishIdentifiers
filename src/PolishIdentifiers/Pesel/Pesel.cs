@@ -4,8 +4,8 @@ namespace PolishIdentifiers;
 /// Represents a validated Polish national identification number (PESEL).
 /// </summary>
 /// <remarks>
-/// Instances can only be obtained through <see cref="Parse(string)"/>, <see cref="TryParse(string?, out Pesel)"/>,
-/// or <see cref="PeselGenerator"/>. The default instance is not valid; accessing domain properties on it
+/// Instances are obtained through the parsing APIs or through <see cref="PeselGenerator"/>.
+/// The default instance is not valid; accessing domain properties on it
 /// throws <see cref="InvalidOperationException"/>. Use <see cref="IsDefault"/> to check before accessing.
 /// </remarks>
 #if NET10_0_OR_GREATER

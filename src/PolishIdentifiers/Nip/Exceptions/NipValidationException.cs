@@ -1,12 +1,12 @@
 namespace PolishIdentifiers;
 
 /// <summary>
-/// The exception thrown by <see cref="Nip.Parse(string)"/> and
-/// <see cref="Nip.Parse(System.ReadOnlySpan{char})"/> when the input does not
+/// The exception thrown by the <see cref="Nip"/> parsing APIs when the input does not
 /// represent a valid NIP number.
 /// </summary>
 /// <remarks>
-/// Prefer <see cref="Nip.TryParse(string?, out Nip)"/> or <see cref="Nip.Validate(string?)"/>
+/// Prefer <see cref="Nip.TryParse(string?, out Nip)"/>, <see cref="Nip.TryParseFormatted(string?, out Nip)"/>,
+/// <see cref="Nip.Validate(string?)"/>, or <see cref="Nip.ValidateFormatted(string?)"/>
 /// in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
 /// </remarks>
 public class NipValidationException : Exception

@@ -7,8 +7,6 @@ namespace PolishIdentifiers;
 /// </summary>
 internal static class NipValidator
 {
-    private static ReadOnlySpan<int> Weights => [6, 5, 7, 2, 3, 4, 5, 6, 7];
-
     public static ValidationResult<NipValidationError> Validate(ReadOnlySpan<char> value)
     {
         if (!TryValidate(value, out var error))
@@ -53,7 +51,7 @@ internal static class NipValidator
 
     private static bool IsChecksumValid(ReadOnlySpan<char> value)
     {
-        var sum = ChecksumCalculator.WeightedSum(value.Slice(0, 9), Weights);
+        var sum = ChecksumCalculator.WeightedSum(value.Slice(0, 9), NipAlgorithm.Weights);
         var checksum = sum % 11;
 
         // If checksum == 10, no valid check digit exists for this combination.

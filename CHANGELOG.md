@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-03-13
+
+First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the package.
+
+### Added
+
+#### `Regon` - strongly typed identifier
+
+- `Regon` readonly struct covering both REGON-9 and REGON-14
+- Strict factories: `Regon.Parse(string)` / `Regon.Parse(ReadOnlySpan<char>)`, `Regon.TryParse(...)`, `Regon.Validate(...)`
+- `RegonValidationError` enum: `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`
+- `RegonValidationException` - wraps `RegonValidationError`, thrown by `Parse`
+- `RegonKind`, `Regon.IsMain`, `Regon.IsLocal`, and `Regon.BaseRegon`
+- `Regon.IsDefault` with dedicated initialization-state handling so valid all-zero REGON values remain distinct from `default(Regon)`
+- `Regon.ToString()` and `IFormattable` support for canonical `D9` and `D14` output
+- `IFormattable`, `IEquatable<Regon>`, `IComparable<Regon>`, `==` / `!=` operators
+- `IParsable<Regon>`, `ISpanParsable<Regon>` (net10.0 only)
+
+#### Validation and generation
+
+- REGON checksum validation for both 9-digit and 14-digit variants
+- Two-step REGON-14 validation: base REGON-9 validation first, then REGON-14 checksum validation
+- Support for valid canonical all-zero REGON values: `000000000` and `00000000000000`
+- `RegonGenerator.Random()` - generates a random valid REGON-9
+- `RegonGenerator.RandomLocal()` - generates a random valid REGON-14
+- `RegonGenerator.Invalid.WrongChecksum()` - valid in all other respects, REGON-9 checksum digit is wrong
+- `RegonGenerator.Invalid.WrongChecksum14()` - embedded REGON-9 base stays valid while the REGON-14 checksum digit is wrong
+- `RegonGenerator.Invalid.WrongLength()` - digit-only value with invalid length
+- `RegonGenerator.Invalid.NonNumeric()` - contains a non-digit character
+
+#### DataAnnotations
+
+- `[ValidRegon]` attribute - validates `string`, `Regon`, and `Regon?`
+- For string values, `[ValidRegon]` accepts canonical 9-digit and 14-digit REGON input
+- `null` is treated as valid; compose with `[Required]` when the field is mandatory
+- Error message: `"The {0} field is not a valid REGON."`
+- Member name and display name propagated correctly to `ValidationResult`
+
+### Changed
+
+- Migrated the PESEL, NIP, and REGON unit test suites to Shouldly assertions
+- Extracted shared checksum weight definitions into `PeselAlgorithm`, `NipAlgorithm`, and `RegonAlgorithm` so generators and validators use the same algorithm constants
+
 ## [0.2.0] - 2026-03-10
 
 ### Added
@@ -119,6 +162,7 @@ First public release. PESEL support only — NIP, REGON and NRB are planned for 
 - `netstandard2.0` — compatible with .NET Framework 4.6.1+ and all legacy runtimes
 - `net10.0` — full modern API surface including `DateOnly`, `IParsable<T>`, `ISpanParsable<T>`
 
+[1.0.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/releases/tag/v0.1.0

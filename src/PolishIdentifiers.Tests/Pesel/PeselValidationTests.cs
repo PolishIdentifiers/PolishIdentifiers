@@ -113,8 +113,8 @@ public class PeselValidationTests
     {
         var result = Pesel.Validate(pesel);
 
-        Assert.True(result.IsValid);
-        Assert.Null(result.Error);
+        result.IsValid.ShouldBeTrue();
+        result.Error.ShouldBeNull();
     }
 
     [Fact]
@@ -133,8 +133,8 @@ public class PeselValidationTests
     {
         var result = Pesel.Validate(pesel);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(PeselValidationError.InvalidLength, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(PeselValidationError.InvalidLength);
     }
 
     // --- InvalidCharacters ---
@@ -145,8 +145,8 @@ public class PeselValidationTests
     {
         var result = Pesel.Validate(pesel);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(PeselValidationError.InvalidCharacters, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(PeselValidationError.InvalidCharacters);
     }
 
     // --- InvalidDate ---
@@ -157,8 +157,8 @@ public class PeselValidationTests
     {
         var result = Pesel.Validate(pesel);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(PeselValidationError.InvalidDate, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(PeselValidationError.InvalidDate);
     }
 
     // --- InvalidChecksum ---
@@ -170,8 +170,8 @@ public class PeselValidationTests
         // For ValidPesel the correct check digit is 8 — all other digits yield InvalidChecksum.
         var result = Pesel.Validate(pesel);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(PeselValidationError.InvalidChecksum, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(PeselValidationError.InvalidChecksum);
     }
 
     // --- Validation order: characters → length → date → checksum ---
@@ -181,7 +181,7 @@ public class PeselValidationTests
     {
         var result = Pesel.Validate(MultipleValidationIssuesPesel);
 
-        Assert.Equal(PeselValidationError.InvalidCharacters, result.Error);
+        result.Error.ShouldBe(PeselValidationError.InvalidCharacters);
     }
 
     // --- Century encoding (full specification 1800–2299) ---
@@ -192,7 +192,7 @@ public class PeselValidationTests
     {
         var result = Pesel.Validate(pesel);
 
-        Assert.NotEqual(PeselValidationError.InvalidDate, result.Error);
+        result.Error.ShouldNotBe(PeselValidationError.InvalidDate);
     }
 
     // --- Span overload ---
@@ -200,10 +200,8 @@ public class PeselValidationTests
     [Fact]
     public void Validate_SpanOverload_ProducesSameResultAsString()
     {
-        Assert.True(Pesel.Validate(ValidPesel.AsSpan()).IsValid);
-        Assert.Equal(
-            PeselValidationError.InvalidChecksum,
-            Pesel.Validate(InvalidChecksum7Pesel.AsSpan()).Error);
+        Pesel.Validate(ValidPesel.AsSpan()).IsValid.ShouldBeTrue();
+        Pesel.Validate(InvalidChecksum7Pesel.AsSpan()).Error.ShouldBe(PeselValidationError.InvalidChecksum);
     }
 
     // --- Match ---
@@ -215,7 +213,7 @@ public class PeselValidationTests
 
         var value = result.Match(onValid: () => "ok", onError: e => e.ToString());
 
-        Assert.Equal("ok", value);
+        value.ShouldBe("ok");
     }
 
     [Fact]
@@ -225,7 +223,7 @@ public class PeselValidationTests
 
         var error = result.Match(onValid: () => (PeselValidationError?)null, onError: e => (PeselValidationError?)e);
 
-        Assert.Equal(PeselValidationError.InvalidChecksum, error);
+        error.ShouldBe(PeselValidationError.InvalidChecksum);
     }
 
     [Fact]
@@ -236,7 +234,7 @@ public class PeselValidationTests
 
         result.Match(onValid: () => true, onError: _ => { onErrorCalled = true; return false; });
 
-        Assert.False(onErrorCalled);
+        onErrorCalled.ShouldBeFalse();
     }
 
     [Fact]
@@ -247,7 +245,7 @@ public class PeselValidationTests
 
         result.Match(onValid: () => { onValidCalled = true; return true; }, onError: _ => false);
 
-        Assert.False(onValidCalled);
+        onValidCalled.ShouldBeFalse();
     }
 
     // --- Default struct ---
@@ -257,7 +255,7 @@ public class PeselValidationTests
     {
         var result = default(ValidationResult<PeselValidationError>);
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Should.Throw<InvalidOperationException>(() =>
             result.Match(onValid: () => "ok", onError: e => e.ToString()));
     }
 
@@ -266,7 +264,7 @@ public class PeselValidationTests
     {
         var result = default(ValidationResult<PeselValidationError>);
 
-        Assert.False(result.IsValid);
+        result.IsValid.ShouldBeFalse();
     }
 
     [Fact]
@@ -274,6 +272,6 @@ public class PeselValidationTests
     {
         var result = default(ValidationResult<PeselValidationError>);
 
-        Assert.Null(result.Error);
+        result.Error.ShouldBeNull();
     }
 }

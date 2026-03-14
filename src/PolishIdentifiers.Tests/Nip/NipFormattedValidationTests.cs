@@ -53,8 +53,8 @@ public class NipFormattedValidationTests
     {
         var result = Nip.ValidateFormatted(nip);
 
-        Assert.True(result.IsValid);
-        Assert.Null(result.Error);
+        result.IsValid.ShouldBeTrue();
+        result.Error.ShouldBeNull();
     }
 
     // --- Unrecognized formats ---
@@ -81,8 +81,8 @@ public class NipFormattedValidationTests
     {
         var result = Nip.ValidateFormatted(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.UnrecognizedFormat, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.UnrecognizedFormat);
     }
 
     // --- Null input ---
@@ -108,8 +108,8 @@ public class NipFormattedValidationTests
     {
         var result = Nip.ValidateFormatted(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidChecksum, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Checksum mod 11 == 10 edge case through formatted path ---
@@ -122,8 +122,8 @@ public class NipFormattedValidationTests
     {
         var result = Nip.ValidateFormatted(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidChecksum, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- TryParseFormatted ---
@@ -132,7 +132,7 @@ public class NipFormattedValidationTests
     [MemberData(nameof(AllValidFormatsData))]
     public void TryParseFormatted_ValidInput_ReturnsTrue(string nip)
     {
-        Assert.True(Nip.TryParseFormatted(nip, out _));
+        Nip.TryParseFormatted(nip, out _).ShouldBeTrue();
     }
 
     [Theory]
@@ -144,20 +144,20 @@ public class NipFormattedValidationTests
         // All formats of the same underlying NIP should produce the same canonical output.
         var isFirstGroup = nip.Contains("1234563218") || nip.Contains("123-456-32-18");
         var expected = isFirstGroup ? "1234563218" : "7680002466";
-        Assert.Equal(expected, parsed.ToString());
+        parsed.ToString().ShouldBe(expected);
     }
 
     [Fact]
     public void TryParseFormatted_Null_ReturnsFalse()
     {
-        Assert.False(Nip.TryParseFormatted(null, out _));
+        Nip.TryParseFormatted(null, out _).ShouldBeFalse();
     }
 
     [Theory]
     [MemberData(nameof(UnrecognizedFormatData))]
     public void TryParseFormatted_UnrecognizedFormat_ReturnsFalse(string nip)
     {
-        Assert.False(Nip.TryParseFormatted(nip, out _));
+        Nip.TryParseFormatted(nip, out _).ShouldBeFalse();
     }
 
     // --- ParseFormatted ---
@@ -166,9 +166,7 @@ public class NipFormattedValidationTests
     [MemberData(nameof(AllValidFormatsData))]
     public void ParseFormatted_ValidInput_DoesNotThrow(string nip)
     {
-        var exception = Record.Exception(() => Nip.ParseFormatted(nip));
-
-        Assert.Null(exception);
+        Nip.ParseFormatted(nip).IsDefault.ShouldBeFalse();
     }
 
     [Theory]
@@ -183,16 +181,16 @@ public class NipFormattedValidationTests
     [Fact]
     public void ParseFormatted_Null_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => Nip.ParseFormatted((string)null!));
+        Should.Throw<ArgumentNullException>(() => Nip.ParseFormatted((string)null!));
     }
 
     [Theory]
     [MemberData(nameof(UnrecognizedFormatData))]
     public void ParseFormatted_UnrecognizedFormat_ThrowsNipValidationException(string nip)
     {
-        var ex = Assert.Throws<NipValidationException>(() => Nip.ParseFormatted(nip));
+        var ex = Should.Throw<NipValidationException>(() => Nip.ParseFormatted(nip));
 
-        Assert.Equal(NipValidationError.UnrecognizedFormat, ex.Error);
+        ex.Error.ShouldBe(NipValidationError.UnrecognizedFormat);
     }
 
     [Theory]
@@ -200,9 +198,9 @@ public class NipFormattedValidationTests
     [InlineData("PL1234563210")]
     public void ParseFormatted_InvalidChecksum_ThrowsNipValidationException(string nip)
     {
-        var ex = Assert.Throws<NipValidationException>(() => Nip.ParseFormatted(nip));
+        var ex = Should.Throw<NipValidationException>(() => Nip.ParseFormatted(nip));
 
-        Assert.Equal(NipValidationError.InvalidChecksum, ex.Error);
+        ex.Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Span overloads ---
@@ -210,15 +208,13 @@ public class NipFormattedValidationTests
     [Fact]
     public void ValidateFormatted_SpanOverload_ValidHyphenated_ReturnsValid()
     {
-        Assert.True(Nip.ValidateFormatted(ValidHyphenated.AsSpan()).IsValid);
+        Nip.ValidateFormatted(ValidHyphenated.AsSpan()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
     public void ValidateFormatted_SpanOverload_UnrecognizedFormat_ReturnsUnrecognizedFormat()
     {
-        Assert.Equal(
-            NipValidationError.UnrecognizedFormat,
-            Nip.ValidateFormatted("PL-1234563218".AsSpan()).Error);
+        Nip.ValidateFormatted("PL-1234563218".AsSpan()).Error.ShouldBe(NipValidationError.UnrecognizedFormat);
     }
 
     [Fact]
@@ -226,14 +222,14 @@ public class NipFormattedValidationTests
     {
         var nip = Nip.ParseFormatted(ValidPlPrefix.AsSpan());
 
-        Assert.Equal("1234563218", nip.ToString());
+        nip.ToString().ShouldBe("1234563218");
     }
 
     [Fact]
     public void TryParseFormatted_SpanOverload_ValidInput_ReturnsTrue()
     {
-        Assert.True(Nip.TryParseFormatted(ValidPlSpaceHyphenated.AsSpan(), out var nip));
-        Assert.Equal("1234563218", nip.ToString());
+        Nip.TryParseFormatted(ValidPlSpaceHyphenated.AsSpan(), out var nip).ShouldBeTrue();
+        nip.ToString().ShouldBe("1234563218");
     }
 
     [Theory]
@@ -248,6 +244,6 @@ public class NipFormattedValidationTests
     [Fact]
     public void TryParseFormatted_SpanOverload_EmptySpan_ReturnsFalse()
     {
-        Assert.False(Nip.TryParseFormatted(ReadOnlySpan<char>.Empty, out _));
+        Nip.TryParseFormatted(ReadOnlySpan<char>.Empty, out _).ShouldBeFalse();
     }
 }

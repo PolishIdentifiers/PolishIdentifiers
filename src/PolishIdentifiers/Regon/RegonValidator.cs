@@ -8,12 +8,6 @@ namespace PolishIdentifiers;
 /// </summary>
 internal static class RegonValidator
 {
-    // REGON-9 weights for digits d0–d7; check digit is d8.
-    private static ReadOnlySpan<int> Weights9 => [8, 9, 2, 3, 4, 5, 6, 7];
-
-    // REGON-14 weights for digits d0–d12; check digit is d13.
-    private static ReadOnlySpan<int> Weights14 => [2, 4, 8, 5, 0, 9, 7, 3, 6, 1, 2, 4, 8];
-
     public static ValidationResult<RegonValidationError> Validate(ReadOnlySpan<char> value)
     {
         if (!TryValidate(value, out var error, out _))
@@ -41,7 +35,6 @@ internal static class RegonValidator
         out RegonValidationError error)
     {
         result = 0;
-        isLocal = false;
 
         if (!TryValidate(value, out error, out isLocal))
             return false;
@@ -101,7 +94,8 @@ internal static class RegonValidator
 
     private static bool IsChecksum9Valid(ReadOnlySpan<char> value)
     {
-        var sum = ChecksumCalculator.WeightedSum(value.Slice(0, 8), Weights9);
+        // WeightedSum reads only weights.Length (8) digits from the span.
+        var sum = ChecksumCalculator.WeightedSum(value, RegonAlgorithm.Weights9);
         var r = sum % 11;
         var checkDigit = r == 10 ? 0 : r;
         return checkDigit == (value[8] - '0');
@@ -109,7 +103,8 @@ internal static class RegonValidator
 
     private static bool IsChecksum14Valid(ReadOnlySpan<char> value)
     {
-        var sum = ChecksumCalculator.WeightedSum(value.Slice(0, 13), Weights14);
+        // WeightedSum reads only weights.Length (13) digits from the span.
+        var sum = ChecksumCalculator.WeightedSum(value, RegonAlgorithm.Weights14);
         var r = sum % 11;
         var checkDigit = r == 10 ? 0 : r;
         return checkDigit == (value[13] - '0');

@@ -19,8 +19,6 @@ public static class NipGenerator
     private static int NextInt(int maxValue) => CurrentRng.Next(maxValue);
 #endif
 
-    private static readonly int[] ChecksumWeights = [6, 5, 7, 2, 3, 4, 5, 6, 7];
-
     // --- Valid generators ---
 
     /// <summary>Generates a random valid NIP.</summary>
@@ -39,7 +37,7 @@ public static class NipGenerator
 
             var sum = 0;
             for (var i = 0; i < 9; i++)
-                sum += digits[i] * ChecksumWeights[i];
+                sum += digits[i] * NipAlgorithm.Weights[i];
 
             checksum = sum % 11;
         }

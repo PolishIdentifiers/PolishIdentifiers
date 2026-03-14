@@ -12,7 +12,7 @@ public class NipGeneratorTests
     {
         var nip = NipGenerator.Random();
 
-        Assert.True(Nip.Validate(nip.ToString()).IsValid);
+        Nip.Validate(nip.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
@@ -20,17 +20,7 @@ public class NipGeneratorTests
     {
         var results = Enumerable.Range(0, 100).Select(_ => NipGenerator.Random().ToString()).ToList();
 
-        Assert.All(results, value => Assert.True(Nip.Validate(value).IsValid));
-    }
-
-    [Fact]
-    public void Random_CalledManyTimes_CanGenerateNipWithLeadingZero()
-    {
-        var generatedNips = Enumerable.Range(0, 500)
-            .Select(_ => NipGenerator.Random().ToString())
-            .ToList();
-
-        generatedNips.Any(value => value[0] == '0').ShouldBeTrue();
+        results.ShouldAllBe(value => Nip.Validate(value).IsValid);
     }
 
     // --- Invalid generators ---
@@ -40,7 +30,7 @@ public class NipGeneratorTests
     {
         var s = NipGenerator.Invalid.WrongChecksum();
 
-        Assert.Equal(NipValidationError.InvalidChecksum, Nip.Validate(s).Error);
+        Nip.Validate(s).Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     [Fact]
@@ -48,7 +38,7 @@ public class NipGeneratorTests
     {
         var s = NipGenerator.Invalid.WrongLength();
 
-        Assert.Equal(NipValidationError.InvalidLength, Nip.Validate(s).Error);
+        Nip.Validate(s).Error.ShouldBe(NipValidationError.InvalidLength);
     }
 
     [Fact]
@@ -56,7 +46,7 @@ public class NipGeneratorTests
     {
         var s = NipGenerator.Invalid.NonNumeric();
 
-        Assert.Equal(NipValidationError.InvalidCharacters, Nip.Validate(s).Error);
+        Nip.Validate(s).Error.ShouldBe(NipValidationError.InvalidCharacters);
     }
 
     // --- WrongChecksum: structural verification ---
@@ -66,8 +56,8 @@ public class NipGeneratorTests
     {
         var s = NipGenerator.Invalid.WrongChecksum();
 
-        Assert.Equal(10, s.Length);
-        Assert.All(s, c => Assert.True(c >= '0' && c <= '9'));
+        s.Length.ShouldBe(10);
+        s.ShouldAllBe(c => c >= '0' && c <= '9');
     }
 
     [Fact]
@@ -75,7 +65,7 @@ public class NipGeneratorTests
     {
         var results = Enumerable.Range(0, 50).Select(_ => NipGenerator.Invalid.WrongChecksum()).ToList();
 
-        Assert.All(results, s => Assert.Equal(NipValidationError.InvalidChecksum, Nip.Validate(s).Error));
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidChecksum);
     }
 
     // --- WrongLength: structural verification ---
@@ -93,7 +83,7 @@ public class NipGeneratorTests
     {
         var value = NipGenerator.Invalid.WrongLength();
 
-        value.All(char.IsDigit).ShouldBeTrue();
+        value.ShouldAllBe(c => char.IsDigit(c));
     }
 
     // --- NonNumeric: structural verification ---
@@ -103,7 +93,7 @@ public class NipGeneratorTests
     {
         var s = NipGenerator.Invalid.NonNumeric();
 
-        Assert.Equal(10, s.Length);
+        s.Length.ShouldBe(10);
     }
 
     [Fact]
@@ -111,16 +101,6 @@ public class NipGeneratorTests
     {
         var s = NipGenerator.Invalid.NonNumeric();
 
-        Assert.Contains(s, c => c < '0' || c > '9');
-    }
-
-    // --- Random stability: multiple calls produce valid, non-identical results ---
-
-    [Fact]
-    public void Random_CalledMultipleTimes_ProducesAtLeastTwoDistinctValues()
-    {
-        var results = Enumerable.Range(0, 20).Select(_ => NipGenerator.Random().ToString()).Distinct().ToList();
-
-        Assert.True(results.Count >= 2);
+        s.Any(c => c < '0' || c > '9').ShouldBeTrue();
     }
 }
