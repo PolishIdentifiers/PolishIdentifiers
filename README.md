@@ -1,6 +1,12 @@
 # PolishIdentifiers
 
-Strongly typed Polish formal identifiers for .NET.
+> Strongly typed Polish formal identifiers for .NET.
+
+[![CI](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml/badge.svg)](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![Targets: netstandard2.0 · net10.0](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net10.0-informational)
+
+---
 
 `PolishIdentifiers` provides value types for `Pesel`, `Nip`, and `Regon`, with parsing, validation, formatting, generation, and DataAnnotations support. The library performs offline structural validation only. It does not query government registries or external services.
 
