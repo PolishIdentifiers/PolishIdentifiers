@@ -379,54 +379,54 @@ public class RegonParsingTests
         validateResult.IsValid.ShouldBe(tryParseResult);
     }
 
-    // ── Domain properties: Kind / IsMain / IsLocal ────────────────────────────
+    // ── Domain properties: Kind / IsRegon9 / IsRegon14 ───────────────────────
 
     [Fact]
-    public void Kind_Regon9_ReturnsMain()
+    public void Kind_Regon9_ReturnsRegon9()
     {
         var regon = Regon.Parse(ValidRegon9);
 
-        regon.Kind.ShouldBe(RegonKind.Main);
+        regon.Kind.ShouldBe(RegonKind.Regon9);
     }
 
     [Fact]
-    public void IsMain_Regon9_ReturnsTrue()
+    public void IsRegon9_Regon9_ReturnsTrue()
     {
         var regon = Regon.Parse(ValidRegon9);
 
-        regon.IsMain.ShouldBeTrue();
+        regon.IsRegon9.ShouldBeTrue();
     }
 
     [Fact]
-    public void IsLocal_Regon9_ReturnsFalse()
+    public void IsRegon14_Regon9_ReturnsFalse()
     {
         var regon = Regon.Parse(ValidRegon9);
 
-        regon.IsLocal.ShouldBeFalse();
+        regon.IsRegon14.ShouldBeFalse();
     }
 
     [Fact]
-    public void Kind_Regon14_ReturnsLocal()
+    public void Kind_Regon14_ReturnsRegon14()
     {
         var regon = Regon.Parse(ValidRegon14);
 
-        regon.Kind.ShouldBe(RegonKind.Local);
+        regon.Kind.ShouldBe(RegonKind.Regon14);
     }
 
     [Fact]
-    public void IsLocal_Regon14_ReturnsTrue()
+    public void IsRegon14_Regon14_ReturnsTrue()
     {
         var regon = Regon.Parse(ValidRegon14);
 
-        regon.IsLocal.ShouldBeTrue();
+        regon.IsRegon14.ShouldBeTrue();
     }
 
     [Fact]
-    public void IsMain_Regon14_ReturnsFalse()
+    public void IsRegon9_Regon14_ReturnsFalse()
     {
         var regon = Regon.Parse(ValidRegon14);
 
-        regon.IsMain.ShouldBeFalse();
+        regon.IsRegon9.ShouldBeFalse();
     }
 
     // ── Domain properties: BaseRegon ──────────────────────────────────────────
@@ -449,11 +449,11 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_Regon14_BaseIsMain()
+    public void BaseRegon_Regon14_BaseIsRegon9()
     {
         var regon14 = Regon.Parse(ValidRegon14);
 
-        regon14.BaseRegon.IsMain.ShouldBeTrue();
+        regon14.BaseRegon.IsRegon9.ShouldBeTrue();
     }
 
     [Fact]
@@ -482,7 +482,7 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_Regon14AllZeros_ReturnsInitializedMainBaseMatchingFirstNineDigits()
+    public void BaseRegon_Regon14AllZeros_ReturnsInitializedRegon9BaseMatchingFirstNineDigits()
     {
         var regon14 = Regon.Parse(ValidRegon14AllZeros);
         var baseRegon = regon14.BaseRegon;
@@ -490,7 +490,7 @@ public class RegonParsingTests
         var expectedBase9 = ValidRegon14AllZeros.Substring(0, 9);
 
         baseRegon.IsDefault.ShouldBeFalse();
-        baseRegon.IsMain.ShouldBeTrue();
+        baseRegon.IsRegon9.ShouldBeTrue();
         baseRegon.ToString().Length.ShouldBe(9);
         baseRegon.ToString().ShouldBe(expectedBase9);
     }
@@ -522,19 +522,19 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void IsMain_DefaultInstance_ThrowsInvalidOperationException()
+    public void IsRegon9_DefaultInstance_ThrowsInvalidOperationException()
     {
         Regon regon = default;
 
-        Should.Throw<InvalidOperationException>(() => _ = regon.IsMain);
+        Should.Throw<InvalidOperationException>(() => _ = regon.IsRegon9);
     }
 
     [Fact]
-    public void IsLocal_DefaultInstance_ThrowsInvalidOperationException()
+    public void IsRegon14_DefaultInstance_ThrowsInvalidOperationException()
     {
         Regon regon = default;
 
-        Should.Throw<InvalidOperationException>(() => _ = regon.IsLocal);
+        Should.Throw<InvalidOperationException>(() => _ = regon.IsRegon14);
     }
 
     [Fact]

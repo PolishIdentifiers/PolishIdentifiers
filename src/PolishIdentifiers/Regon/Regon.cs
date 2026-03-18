@@ -2,7 +2,7 @@ namespace PolishIdentifiers;
 
 /// <summary>
 /// Represents a validated Polish statistical identification number (REGON — Rejestr Gospodarki Narodowej).
-/// Supports both 9-digit (REGON-9, primary entity) and 14-digit (REGON-14, local unit) variants.
+/// Supports both 9-digit (REGON-9) and 14-digit (REGON-14) variants.
 /// </summary>
 /// <remarks>
 /// Instances are obtained through the parsing APIs or through <see cref="RegonGenerator"/>.
@@ -18,13 +18,13 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
 #endif
 {
     private readonly ulong _value;
-    private readonly bool _isLocal;
+    private readonly bool _isRegon14;
     private readonly bool _isInitialized;
 
-    internal Regon(ulong value, bool isLocal)
+    internal Regon(ulong value, bool isRegon14)
     {
         _value = value;
-        _isLocal = isLocal;
+        _isRegon14 = isRegon14;
         _isInitialized = true;
     }
 
@@ -57,10 +57,10 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// </exception>
     public static Regon Parse(ReadOnlySpan<char> value)
     {
-        if (!RegonValidator.TryParseCore(value, out var parsedValue, out var isLocal, out var error))
+        if (!RegonValidator.TryParseCore(value, out var parsedValue, out var isRegon14, out var error))
             throw new RegonValidationException(error);
 
-        return new Regon(parsedValue, isLocal);
+        return new Regon(parsedValue, isRegon14);
     }
 
     /// <summary>
@@ -89,13 +89,13 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
     public static bool TryParse(ReadOnlySpan<char> value, out Regon regon)
     {
-        if (!RegonValidator.TryParseCore(value, out var parsedValue, out var isLocal, out _))
+        if (!RegonValidator.TryParseCore(value, out var parsedValue, out var isRegon14, out _))
         {
             regon = default;
             return false;
         }
 
-        regon = new Regon(parsedValue, isLocal);
+        regon = new Regon(parsedValue, isRegon14);
         return true;
     }
 
@@ -156,8 +156,8 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     }
 
     /// <summary>
-    /// Gets the structural kind of this REGON: <see cref="RegonKind.Main"/> (9-digit) or
-    /// <see cref="RegonKind.Local"/> (14-digit).
+    /// Gets the structural kind of this REGON: <see cref="RegonKind.Regon9"/> (9-digit) or
+    /// <see cref="RegonKind.Regon14"/> (14-digit).
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
     public RegonKind Kind
@@ -165,42 +165,42 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
         get
         {
             ThrowIfDefault();
-            return _isLocal ? RegonKind.Local : RegonKind.Main;
+            return _isRegon14 ? RegonKind.Regon14 : RegonKind.Regon9;
         }
     }
 
     /// <summary>
-    /// Gets <see langword="true"/> when this is a 9-digit primary-entity REGON.
-    /// Sugar for <c>Kind == RegonKind.Main</c>.
+    /// Gets <see langword="true"/> when this is a 9-digit REGON.
+    /// Sugar for <c>Kind == RegonKind.Regon9</c>.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
-    public bool IsMain
+    public bool IsRegon9
     {
         get
         {
             ThrowIfDefault();
-            return !_isLocal;
+            return !_isRegon14;
         }
     }
 
     /// <summary>
-    /// Gets <see langword="true"/> when this is a 14-digit local-unit REGON.
-    /// Sugar for <c>Kind == RegonKind.Local</c>.
+    /// Gets <see langword="true"/> when this is a 14-digit REGON.
+    /// Sugar for <c>Kind == RegonKind.Regon14</c>.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
-    public bool IsLocal
+    public bool IsRegon14
     {
         get
         {
             ThrowIfDefault();
-            return _isLocal;
+            return _isRegon14;
         }
     }
 
     /// <summary>
     /// Returns the base REGON-9 for this identifier.
-    /// For local (14-digit) REGON numbers, returns the parent entity REGON-9.
-    /// For main (9-digit) REGON numbers, returns the current instance.
+    /// For 14-digit REGON numbers, returns the embedded REGON-9 base.
+    /// For 9-digit REGON numbers, returns the current instance.
     /// </summary>
     /// <remarks>
     /// No re-validation is performed: REGON-14 undergoes two-step validation during construction,
@@ -212,7 +212,7 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
         get
         {
             ThrowIfDefault();
-            if (!_isLocal)
+            if (!_isRegon14)
                 return this;
 
             ulong baseValue = _value / 100_000UL; // strip the last 5 digits of the 14-digit value
@@ -231,7 +231,7 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     {
         ThrowIfDefault();
         return _value.ToString(
-            _isLocal ? "D14" : "D9",
+            _isRegon14 ? "D14" : "D9",
             System.Globalization.CultureInfo.InvariantCulture);
     }
 
@@ -250,7 +250,7 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     {
         ThrowIfDefault();
 
-        var natural = _isLocal ? "D14" : "D9";
+        var natural = _isRegon14 ? "D14" : "D9";
 
         if (string.IsNullOrEmpty(format)
             || string.Equals(format, "G", StringComparison.OrdinalIgnoreCase)
@@ -274,7 +274,7 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// <returns><see langword="true"/> if both instances represent the same REGON number; otherwise, <see langword="false"/>.</returns>
     public bool Equals(Regon other)
         => _isInitialized == other._isInitialized
-           && _isLocal == other._isLocal
+           && _isRegon14 == other._isRegon14
            && _value == other._value;
 
     /// <summary>
@@ -286,13 +286,13 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// Returns the hash code for this instance.
     /// </summary>
     public override int GetHashCode()
-        => unchecked((_value.GetHashCode() * 397) ^ (_isLocal.GetHashCode() * 31) ^ _isInitialized.GetHashCode());
+        => unchecked((_value.GetHashCode() * 397) ^ (_isRegon14.GetHashCode() * 31) ^ _isInitialized.GetHashCode());
 
     /// <summary>
     /// Compares this instance to another <see cref="Regon"/>.
     /// Default instances sort before initialized instances.
     /// Initialized instances are ordered first by numeric value, and when the numeric payload matches,
-    /// <see cref="RegonKind.Main"/> sorts before <see cref="RegonKind.Local"/>.
+    /// <see cref="RegonKind.Regon9"/> sorts before <see cref="RegonKind.Regon14"/>.
     /// </summary>
     /// <param name="other">The instance to compare with.</param>
     /// <returns>
@@ -308,7 +308,7 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
         if (valueComparison != 0)
             return valueComparison;
 
-        return _isLocal.CompareTo(other._isLocal);
+        return _isRegon14.CompareTo(other._isRegon14);
     }
 
     /// <summary>

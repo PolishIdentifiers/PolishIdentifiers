@@ -23,50 +23,87 @@ public static class PeselGenerator
 
     // --- Valid generators ---
 
-    /// <summary>Generates a random valid PESEL with a random birth date and gender.</summary>
+    /// <summary>Generates a valid PESEL with a random birth date and gender.</summary>
     /// <returns>A valid <see cref="Pesel"/> instance.</returns>
     /// <remarks>This method is thread-safe.</remarks>
-    public static Pesel Random()
+    public static Pesel Generate()
     {
         var date   = RandomDate();
         var gender = NextInt(2) == 0 ? Gender.Male : Gender.Female;
         return BuildPesel(date, gender);
     }
 
+    /// <summary>Generates a valid PESEL with a random birth date and the specified gender.</summary>
+    /// <param name="gender">The gender to encode in the generated PESEL.</param>
+    /// <returns>A valid <see cref="Pesel"/> instance.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="gender"/> is not a supported <see cref="Gender"/> value.</exception>
+    /// <remarks>This method is thread-safe.</remarks>
+    public static Pesel Generate(Gender gender)
+        => BuildPesel(RandomDate(), gender);
+
     /// <summary>
-    /// Returns a <see cref="PeselDateBuilder"/> for generating a valid PESEL
-    /// for a person born on <paramref name="date"/>.
+    /// Generates a valid PESEL for a person born on <paramref name="birthDate"/>, with a random gender.
     /// Only the date part (year, month, day) is used; any time component is ignored.
     /// </summary>
-    /// <param name="date">The birth date to encode. Only the date part is used.</param>
-    /// <returns>A <see cref="PeselDateBuilder"/> for choosing the gender and building the PESEL.</returns>
+    /// <param name="birthDate">The birth date to encode. Only the date part is used.</param>
+    /// <returns>A valid <see cref="Pesel"/> instance.</returns>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
     /// </exception>
-    public static PeselDateBuilder ForBirthDate(DateTime date)
+    public static Pesel Generate(DateTime birthDate)
     {
-        if (date.Year is < 1800 or > 2299)
-            throw new ArgumentOutOfRangeException(nameof(date), "PESEL supports birth years in range 1800-2299.");
+        ValidateBirthYear(birthDate.Year, nameof(birthDate));
+        var gender = NextInt(2) == 0 ? Gender.Male : Gender.Female;
+        return BuildPesel(birthDate, gender);
+    }
 
-        return new PeselDateBuilder(date.Date);
+    /// <summary>
+    /// Generates a valid PESEL for a person born on <paramref name="birthDate"/> with the specified gender.
+    /// Only the date part (year, month, day) is used; any time component is ignored.
+    /// </summary>
+    /// <param name="gender">The gender to encode in the generated PESEL.</param>
+    /// <param name="birthDate">The birth date to encode. Only the date part is used.</param>
+    /// <returns>A valid <see cref="Pesel"/> instance.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="gender"/> is not a supported <see cref="Gender"/> value.</exception>
+    public static Pesel Generate(Gender gender, DateTime birthDate)
+    {
+        ValidateBirthYear(birthDate.Year, nameof(birthDate));
+        return BuildPesel(birthDate, gender);
     }
 
 #if NET10_0_OR_GREATER
     /// <summary>
-    /// Returns a <see cref="PeselDateBuilder"/> for generating a valid PESEL
-    /// for a person born on <paramref name="date"/>.
+    /// Generates a valid PESEL for a person born on <paramref name="birthDate"/>, with a random gender.
     /// </summary>
-    /// <param name="date">The birth date to encode.</param>
-    /// <returns>A <see cref="PeselDateBuilder"/> for choosing the gender and building the PESEL.</returns>
+    /// <param name="birthDate">The birth date to encode.</param>
+    /// <returns>A valid <see cref="Pesel"/> instance.</returns>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
     /// </exception>
-    public static PeselDateBuilder ForBirthDate(DateOnly date)
+    public static Pesel Generate(DateOnly birthDate)
     {
-        if (date.Year is < 1800 or > 2299)
-            throw new ArgumentOutOfRangeException(nameof(date), "PESEL supports birth years in range 1800-2299.");
+        ValidateBirthYear(birthDate.Year, nameof(birthDate));
+        var gender = NextInt(2) == 0 ? Gender.Male : Gender.Female;
+        return BuildPesel(birthDate.ToDateTime(TimeOnly.MinValue), gender);
+    }
 
-        return new PeselDateBuilder(date.ToDateTime(TimeOnly.MinValue));
+    /// <summary>
+    /// Generates a valid PESEL for a person born on <paramref name="birthDate"/> with the specified gender.
+    /// </summary>
+    /// <param name="gender">The gender to encode in the generated PESEL.</param>
+    /// <param name="birthDate">The birth date to encode.</param>
+    /// <returns>A valid <see cref="Pesel"/> instance.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="gender"/> is not a supported <see cref="Gender"/> value.</exception>
+    public static Pesel Generate(Gender gender, DateOnly birthDate)
+    {
+        ValidateBirthYear(birthDate.Year, nameof(birthDate));
+        return BuildPesel(birthDate.ToDateTime(TimeOnly.MinValue), gender);
     }
 #endif
 
@@ -88,7 +125,7 @@ public static class PeselGenerator
         /// <returns>An 11-digit string that fails checksum validation.</returns>
         public static string WrongChecksum()
         {
-            var chars = PeselGenerator.Random().ToString().ToCharArray();
+            var chars = PeselGenerator.Generate().ToString().ToCharArray();
             chars[10] = (char)('0' + (chars[10] - '0' + 1) % 10);
             return new string(chars);
         }
@@ -123,7 +160,7 @@ public static class PeselGenerator
         /// <returns>A digit-only string whose length differs from a valid PESEL by 1 to 3 characters.</returns>
         public static string WrongLength()
         {
-            var value = PeselGenerator.Random().ToString();
+            var value = PeselGenerator.Generate().ToString();
             var delta = NextInt(MaxLengthDelta) + 1;
 
             return NextInt(2) == 0
@@ -138,7 +175,7 @@ public static class PeselGenerator
         /// <returns>An 11-character string that fails character validation.</returns>
         public static string NonNumeric()
         {
-            var chars = PeselGenerator.Random().ToString().ToCharArray();
+            var chars = PeselGenerator.Generate().ToString().ToCharArray();
             chars[5] = 'X';
             return new string(chars);
         }
@@ -155,10 +192,18 @@ public static class PeselGenerator
         }
     }
 
-    // --- Internal helpers (used by PeselDateBuilder) ---
+    // --- Internal helpers ---
 
-    internal static Pesel BuildPesel(DateTime date, Gender gender)
+    private static void ValidateBirthYear(int year, string paramName)
     {
+        if (year is < 1800 or > 2299)
+            throw new ArgumentOutOfRangeException(paramName, "PESEL supports birth years in range 1800-2299.");
+    }
+
+    private static Pesel BuildPesel(DateTime date, Gender gender)
+    {
+        ValidateGender(gender, nameof(gender));
+
         var yy           = date.Year % 100;
         var encodedMonth = EncodeMonth(date.Year, date.Month);
         var day          = date.Day;
@@ -185,6 +230,12 @@ public static class PeselGenerator
         return new Pesel(value);
     }
 
+    private static void ValidateGender(Gender gender, string paramName)
+    {
+        if (gender is not Gender.Female and not Gender.Male)
+            throw new ArgumentOutOfRangeException(paramName, gender, "Unsupported gender value.");
+    }
+
     private static DateTime RandomDate()
     {
         var year  = NextInt(1800, 2300);
@@ -206,7 +257,7 @@ public static class PeselGenerator
     {
         var sum = 0;
         for (var i = 0; i < 10; i++)
-            sum += digits[i] * PeselAlgorithm.Weights[i];
+            sum += digits[i] * PeselChecksumWeights.Weights[i];
         return (10 - sum % 10) % 10;
     }
 }

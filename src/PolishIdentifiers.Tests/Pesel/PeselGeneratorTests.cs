@@ -5,66 +5,112 @@ namespace PolishIdentifiers.Tests;
 
 public class PeselGeneratorTests
 {
-    // --- Random() ---
+    // --- Generate() ---
 
     [Fact]
-    public void Random_ReturnsParsablePesel()
+    public void Generate_ReturnsParsablePesel()
     {
-        var pesel = PeselGenerator.Random();
+        var pesel = PeselGenerator.Generate();
 
         Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
-    public void Random_CalledMultipleTimes_ReturnsOnlyValidValues()
+    public void Generate_CalledMultipleTimes_ReturnsOnlyValidValues()
     {
-        var results = Enumerable.Range(0, 100).Select(_ => PeselGenerator.Random().ToString()).ToList();
+        var results = Enumerable.Range(0, 100).Select(_ => PeselGenerator.Generate().ToString()).ToList();
 
         results.ShouldAllBe(value => Pesel.Validate(value).IsValid);
     }
 
-    // --- ForBirthDate().Male() / .Female() ---
+    // --- Generate(Gender) ---
 
     [Fact]
-    public void ForBirthDate_Male_HasCorrectDate()
+    public void Generate_WithMaleGender_HasMaleGender()
     {
-        var date = new DateTime(1990, 5, 14);
-        var pesel = PeselGenerator.ForBirthDate(date).Male();
-
-        pesel.BirthDateTime.ShouldBe(date);
-    }
-
-    [Fact]
-    public void ForBirthDate_Male_HasMaleGender()
-    {
-        var pesel = PeselGenerator.ForBirthDate(new DateTime(1990, 5, 14)).Male();
+        var pesel = PeselGenerator.Generate(Gender.Male);
 
         pesel.Gender.ShouldBe(Gender.Male);
     }
 
     [Fact]
-    public void ForBirthDate_Female_HasCorrectDate()
+    public void Generate_WithUnsupportedGender_ThrowsArgumentOutOfRangeException()
     {
-        var date = new DateTime(1985, 11, 3);
-        var pesel = PeselGenerator.ForBirthDate(date).Female();
+        var invalidGender = (Gender)999;
+
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(invalidGender));
+    }
+
+    [Fact]
+    public void Generate_WithFemaleGender_HasFemaleGender()
+    {
+        var pesel = PeselGenerator.Generate(Gender.Female);
+
+        pesel.Gender.ShouldBe(Gender.Female);
+    }
+
+    // --- Generate(DateTime) ---
+
+    [Fact]
+    public void Generate_WithBirthDate_HasCorrectDate()
+    {
+        var date = new DateTime(1990, 5, 14);
+        var pesel = PeselGenerator.Generate(date);
 
         pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Fact]
-    public void ForBirthDate_Female_HasFemaleGender()
+    public void Generate_WithBirthDate_ProducesValidPesel()
     {
-        var pesel = PeselGenerator.ForBirthDate(new DateTime(1985, 11, 3)).Female();
+        var pesel = PeselGenerator.Generate(new DateTime(2001, 3, 21));
 
-        pesel.Gender.ShouldBe(Gender.Female);
+        Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
+    }
+
+    // --- Generate(Gender, DateTime) ---
+
+    [Fact]
+    public void Generate_WithMaleGenderAndBirthDate_HasCorrectDate()
+    {
+        var date = new DateTime(1990, 5, 14);
+        var pesel = PeselGenerator.Generate(Gender.Male, date);
+
+        pesel.BirthDateTime.ShouldBe(date);
     }
 
     [Fact]
-    public void ForBirthDate_ProducesValidPesel()
+    public void Generate_WithUnsupportedGenderAndBirthDate_ThrowsArgumentOutOfRangeException()
     {
-        var pesel = PeselGenerator.ForBirthDate(new DateTime(2001, 3, 21)).Female();
+        var invalidGender = (Gender)999;
+        var birthDate = new DateTime(1990, 5, 14);
 
-        Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(invalidGender, birthDate));
+    }
+
+    [Fact]
+    public void Generate_WithMaleGenderAndBirthDate_HasMaleGender()
+    {
+        var pesel = PeselGenerator.Generate(Gender.Male, new DateTime(1990, 5, 14));
+
+        pesel.Gender.ShouldBe(Gender.Male);
+    }
+
+    [Fact]
+    public void Generate_WithFemaleGenderAndBirthDate_HasCorrectDate()
+    {
+        var date = new DateTime(1985, 11, 3);
+        var pesel = PeselGenerator.Generate(Gender.Female, date);
+
+        pesel.BirthDateTime.ShouldBe(date);
+    }
+
+    [Fact]
+    public void Generate_WithFemaleGenderAndBirthDate_HasFemaleGender()
+    {
+        var pesel = PeselGenerator.Generate(Gender.Female, new DateTime(1985, 11, 3));
+
+        pesel.Gender.ShouldBe(Gender.Female);
     }
 
     // --- Century encoding ---
@@ -73,10 +119,10 @@ public class PeselGeneratorTests
     [InlineData(1800, 1, 1)]   // 1800s century: PESEL encoded month = 81
     [InlineData(1850, 6, 15)]
     [InlineData(1899, 12, 31)]
-    public void ForBirthDate_Century1800_RoundTrips(int year, int month, int day)
+    public void Generate_Century1800_RoundTrips(int year, int month, int day)
     {
         var date  = new DateTime(year, month, day);
-        var pesel = PeselGenerator.ForBirthDate(date).Male();
+        var pesel = PeselGenerator.Generate(Gender.Male, date);
 
         pesel.BirthDateTime.ShouldBe(date);
     }
@@ -85,10 +131,10 @@ public class PeselGeneratorTests
     [InlineData(2000, 1, 1)]   // 2000s century: PESEL encoded month = 21
     [InlineData(2050, 8, 20)]
     [InlineData(2099, 12, 31)]
-    public void ForBirthDate_Century2000_RoundTrips(int year, int month, int day)
+    public void Generate_Century2000_RoundTrips(int year, int month, int day)
     {
         var date  = new DateTime(year, month, day);
-        var pesel = PeselGenerator.ForBirthDate(date).Female();
+        var pesel = PeselGenerator.Generate(Gender.Female, date);
 
         pesel.BirthDateTime.ShouldBe(date);
     }
@@ -96,10 +142,10 @@ public class PeselGeneratorTests
     [Theory]
     [InlineData(2100, 3, 5)]   // 2100s century: PESEL encoded month = 43
     [InlineData(2200, 7, 1)]   // 2200s century: PESEL encoded month = 67
-    public void ForBirthDate_Century2100And2200_RoundTrips(int year, int month, int day)
+    public void Generate_Century2100And2200_RoundTrips(int year, int month, int day)
     {
         var date  = new DateTime(year, month, day);
-        var pesel = PeselGenerator.ForBirthDate(date).Male();
+        var pesel = PeselGenerator.Generate(Gender.Male, date);
 
         pesel.BirthDateTime.ShouldBe(date);
     }
@@ -107,17 +153,17 @@ public class PeselGeneratorTests
     [Theory]
     [InlineData(1799, 12, 31)]
     [InlineData(2300, 1, 1)]
-    public void ForBirthDate_YearOutOfSupportedRange_ThrowsArgumentOutOfRangeException(int year, int month, int day)
+    public void Generate_WithBirthDate_YearOutOfRange_ThrowsArgumentOutOfRangeException(int year, int month, int day)
     {
-        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.ForBirthDate(new DateTime(year, month, day)));
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(new DateTime(year, month, day)));
     }
 
     [Theory]
     [InlineData(1800, 1, 1)]
     [InlineData(2299, 12, 31)]
-    public void ForBirthDate_BoundaryYears_DoNotThrow(int year, int month, int day)
+    public void Generate_WithBirthDate_BoundaryYears_DoNotThrow(int year, int month, int day)
     {
-        var exception = Record.Exception(() => PeselGenerator.ForBirthDate(new DateTime(year, month, day)));
+        var exception = Record.Exception(() => PeselGenerator.Generate(new DateTime(year, month, day)));
 
         exception.ShouldBeNull();
     }
@@ -205,125 +251,61 @@ public class PeselGeneratorTests
         isValidRange.ShouldBeFalse();
     }
 
-    // --- WithGender ---
-
-    [Theory]
-    [InlineData(Gender.Male)]
-    [InlineData(Gender.Female)]
-    public void ForBirthDate_WithGender_HasCorrectGender(Gender gender)
-    {
-        var date = new DateTime(1990, 5, 14);
-
-        var pesel = PeselGenerator.ForBirthDate(date).WithGender(gender);
-
-        pesel.Gender.ShouldBe(gender);
-    }
-
-    [Theory]
-    [InlineData(Gender.Male)]
-    [InlineData(Gender.Female)]
-    public void ForBirthDate_WithGender_HasCorrectDate(Gender gender)
-    {
-        var date = new DateTime(1990, 5, 14);
-
-        var pesel = PeselGenerator.ForBirthDate(date).WithGender(gender);
-
-        pesel.BirthDateTime.ShouldBe(date);
-    }
-
-    [Theory]
-    [InlineData(Gender.Male)]
-    [InlineData(Gender.Female)]
-    public void ForBirthDate_WithGender_ProducesValidPesel(Gender gender)
-    {
-        var pesel = PeselGenerator.ForBirthDate(new DateTime(2001, 3, 21)).WithGender(gender);
-
-        Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ForBirthDate_WithGender_Male_ProducesSameResultAsMale()
-    {
-        // WithGender(Male) is semantically equivalent to .Male() — verify both produce valid male PESELs
-        var date = new DateTime(1985, 11, 3);
-
-        var pesel = PeselGenerator.ForBirthDate(date).WithGender(Gender.Male);
-
-        pesel.Gender.ShouldBe(Gender.Male);
-        pesel.BirthDateTime.ShouldBe(date);
-    }
-
-    [Fact]
-    public void ForBirthDate_WithGender_Female_ProducesSameResultAsFemale()
-    {
-        var date = new DateTime(1985, 11, 3);
-
-        var pesel = PeselGenerator.ForBirthDate(date).WithGender(Gender.Female);
-
-        pesel.Gender.ShouldBe(Gender.Female);
-        pesel.BirthDateTime.ShouldBe(date);
-    }
-
-    // --- ForBirthDate(DateOnly) — net10 only ---
-
 #if NET10_0_OR_GREATER
-    [Fact]
-    public void ForBirthDate_DateOnly_Male_HasCorrectDate()
-    {
-        var date = new DateOnly(1990, 5, 14);
-
-        var pesel = PeselGenerator.ForBirthDate(date).Male();
-
-        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
-    }
+    // --- Generate(DateOnly) ---
 
     [Fact]
-    public void ForBirthDate_DateOnly_Female_HasCorrectDate()
-    {
-        var date = new DateOnly(1985, 11, 3);
-
-        var pesel = PeselGenerator.ForBirthDate(date).Female();
-
-        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
-    }
-
-    [Fact]
-    public void ForBirthDate_DateOnly_WithGender_HasCorrectGenderAndDate()
-    {
-        var date = new DateOnly(2000, 2, 29);
-
-        var pesel = PeselGenerator.ForBirthDate(date).WithGender(Gender.Male);
-
-        pesel.Gender.ShouldBe(Gender.Male);
-        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
-    }
-
-    [Fact]
-    public void ForBirthDate_DateOnly_ProducesValidPesel()
+    public void Generate_WithDateOnly_ProducesValidPesel()
     {
         var date = new DateOnly(2001, 3, 21);
-
-        var pesel = PeselGenerator.ForBirthDate(date).Female();
+        var pesel = PeselGenerator.Generate(date);
 
         Pesel.Validate(pesel.ToString()).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Generate_WithMaleGenderAndDateOnly_HasCorrectDate()
+    {
+        var date = new DateOnly(1990, 5, 14);
+        var pesel = PeselGenerator.Generate(Gender.Male, date);
+
+        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
+    }
+
+    [Fact]
+    public void Generate_WithFemaleGenderAndDateOnly_HasCorrectDate()
+    {
+        var date = new DateOnly(1985, 11, 3);
+        var pesel = PeselGenerator.Generate(Gender.Female, date);
+
+        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
+    }
+
+    [Fact]
+    public void Generate_WithUnsupportedGenderAndDateOnly_ThrowsArgumentOutOfRangeException()
+    {
+        var invalidGender = (Gender)999;
+        var birthDate = new DateOnly(1990, 5, 14);
+
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(invalidGender, birthDate));
     }
 
     [Theory]
     [InlineData(1799, 12, 31)]
     [InlineData(2300, 1, 1)]
-    public void ForBirthDate_DateOnly_YearOutOfRange_ThrowsArgumentOutOfRangeException(int year, int month, int day)
+    public void Generate_WithDateOnly_YearOutOfRange_ThrowsArgumentOutOfRangeException(int year, int month, int day)
     {
-        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.ForBirthDate(new DateOnly(year, month, day)));
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(new DateOnly(year, month, day)));
     }
 
     [Fact]
-    public void ForBirthDate_DateOnly_IsConsistentWithDateTimeOverload()
+    public void Generate_DateOnlyAndDateTimeOverloads_ProduceSameBirthDate()
     {
         var dateOnly = new DateOnly(1990, 5, 14);
         var dateTime = dateOnly.ToDateTime(TimeOnly.MinValue);
 
-        var fromDateOnly = PeselGenerator.ForBirthDate(dateOnly).Male();
-        var fromDateTime = PeselGenerator.ForBirthDate(dateTime).Male();
+        var fromDateOnly = PeselGenerator.Generate(Gender.Male, dateOnly);
+        var fromDateTime = PeselGenerator.Generate(Gender.Male, dateTime);
 
         DateOnly.FromDateTime(fromDateOnly.BirthDateTime).ShouldBe(DateOnly.FromDateTime(fromDateTime.BirthDateTime));
     }

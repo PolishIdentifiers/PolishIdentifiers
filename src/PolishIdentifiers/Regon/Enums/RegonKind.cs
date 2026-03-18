@@ -6,13 +6,13 @@ namespace PolishIdentifiers;
 public enum RegonKind
 {
     /// <summary>
-    /// A 9-digit REGON number identifying the primary entity (company, institution).
+    /// A 9-digit REGON number.
     /// </summary>
-    Main,
+    Regon9,
 
     /// <summary>
-    /// A 14-digit REGON number identifying a local unit (branch, outlet).
-    /// The first 9 digits form the REGON-9 of the parent entity.
+    /// A 14-digit REGON number.
+    /// The first 9 digits form the embedded REGON-9 base.
     /// </summary>
-    Local,
+    Regon14,
 }

@@ -1,6 +1,6 @@
 namespace PolishIdentifiers;
 
-internal static class PeselParser
+internal static class PeselDecoder
 {
     // Decodes the PESEL-encoded month into a full year and the actual calendar month.
     // Returns false when encodedMonth does not belong to any valid range.

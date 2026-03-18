@@ -5,90 +5,98 @@ namespace PolishIdentifiers.Tests;
 
 public class RegonGeneratorTests
 {
-    // --- Random() ---
+    // --- Generate(RegonKind.Regon9) ---
 
     [Fact]
-    public void Random_ReturnsParsableRegon9()
+    public void Generate_WithUnsupportedKind_ThrowsArgumentOutOfRangeException()
     {
-        var regon = RegonGenerator.Random();
+        var invalidKind = (RegonKind)999;
+
+        Should.Throw<ArgumentOutOfRangeException>(() => RegonGenerator.Generate(invalidKind));
+    }
+
+    [Fact]
+    public void Generate_WithRegon9Kind_ReturnsParsableRegon9()
+    {
+        var regon = RegonGenerator.Generate(RegonKind.Regon9);
 
         Regon.Validate(regon.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
-    public void Random_ReturnsMainKind()
+    public void Generate_WithRegon9Kind_ReturnsRegon9Kind()
     {
-        var regon = RegonGenerator.Random();
+        var regon = RegonGenerator.Generate(RegonKind.Regon9);
 
-        regon.Kind.ShouldBe(RegonKind.Main);
-        regon.IsMain.ShouldBeTrue();
+        regon.Kind.ShouldBe(RegonKind.Regon9);
+        regon.IsRegon9.ShouldBeTrue();
     }
 
     [Fact]
-    public void Random_ToString_Has9Digits()
+    public void Generate_WithRegon9Kind_ToString_Has9Digits()
     {
-        var regon = RegonGenerator.Random();
+        var regon = RegonGenerator.Generate(RegonKind.Regon9);
 
         regon.ToString().Length.ShouldBe(9);
     }
 
     [Fact]
-    public void Random_CalledMultipleTimes_ReturnsOnlyValidValues()
+    public void Generate_WithRegon9Kind_CalledMultipleTimes_ReturnsOnlyValidValues()
     {
-        var results = Enumerable.Range(0, 100).Select(_ => RegonGenerator.Random().ToString()).ToList();
+        var results = Enumerable.Range(0, 100).Select(_ => RegonGenerator.Generate(RegonKind.Regon9).ToString()).ToList();
 
         results.ShouldAllBe(value => Regon.Validate(value).IsValid);
     }
 
-    // --- RandomLocal() ---
+    // --- Generate(RegonKind.Regon14) ---
 
     [Fact]
-    public void RandomLocal_ReturnsParsableRegon14()
+    public void Generate_WithRegon14Kind_ReturnsParsableRegon14()
     {
-        var regon = RegonGenerator.RandomLocal();
+        var regon = RegonGenerator.Generate(RegonKind.Regon14);
 
         Regon.Validate(regon.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
-    public void RandomLocal_ReturnsLocalKind()
+    public void Generate_WithRegon14Kind_ReturnsRegon14Kind()
     {
-        var regon = RegonGenerator.RandomLocal();
+        var regon = RegonGenerator.Generate(RegonKind.Regon14);
 
-        regon.Kind.ShouldBe(RegonKind.Local);
-        regon.IsLocal.ShouldBeTrue();
+        regon.Kind.ShouldBe(RegonKind.Regon14);
+        regon.IsRegon14.ShouldBeTrue();
     }
 
     [Fact]
-    public void RandomLocal_ToString_Has14Digits()
+    public void Generate_WithRegon14Kind_ToString_Has14Digits()
     {
-        var regon = RegonGenerator.RandomLocal();
+        var regon = RegonGenerator.Generate(RegonKind.Regon14);
 
         regon.ToString().Length.ShouldBe(14);
     }
 
     [Fact]
-    public void RandomLocal_CalledMultipleTimes_ReturnsOnlyValidValues()
+    public void Generate_WithRegon14Kind_CalledMultipleTimes_ReturnsOnlyValidValues()
     {
-        var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.RandomLocal().ToString()).ToList();
+        var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.Generate(RegonKind.Regon14).ToString()).ToList();
 
         results.ShouldAllBe(value => Regon.Validate(value).IsValid);
     }
 
     [Fact]
-    public void RandomLocal_BaseRegon_IsValidRegon9()
+    public void Generate_WithRegon14Kind_BaseRegon_IsValidRegon9()
     {
-        var regon14 = RegonGenerator.RandomLocal();
+        var regon14 = RegonGenerator.Generate(RegonKind.Regon14);
 
         var base9 = regon14.BaseRegon;
         Regon.Validate(base9.ToString()).IsValid.ShouldBeTrue();
-        base9.IsMain.ShouldBeTrue();
+        base9.IsRegon9.ShouldBeTrue();
     }
 
     [Fact]
-    public void RandomLocal_FirstNineDigitsMatchBaseRegon9()
+    public void Generate_WithRegon14Kind_FirstNineDigitsMatchBaseRegon9()
     {
-        var regon14 = RegonGenerator.RandomLocal();
+        var regon14 = RegonGenerator.Generate(RegonKind.Regon14);
 
         var base9FromProp = regon14.BaseRegon.ToString();
         var base9FromStr = regon14.ToString().Substring(0, 9);
@@ -99,9 +107,9 @@ public class RegonGeneratorTests
     // --- Invalid generators ---
 
     [Fact]
-    public void Invalid_WrongChecksum_YieldsExactlyInvalidChecksum()
+    public void Invalid_WrongChecksumRegon9_YieldsExactlyInvalidChecksum()
     {
-        var s = RegonGenerator.Invalid.WrongChecksum();
+        var s = RegonGenerator.Invalid.WrongChecksumRegon9();
 
         Regon.Validate(s).Error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
@@ -122,56 +130,56 @@ public class RegonGeneratorTests
         Regon.Validate(s).Error.ShouldBe(RegonValidationError.InvalidCharacters);
     }
 
-    // --- WrongChecksum: structural verification ---
+    // --- WrongChecksumRegon9: structural verification ---
 
     [Fact]
-    public void Invalid_WrongChecksum_Regon9_HasCorrectLengthAndDigits()
+    public void Invalid_WrongChecksumRegon9_HasCorrectLengthAndDigits()
     {
-        var s = RegonGenerator.Invalid.WrongChecksum();
+        var s = RegonGenerator.Invalid.WrongChecksumRegon9();
 
         s.Length.ShouldBe(9);
         s.ShouldAllBe(c => char.IsDigit(c));
     }
 
     [Fact]
-    public void Invalid_WrongChecksum_CalledMultipleTimes_AlwaysYieldsInvalidChecksum()
+    public void Invalid_WrongChecksumRegon9_CalledMultipleTimes_AlwaysYieldsInvalidChecksum()
     {
-        var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.Invalid.WrongChecksum()).ToList();
+        var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.Invalid.WrongChecksumRegon9()).ToList();
 
         results.ShouldAllBe(s => Regon.Validate(s).Error == RegonValidationError.InvalidChecksum);
     }
 
-    // --- WrongChecksum14: functional and structural verification ---
+    // --- WrongChecksumRegon14: functional and structural verification ---
 
     [Fact]
-    public void Invalid_WrongChecksum14_YieldsExactlyInvalidChecksum()
+    public void Invalid_WrongChecksumRegon14_YieldsExactlyInvalidChecksum()
     {
-        var s = RegonGenerator.Invalid.WrongChecksum14();
+        var s = RegonGenerator.Invalid.WrongChecksumRegon14();
 
         Regon.Validate(s).Error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
 
     [Fact]
-    public void Invalid_WrongChecksum14_HasLength14AndAllDigits()
+    public void Invalid_WrongChecksumRegon14_HasLength14AndAllDigits()
     {
-        var s = RegonGenerator.Invalid.WrongChecksum14();
+        var s = RegonGenerator.Invalid.WrongChecksumRegon14();
 
         s.Length.ShouldBe(14);
         s.ShouldAllBe(c => char.IsDigit(c));
     }
 
     [Fact]
-    public void Invalid_WrongChecksum14_EmbeddedBase9IsValid()
+    public void Invalid_WrongChecksumRegon14_EmbeddedBase9IsValid()
     {
-        var base9 = RegonGenerator.Invalid.WrongChecksum14().Substring(0, 9);
+        var base9 = RegonGenerator.Invalid.WrongChecksumRegon14().Substring(0, 9);
 
         Regon.Validate(base9).IsValid.ShouldBeTrue();
     }
 
     [Fact]
-    public void Invalid_WrongChecksum14_CalledMultipleTimes_AlwaysYieldsInvalidChecksum()
+    public void Invalid_WrongChecksumRegon14_CalledMultipleTimes_AlwaysYieldsInvalidChecksum()
     {
-        var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.Invalid.WrongChecksum14()).ToList();
+        var results = Enumerable.Range(0, 50).Select(_ => RegonGenerator.Invalid.WrongChecksumRegon14()).ToList();
 
         results.ShouldAllBe(s => Regon.Validate(s).Error == RegonValidationError.InvalidChecksum);
     }

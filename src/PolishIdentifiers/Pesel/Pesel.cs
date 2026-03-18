@@ -163,9 +163,9 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
 #if NET10_0_OR_GREATER
             Span<char> chars = stackalloc char[11];
             _value.TryFormat(chars, out _, "D11", System.Globalization.CultureInfo.InvariantCulture);
-            return PeselParser.DecodeDate(chars);
+            return PeselDecoder.DecodeDate(chars);
 #else
-            return PeselParser.DecodeDate(ToString().AsSpan());
+            return PeselDecoder.DecodeDate(ToString().AsSpan());
 #endif
         }
     }
@@ -179,7 +179,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
         get
         {
             ThrowIfDefault();
-            return PeselParser.DecodeGender(_value);
+            return PeselDecoder.DecodeGender(_value);
         }
     }
 

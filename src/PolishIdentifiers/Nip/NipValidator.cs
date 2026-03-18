@@ -51,14 +51,14 @@ internal static class NipValidator
 
     private static bool IsChecksumValid(ReadOnlySpan<char> value)
     {
-        var sum = ChecksumCalculator.WeightedSum(value.Slice(0, 9), NipAlgorithm.Weights);
-        var checksum = sum % 11;
+        var sum = WeightedSumCalculator.WeightedSum(value.Slice(0, 9), NipChecksumWeights.Weights);
+        var checkDigit = sum % 11;
 
-        // If checksum == 10, no valid check digit exists for this combination.
-        if (checksum == 10)
+        // If check digit == 10, no valid check digit exists for this combination.
+        if (checkDigit == 10)
             return false;
 
-        return checksum == (value[9] - '0');
+        return checkDigit == (value[9] - '0');
     }
 
     /// <summary>

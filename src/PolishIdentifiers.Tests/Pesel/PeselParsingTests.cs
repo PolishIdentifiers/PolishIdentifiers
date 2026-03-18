@@ -409,7 +409,7 @@ public class PeselParsingTests
     [InlineData(2004, 2, 29)]
     public void BirthDateTime_LeapDayInLeapYear_ReturnsCorrectDate(int year, int month, int day)
     {
-        var generated = PeselGenerator.ForBirthDate(new DateTime(year, month, day)).Male();
+        var generated = PeselGenerator.Generate(Gender.Male, new DateTime(year, month, day));
         var pesel = Pesel.Parse(generated.ToString());
 
         pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
@@ -450,7 +450,7 @@ public class PeselParsingTests
     [InlineData(2104, 2, 29)]
     public void BirthDateTime_LeapDayInNonStandardCenturyLeapYear_ReturnsCorrectDate(int year, int month, int day)
     {
-        var generated = PeselGenerator.ForBirthDate(new DateTime(year, month, day)).Male();
+        var generated = PeselGenerator.Generate(Gender.Male, new DateTime(year, month, day));
         var pesel = Pesel.Parse(generated.ToString());
 
         pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
@@ -464,7 +464,7 @@ public class PeselParsingTests
     [InlineData(2299, 12, 31)]
     public void BirthDateTime_LastDayOfCenturyRange_ReturnsCorrectDate(int year, int month, int day)
     {
-        var generated = PeselGenerator.ForBirthDate(new DateTime(year, month, day)).Male();
+        var generated = PeselGenerator.Generate(Gender.Male, new DateTime(year, month, day));
         var pesel = Pesel.Parse(generated.ToString());
 
         pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
@@ -937,9 +937,9 @@ public class PeselParsingTests
     [Fact]
     public void TryParse_MixedDataset_EachInputProducesExpectedOutcome()
     {
-        var validA = PeselGenerator.ForBirthDate(new DateTime(1990, 6, 15)).Female().ToString();
-        var validB = PeselGenerator.ForBirthDate(new DateTime(2000, 2, 29)).Male().ToString();
-        var validC = PeselGenerator.ForBirthDate(new DateTime(2200, 1, 1)).Female().ToString();
+        var validA = PeselGenerator.Generate(Gender.Female, new DateTime(1990, 6, 15)).ToString();
+        var validB = PeselGenerator.Generate(Gender.Male, new DateTime(2000, 2, 29)).ToString();
+        var validC = PeselGenerator.Generate(Gender.Female, new DateTime(2200, 1, 1)).ToString();
 
         Pesel.TryParse(validA, out _).ShouldBeTrue();
         Pesel.TryParse(validB, out _).ShouldBeTrue();

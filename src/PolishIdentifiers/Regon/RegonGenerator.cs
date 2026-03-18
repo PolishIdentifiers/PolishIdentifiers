@@ -21,10 +21,20 @@ public static class RegonGenerator
 
     // --- Valid generators ---
 
-    /// <summary>Generates a random valid 9-digit REGON (REGON-9, primary entity).</summary>
-    /// <returns>A valid <see cref="Regon"/> instance with <see cref="Regon.Kind"/> == <see cref="RegonKind.Main"/>.</returns>
+    /// <summary>Generates a valid REGON of the specified kind.</summary>
+    /// <param name="kind">The kind of REGON to generate: <see cref="RegonKind.Regon9"/> (9 digits) or <see cref="RegonKind.Regon14"/> (14 digits).</param>
+    /// <returns>A valid <see cref="Regon"/> instance with the requested <see cref="Regon.Kind"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="kind"/> is not a supported <see cref="RegonKind"/> value.</exception>
     /// <remarks>This method is thread-safe.</remarks>
-    public static Regon Random()
+    public static Regon Generate(RegonKind kind)
+        => kind switch
+        {
+            RegonKind.Regon9 => GenerateRegon9(),
+            RegonKind.Regon14 => GenerateRegon14(),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported REGON kind.")
+        };
+
+    private static Regon GenerateRegon9()
     {
         var digits = new int[9];
 
@@ -33,7 +43,7 @@ public static class RegonGenerator
 
         var sum = 0;
         for (var i = 0; i < 8; i++)
-            sum += digits[i] * RegonAlgorithm.Weights9[i];
+            sum += digits[i] * RegonChecksumWeights.Weights9[i];
 
         var r = sum % 11;
         digits[8] = r == 10 ? 0 : r;
@@ -42,15 +52,12 @@ public static class RegonGenerator
         foreach (var d in digits)
             value = value * 10 + (ulong)d;
 
-        return new Regon(value, isLocal: false);
+        return new Regon(value, isRegon14: false);
     }
 
-    /// <summary>Generates a random valid 14-digit REGON (REGON-14, local unit).</summary>
-    /// <returns>A valid <see cref="Regon"/> instance with <see cref="Regon.Kind"/> == <see cref="RegonKind.Local"/>.</returns>
-    /// <remarks>This method is thread-safe. The embedded 9-digit base is always a valid REGON-9.</remarks>
-    public static Regon RandomLocal()
+    private static Regon GenerateRegon14()
     {
-        var base9 = Random();
+        var base9 = GenerateRegon9();
         var base9Str = base9.ToString(); // "D9" — 9 digits
 
         var digits = new int[14];
@@ -62,7 +69,7 @@ public static class RegonGenerator
 
         var sum = 0;
         for (var i = 0; i < 13; i++)
-            sum += digits[i] * RegonAlgorithm.Weights14[i];
+            sum += digits[i] * RegonChecksumWeights.Weights14[i];
 
         var r = sum % 11;
         digits[13] = r == 10 ? 0 : r;
@@ -71,7 +78,7 @@ public static class RegonGenerator
         foreach (var d in digits)
             value = value * 10 + (ulong)d;
 
-        return new Regon(value, isLocal: true);
+        return new Regon(value, isRegon14: true);
     }
 
     // --- Invalid generators (return string — Regon.Parse would throw) ---
@@ -89,10 +96,10 @@ public static class RegonGenerator
         /// Generates a REGON-9 string with a wrong check digit.
         /// Triggers <see cref="RegonValidationError.InvalidChecksum"/>.
         /// </summary>
-        /// <returns>A 9-digit string that fails checksum validation.</returns>
-        public static string WrongChecksum()
+        /// <returns>A 9-digit REGON string that fails checksum validation.</returns>
+        public static string WrongChecksumRegon9()
         {
-            var chars = RegonGenerator.Random().ToString().ToCharArray();
+            var chars = RegonGenerator.GenerateRegon9().ToString().ToCharArray();
             chars[8] = (char)('0' + (chars[8] - '0' + 1) % 10);
             return new string(chars);
         }
@@ -102,12 +109,12 @@ public static class RegonGenerator
         /// Triggers <see cref="RegonValidationError.InvalidChecksum"/>.
         /// </summary>
         /// <returns>
-        /// A 14-digit string whose embedded REGON-9 base (first 9 digits) is valid,
+        /// A 14-digit REGON string whose embedded REGON-9 base (first 9 digits) is valid,
         /// but the REGON-14 check digit (position 13) is wrong.
         /// </returns>
-        public static string WrongChecksum14()
+        public static string WrongChecksumRegon14()
         {
-            var chars = RegonGenerator.RandomLocal().ToString().ToCharArray();
+            var chars = RegonGenerator.GenerateRegon14().ToString().ToCharArray();
             chars[13] = (char)('0' + (chars[13] - '0' + 1) % 10);
             return new string(chars);
         }
@@ -119,7 +126,7 @@ public static class RegonGenerator
         /// <returns>A digit-only string whose length is between 6–8 or 10–12 characters.</returns>
         public static string WrongLength()
         {
-            var value = RegonGenerator.Random().ToString(); // 9 digits
+            var value = RegonGenerator.GenerateRegon9().ToString(); // 9 digits
             var delta = NextInt(MaxLengthDelta) + 1;        // 1–3
 
             // Shorten → 6–8 chars, or lengthen → 10–12 chars. Neither is 9 or 14.
@@ -135,7 +142,7 @@ public static class RegonGenerator
         /// <returns>A 9-character string that fails character validation.</returns>
         public static string NonNumeric()
         {
-            var chars = RegonGenerator.Random().ToString().ToCharArray();
+            var chars = RegonGenerator.GenerateRegon9().ToString().ToCharArray();
             var pos = NextInt(chars.Length);
             chars[pos] = 'X';
             return new string(chars);

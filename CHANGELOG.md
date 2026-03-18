@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+#### Generator API unification
+
+- `PeselGenerator.Random()` renamed to `PeselGenerator.Generate()`. Overloads: `Generate()`, `Generate(Gender)`, `Generate(DateTime)`, `Generate(Gender, DateTime)`, plus net10.0-only `Generate(DateOnly)` and `Generate(Gender, DateOnly)`.
+- `PeselGenerator.ForBirthDate(DateTime).Male/.Female/.WithGender(Gender)` fluent builder removed; replaced by flat `Generate(Gender, DateTime)` overloads.
+- `PeselDateBuilder` class removed.
+- `NipGenerator.Random()` renamed to `NipGenerator.Generate()`.
+- `RegonGenerator.RandomRegon9()` and `RegonGenerator.RandomRegon14()` replaced by a single `RegonGenerator.Generate(RegonKind kind)` with required `RegonKind` argument.
+
+---
+
 ## [1.0.0] - 2026-03-13
 
 First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the package.
@@ -19,7 +33,7 @@ First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the p
 - Strict factories: `Regon.Parse(string)` / `Regon.Parse(ReadOnlySpan<char>)`, `Regon.TryParse(...)`, `Regon.Validate(...)`
 - `RegonValidationError` enum: `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`
 - `RegonValidationException` - wraps `RegonValidationError`, thrown by `Parse`
-- `RegonKind`, `Regon.IsMain`, `Regon.IsLocal`, and `Regon.BaseRegon`
+- `RegonKind`, `Regon.IsRegon9`, `Regon.IsRegon14`, and `Regon.BaseRegon`
 - `Regon.IsDefault` with dedicated initialization-state handling so valid all-zero REGON values remain distinct from `default(Regon)`
 - `Regon.ToString()` and `IFormattable` support for canonical `D9` and `D14` output
 - `IFormattable`, `IEquatable<Regon>`, `IComparable<Regon>`, `==` / `!=` operators
@@ -30,10 +44,9 @@ First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the p
 - REGON checksum validation for both 9-digit and 14-digit variants
 - Two-step REGON-14 validation: base REGON-9 validation first, then REGON-14 checksum validation
 - Support for valid canonical all-zero REGON values: `000000000` and `00000000000000`
-- `RegonGenerator.Random()` - generates a random valid REGON-9
-- `RegonGenerator.RandomLocal()` - generates a random valid REGON-14
-- `RegonGenerator.Invalid.WrongChecksum()` - valid in all other respects, REGON-9 checksum digit is wrong
-- `RegonGenerator.Invalid.WrongChecksum14()` - embedded REGON-9 base stays valid while the REGON-14 checksum digit is wrong
+- `RegonGenerator.Generate(RegonKind)` - generates a valid REGON of the specified kind (Regon9 or Regon14)
+- `RegonGenerator.Invalid.WrongChecksumRegon9()` - valid in all other respects, REGON-9 checksum digit is wrong
+- `RegonGenerator.Invalid.WrongChecksumRegon14()` - embedded REGON-9 base stays valid while the REGON-14 checksum digit is wrong
 - `RegonGenerator.Invalid.WrongLength()` - digit-only value with invalid length
 - `RegonGenerator.Invalid.NonNumeric()` - contains a non-digit character
 

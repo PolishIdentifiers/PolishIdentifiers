@@ -27,7 +27,7 @@ internal static class PeselValidator
         var month = (value[2] - '0') * 10 + (value[3] - '0');
         var day   = (value[4] - '0') * 10 + (value[5] - '0');
 
-        if (!PeselParser.TryDecodeYearMonth(month, yy, out var fullYear, out var actualMonth))
+        if (!PeselDecoder.TryDecodeYearMonth(month, yy, out var fullYear, out var actualMonth))
             return false;
 
         if (day < 1) return false;
@@ -36,7 +36,7 @@ internal static class PeselValidator
 
     private static bool IsChecksumValid(ReadOnlySpan<char> value)
     {
-        var sum = ChecksumCalculator.WeightedSum(value, PeselAlgorithm.Weights);
+        var sum = WeightedSumCalculator.WeightedSum(value, PeselChecksumWeights.Weights);
         var checksum = (10 - (sum % 10)) % 10;
 
         return checksum == (value[10] - '0');

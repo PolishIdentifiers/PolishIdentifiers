@@ -5,20 +5,20 @@ namespace PolishIdentifiers.Tests;
 
 public class NipGeneratorTests
 {
-    // --- Random() ---
+    // --- Generate() ---
 
     [Fact]
-    public void Random_ReturnsParsableNip()
+    public void Generate_ReturnsParsableNip()
     {
-        var nip = NipGenerator.Random();
+        var nip = NipGenerator.Generate();
 
         Nip.Validate(nip.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
-    public void Random_CalledMultipleTimes_ReturnsOnlyValidValues()
+    public void Generate_CalledMultipleTimes_ReturnsOnlyValidValues()
     {
-        var results = Enumerable.Range(0, 100).Select(_ => NipGenerator.Random().ToString()).ToList();
+        var results = Enumerable.Range(0, 100).Select(_ => NipGenerator.Generate().ToString()).ToList();
 
         results.ShouldAllBe(value => Nip.Validate(value).IsValid);
     }

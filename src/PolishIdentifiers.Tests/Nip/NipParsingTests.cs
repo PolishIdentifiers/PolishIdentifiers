@@ -53,7 +53,7 @@ public class NipParsingTests
     }
 
     [Fact]
-    public void Parse_NipWithLeadingZero_ReturnsCanonicalDigits()
+    public void Parse_NipWithLeadingZero_PreservesLeadingZero()
     {
         var input = ValidNipWithLeadingZero;
 
@@ -71,7 +71,7 @@ public class NipParsingTests
     }
 
     [Fact]
-    public void Parse_AllZeroNip_ToString_ReturnsCanonicalDigits()
+    public void Parse_AllZeroNip_ToString_RoundTripsAllZeroDigits()
     {
         var nip = Nip.Parse(AllZeroNip);
 

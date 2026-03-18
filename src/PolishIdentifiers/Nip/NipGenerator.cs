@@ -21,13 +21,13 @@ public static class NipGenerator
 
     // --- Valid generators ---
 
-    /// <summary>Generates a random valid NIP.</summary>
+    /// <summary>Generates a valid NIP.</summary>
     /// <returns>A valid <see cref="Nip"/> instance.</returns>
     /// <remarks>This method is thread-safe.</remarks>
-    public static Nip Random()
+    public static Nip Generate()
     {
         int[] digits;
-        int checksum;
+        int checkDigit;
 
         do
         {
@@ -37,13 +37,13 @@ public static class NipGenerator
 
             var sum = 0;
             for (var i = 0; i < 9; i++)
-                sum += digits[i] * NipAlgorithm.Weights[i];
+                sum += digits[i] * NipChecksumWeights.Weights[i];
 
-            checksum = sum % 11;
+            checkDigit = sum % 11;
         }
-        while (checksum == 10); // Retry if no valid check digit exists for this combination.
+        while (checkDigit == 10); // Retry if no valid check digit exists for this combination.
 
-        digits[9] = checksum;
+        digits[9] = checkDigit;
 
         ulong value = 0;
         foreach (var d in digits)
@@ -70,7 +70,7 @@ public static class NipGenerator
         /// <returns>A 10-digit string that fails checksum validation.</returns>
         public static string WrongChecksum()
         {
-            var chars = NipGenerator.Random().ToString().ToCharArray();
+            var chars = NipGenerator.Generate().ToString().ToCharArray();
             chars[9] = (char)('0' + (chars[9] - '0' + 1) % 10);
             return new string(chars);
         }
@@ -82,7 +82,7 @@ public static class NipGenerator
         /// <returns>A digit-only string whose length differs from a valid NIP by 1 to 3 characters.</returns>
         public static string WrongLength()
         {
-            var value = NipGenerator.Random().ToString();
+            var value = NipGenerator.Generate().ToString();
             var delta = NextInt(MaxLengthDelta) + 1;
 
             return NextInt(2) == 0
@@ -97,7 +97,7 @@ public static class NipGenerator
         /// <returns>A 10-character string that fails character validation.</returns>
         public static string NonNumeric()
         {
-            var chars = NipGenerator.Random().ToString().ToCharArray();
+            var chars = NipGenerator.Generate().ToString().ToCharArray();
             chars[5] = 'X';
             return new string(chars);
         }

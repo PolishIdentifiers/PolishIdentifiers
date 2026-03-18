@@ -17,7 +17,7 @@ public class NipDataAnnotationsTests
     private const string VatEuHyphenatedNip = "PL 123-456-32-18";
     private const string LeadingWhitespaceNip = " 1234563218";
     private const string TrailingWhitespaceNip = "1234563218 ";
-    private const string ExpectedErrorMessage = "The Nip field is not a valid NIP.";
+    private const string DefaultDisplayNameErrorMessage = "The Nip field is not a valid NIP.";
     private const string AlternateDisplayName = "Tax ID";
     private const string AlternateDisplayNameErrorMessage = "The Tax ID field is not a valid NIP.";
 
@@ -96,7 +96,7 @@ public class NipDataAnnotationsTests
 
         isValid.ShouldBeFalse();
         error.MemberNames.ShouldContain(nameof(StringDto.Nip));
-        error.ErrorMessage.ShouldBe(ExpectedErrorMessage);
+        error.ErrorMessage.ShouldBe(DefaultDisplayNameErrorMessage);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class NipDataAnnotationsTests
 
         isValid.ShouldBeFalse();
         error.MemberNames.ShouldContain(nameof(StringDto.Nip));
-        error.ErrorMessage.ShouldBe(ExpectedErrorMessage);
+        error.ErrorMessage.ShouldBe(DefaultDisplayNameErrorMessage);
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public class NipDataAnnotationsTests
 
         isValid.ShouldBeFalse();
         error.MemberNames.ShouldContain(nameof(RequiredStringDto.Nip));
-        error.ErrorMessage.ShouldBe(ExpectedErrorMessage);
+        error.ErrorMessage.ShouldBe(DefaultDisplayNameErrorMessage);
     }
 
     [Fact]

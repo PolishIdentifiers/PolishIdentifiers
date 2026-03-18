@@ -1,11 +1,10 @@
 namespace PolishIdentifiers;
 
 /// <summary>
-/// Shared constants for the REGON checksum algorithm.
-/// Both <see cref="RegonValidator"/> and <see cref="RegonGenerator"/> use these
-/// weights to keep generation and validation consistent.
+/// Checksum weights for REGON. Shared between <see cref="RegonValidator"/> and
+/// <see cref="RegonGenerator"/> to keep validation and generation consistent.
 /// </summary>
-internal static class RegonAlgorithm
+internal static class RegonChecksumWeights
 {
     // Weights for d0-d7; d8 is the check digit.
     internal static ReadOnlySpan<int> Weights9 => [8, 9, 2, 3, 4, 5, 6, 7];
