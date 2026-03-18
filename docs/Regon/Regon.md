@@ -51,7 +51,7 @@ Framework support: `netstandard2.0`, `net10.0`
 
 Use `IsRegon14` for the same reason when the workflow is specific to the 14-digit variant.
 
-## BaseRegon
+## BaseRegon9
 
 Framework support: `netstandard2.0`, `net10.0`
 

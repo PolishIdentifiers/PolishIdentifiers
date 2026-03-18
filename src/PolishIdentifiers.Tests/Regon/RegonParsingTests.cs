@@ -436,7 +436,7 @@ public class RegonParsingTests
     {
         var regon = Regon.Parse(ValidRegon9);
 
-        regon.BaseRegon.ShouldBe(regon);
+        regon.BaseRegon9.ShouldBe(regon);
     }
 
     [Fact]
@@ -445,7 +445,7 @@ public class RegonParsingTests
         var regon14 = Regon.Parse(ValidRegon14);
         var expectedBase = Regon.Parse(ValidRegon9); // first 9 digits of ValidRegon14
 
-        regon14.BaseRegon.ShouldBe(expectedBase);
+        regon14.BaseRegon9.ShouldBe(expectedBase);
     }
 
     [Fact]
@@ -453,7 +453,7 @@ public class RegonParsingTests
     {
         var regon14 = Regon.Parse(ValidRegon14);
 
-        regon14.BaseRegon.IsRegon9.ShouldBeTrue();
+        regon14.BaseRegon9.IsRegon9.ShouldBeTrue();
     }
 
     [Fact]
@@ -461,7 +461,7 @@ public class RegonParsingTests
     {
         var regon14 = Regon.Parse(ValidRegon14);
 
-        regon14.BaseRegon.ToString().Length.ShouldBe(9);
+        regon14.BaseRegon9.ToString().Length.ShouldBe(9);
     }
 
     [Fact]
@@ -470,7 +470,7 @@ public class RegonParsingTests
         var regon14 = Regon.Parse(ValidRegon14);
         var expectedBase9 = ValidRegon14.Substring(0, 9);
 
-        regon14.BaseRegon.ToString().ShouldBe(expectedBase9);
+        regon14.BaseRegon9.ToString().ShouldBe(expectedBase9);
     }
 
     [Fact]
@@ -478,14 +478,14 @@ public class RegonParsingTests
     {
         var regon14 = Regon.Parse(ValidRegon14WithLeadingZeroBase);
 
-        regon14.BaseRegon.ToString().ShouldBe(ValidRegon9WithLeadingZero);
+        regon14.BaseRegon9.ToString().ShouldBe(ValidRegon9WithLeadingZero);
     }
 
     [Fact]
     public void BaseRegon_Regon14AllZeros_ReturnsInitializedRegon9BaseMatchingFirstNineDigits()
     {
         var regon14 = Regon.Parse(ValidRegon14AllZeros);
-        var baseRegon = regon14.BaseRegon;
+        var baseRegon = regon14.BaseRegon9;
 
         var expectedBase9 = ValidRegon14AllZeros.Substring(0, 9);
 
@@ -542,7 +542,7 @@ public class RegonParsingTests
     {
         Regon regon = default;
 
-        Should.Throw<InvalidOperationException>(() => _ = regon.BaseRegon);
+        Should.Throw<InvalidOperationException>(() => _ = regon.BaseRegon9);
     }
 
     [Fact]

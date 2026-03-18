@@ -207,7 +207,7 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// so the embedded REGON-9 base is guaranteed to be structurally valid.
     /// </remarks>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
-    public Regon BaseRegon
+    public Regon BaseRegon9
     {
         get
         {

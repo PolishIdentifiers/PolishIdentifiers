@@ -88,7 +88,7 @@ public class RegonGeneratorTests
     {
         var regon14 = RegonGenerator.Generate(RegonKind.Regon14);
 
-        var base9 = regon14.BaseRegon;
+        var base9 = regon14.BaseRegon9;
         Regon.Validate(base9.ToString()).IsValid.ShouldBeTrue();
         base9.IsRegon9.ShouldBeTrue();
     }
@@ -98,7 +98,7 @@ public class RegonGeneratorTests
     {
         var regon14 = RegonGenerator.Generate(RegonKind.Regon14);
 
-        var base9FromProp = regon14.BaseRegon.ToString();
+        var base9FromProp = regon14.BaseRegon9.ToString();
         var base9FromStr = regon14.ToString().Substring(0, 9);
 
         base9FromProp.ShouldBe(base9FromStr);
