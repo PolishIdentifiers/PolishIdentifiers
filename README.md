@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Targets: netstandard2.0 · net10.0](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net10.0-informational)
 
-PolishIdentifiers is a .NET library that exposes PESEL, NIP, and REGON as strong identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings.
+PolishIdentifiers is a .NET library that exposes PESEL, NIP, and REGON as strong identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings plus includes their strong validation.
 
 These identifiers are implemented as tightly constrained `readonly struct` value types, with one unified `Parse` / `TryParse` / `Validate` API shape across the implemented surface, DataAnnotations attributes for request validation, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths.
 
@@ -13,7 +13,9 @@ In practice, that gives you one package for parsing, validation, formatting, gen
 
 ## Framework support
 
-Targets `netstandard2.0` and `net10.0`. The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-based PESEL members. See [Framework support](./docs/framework-support.md) for all target-specific differences.
+Targets `netstandard2.0` and `net10.0`.
+
+The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-based PESEL members. See [Framework support](./docs/framework-support.md) for all target-specific differences.
 
 ## Supported identifiers
 
