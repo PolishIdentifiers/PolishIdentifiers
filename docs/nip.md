@@ -8,21 +8,7 @@ Available on: `netstandard2.0`, `net10.0`
 
 ## Contents
 
-### Properties
-
-[int: IssuingTaxOfficePrefix](#property-issuingtaxofficeprefix) | [bool: IsDefault](#property-isdefault)
-
-### Methods
-
-[int: CompareTo(Nip)](#method-compareto-nip) | [bool: Equals(object?)](#method-equals-object) | [bool: Equals(Nip)](#method-equals-nip) | [int: GetHashCode()](#method-gethashcode) | [Nip: IParsable<Nip>.Parse(string, IFormatProvider?)](#method-iparsable-parse) | [bool: IParsable<Nip>.TryParse(string?, IFormatProvider?, out Nip)](#method-iparsable-tryparse) | [Nip: ISpanParsable<Nip>.Parse(ReadOnlySpan<char>, IFormatProvider?)](#method-ispanparsable-parse) | [bool: ISpanParsable<Nip>.TryParse(ReadOnlySpan<char>, IFormatProvider?, out Nip)](#method-ispanparsable-tryparse) | [Nip: Parse(ReadOnlySpan<char>)](#method-parse-span) | [Nip: Parse(string)](#method-parse-string) | [string: ToString()](#method-tostring) | [string: ToString(NipFormat)](#method-tostring-nipformat) | [string: ToString(string?, IFormatProvider?)](#method-tostring-format) | [bool: TryParse(ReadOnlySpan<char>, out Nip)](#method-tryparse-span) | [bool: TryParse(ReadOnlySpan<char>, out Nip, out NipValidationError?)](#method-tryparse-span-error) | [bool: TryParse(string?, out Nip)](#method-tryparse-string) | [bool: TryParse(string?, out Nip, out NipValidationError?)](#method-tryparse-string-error) | [ValidationResult<NipValidationError>: Validate(ReadOnlySpan<char>)](#method-validate-span) | [ValidationResult<NipValidationError>: Validate(string?)](#method-validate-string) | [bool: operator !=](#method-operator-ne) | [bool: operator ==](#method-operator-eq)
-
-### Enums
-
-[NipFormat](#enum-nipformat) | [NipValidationError](#enum-nipvalidationerror)
-
-### Related
-
-[NipGenerator](./nip-generator.md)
+[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums)
 
 ## Accepted input
 
@@ -52,6 +38,29 @@ Important implementation notes:
 - `IssuingTaxOfficePrefix` is historical metadata from the number itself; it is not a current routing or registry lookup signal
 - when the weighted checksum modulo 11 equals 10, the input is invalid; the check digit is not remapped to `0`
 - `default(Nip)` is not a valid parsed value; use `IsDefault` before accessing domain properties on a value that might be uninitialized
+
+## Output formatting
+
+`Nip` supports explicit output formatting through `NipFormat`.
+
+- use `ToString()` or `ToString(NipFormat.DigitsOnly)` for canonical storage and wire formats
+- use `ToString(NipFormat.Hyphenated)` when you need a conventional human-readable display form
+- use `ToString(NipFormat.VatEu)` when you need the `PL`-prefixed VAT-EU form
+
+## Persistence
+
+Store the canonical 10-digit string produced by `ToString()`.
+
+- write `nip.ToString()` to the database or serialized payload
+- read with `Nip.Parse(...)` when stored data is guaranteed to be valid
+- read with `Nip.TryParse(...)` when stored data may be malformed
+- format only when producing output, not when persisting
+- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
+- for EF Core, use a value converter targeting `string`
+
+## Generator docs
+
+See [NipGenerator](./nip-generator.md).
 
 ## Properties
 
@@ -487,26 +496,3 @@ if (!Nip.TryParse("1234563219", out _, out NipValidationError? error))
     Console.WriteLine(error);
 }
 ```
-
-## Output formatting
-
-`Nip` supports explicit output formatting through `NipFormat`.
-
-- use `ToString()` or `ToString(NipFormat.DigitsOnly)` for canonical storage and wire formats
-- use `ToString(NipFormat.Hyphenated)` when you need a conventional human-readable display form
-- use `ToString(NipFormat.VatEu)` when you need the `PL`-prefixed VAT-EU form
-
-## Persistence
-
-Store the canonical 10-digit string produced by `ToString()`.
-
-- write `nip.ToString()` to the database or serialized payload
-- read with `Nip.Parse(...)` when stored data is guaranteed to be valid
-- read with `Nip.TryParse(...)` when stored data may be malformed
-- format only when producing output, not when persisting
-- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
-- for EF Core, use a value converter targeting `string`
-
-## Generator docs
-
-See [NipGenerator](./nip-generator.md).

@@ -4,12 +4,6 @@
 
 Available on: `netstandard2.0`, `net10.0`
 
-## Contents
-
-### Methods
-
-[Pesel: Generate()](#method-generate) | [Pesel: Generate(DateOnly)](#method-generate-dateonly) | [Pesel: Generate(DateTime)](#method-generate-datetime) | [Pesel: Generate(Gender)](#method-generate-gender) | [Pesel: Generate(Gender, DateOnly)](#method-generate-gender-dateonly) | [Pesel: Generate(Gender, DateTime)](#method-generate-gender-datetime) | [string: Invalid.NonNumeric()](#method-invalid-nonnumeric) | [string: Invalid.WrongChecksum()](#method-invalid-wrongchecksum) | [string: Invalid.WrongDate()](#method-invalid-wrongdate) | [string: Invalid.WrongLength()](#method-invalid-wronglength)
-
 ## Methods
 
 <a id="method-generate"></a>

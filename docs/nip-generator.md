@@ -4,12 +4,6 @@
 
 Available on: `netstandard2.0`, `net10.0`
 
-## Contents
-
-### Methods
-
-[Nip: Generate()](#method-generate) | [string: Invalid.NonNumeric()](#method-invalid-nonnumeric) | [string: Invalid.WrongChecksum()](#method-invalid-wrongchecksum) | [string: Invalid.WrongLength()](#method-invalid-wronglength)
-
 ## Methods
 
 <a id="method-generate"></a>

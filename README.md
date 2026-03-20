@@ -1,11 +1,15 @@
 # PolishIdentifiers
 
 [![NuGet](https://img.shields.io/nuget/v/PolishIdentifiers.svg)](https://www.nuget.org/packages/PolishIdentifiers/)
-![CI](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml/badge.svg?branch=main)
+[![CI](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml/badge.svg)](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![Targets: netstandard2.0 · net10.0](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net10.0-informational)
 
 PolishIdentifiers is a .NET library for strongly typed handling of PESEL, NIP, and REGON.
 
-It provides one unified `Parse` / `TryParse` / `Validate` API shape across the implemented identifiers, DataAnnotations attributes for request validation, strong identifier types instead of raw strings in domain code, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths. In practice, that makes it a single package for parsing, validation, formatting, generation, and request-model validation across the implemented identifiers.
+It provides one unified `Parse` / `TryParse` / `Validate` API shape across the implemented identifiers, DataAnnotations attributes for request validation, strong identifier types instead of raw strings in domain code, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths. 
+
+In practice, that makes it a single package for parsing, validation, formatting, generation, and request-model validation across the implemented identifiers.
 
 ## Framework support
 
@@ -13,11 +17,11 @@ Targets `netstandard2.0` and `net10.0`. The `net10.0` build adds `IParsable<T>`,
 
 ## Supported identifiers
 
-| Type | Identifier | Accepted examples | Docs |
-|---|---|---|---|
-| `Pesel` | PESEL | `44051401458` | [PESEL](./docs/pesel.md) |
+| Type | Identifier | Accepted formats                                                                   | Docs |
+|---|---|------------------------------------------------------------------------------------|---|
+| `Pesel` | PESEL | `44051401458`                                                                      | [PESEL](./docs/pesel.md) |
 | `Nip` | NIP | `1234563218`, `123-456-32-18`, `PL1234563218`, `PL 1234563218`, `PL 123-456-32-18` | [NIP](./docs/nip.md) |
-| `Regon` | REGON | `123456785`, `12345678512347` | [REGON](./docs/regon.md) |
+| `Regon` | REGON | `123456785`, `12345678512347`                                                      | [REGON](./docs/regon.md) |
 
 ## Generators
 

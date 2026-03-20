@@ -8,21 +8,7 @@ Available on: `netstandard2.0`, `net10.0`
 
 ## Contents
 
-### Properties
-
-[Regon: BaseRegon9](#property-baseregon9) | [bool: IsDefault](#property-isdefault) | [bool: IsRegon14](#property-isregon14) | [bool: IsRegon9](#property-isregon9) | [RegonKind: Kind](#property-kind)
-
-### Methods
-
-[int: CompareTo(Regon)](#method-compareto-regon) | [bool: Equals(object?)](#method-equals-object) | [bool: Equals(Regon)](#method-equals-regon) | [int: GetHashCode()](#method-gethashcode) | [Regon: IParsable<Regon>.Parse(string, IFormatProvider?)](#method-iparsable-parse) | [bool: IParsable<Regon>.TryParse(string?, IFormatProvider?, out Regon)](#method-iparsable-tryparse) | [Regon: ISpanParsable<Regon>.Parse(ReadOnlySpan<char>, IFormatProvider?)](#method-ispanparsable-parse) | [bool: ISpanParsable<Regon>.TryParse(ReadOnlySpan<char>, IFormatProvider?, out Regon)](#method-ispanparsable-tryparse) | [Regon: Parse(ReadOnlySpan<char>)](#method-parse-span) | [Regon: Parse(string)](#method-parse-string) | [string: ToString()](#method-tostring) | [string: ToString(string?, IFormatProvider?)](#method-tostring-format) | [bool: TryParse(ReadOnlySpan<char>, out Regon)](#method-tryparse-span) | [bool: TryParse(ReadOnlySpan<char>, out Regon, out RegonValidationError?)](#method-tryparse-span-error) | [bool: TryParse(string?, out Regon)](#method-tryparse-string) | [bool: TryParse(string?, out Regon, out RegonValidationError?)](#method-tryparse-string-error) | [ValidationResult<RegonValidationError>: Validate(ReadOnlySpan<char>)](#method-validate-span) | [ValidationResult<RegonValidationError>: Validate(string?)](#method-validate-string) | [bool: operator !=](#method-operator-ne) | [bool: operator ==](#method-operator-eq)
-
-### Enums
-
-[RegonKind](#enum-regonkind) | [RegonValidationError](#enum-regonvalidationerror)
-
-### Related
-
-[RegonGenerator](./regon-generator.md)
+[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums)
 
 ## Accepted input
 
@@ -53,6 +39,29 @@ Important implementation notes:
 - for REGON, `sum % 11 == 10` maps to check digit `0`
 - `BaseRegon9` returns the embedded 9-digit base for REGON-14 and returns the current value for REGON-9
 - `default(Regon)` is distinct from valid all-zero REGON values; use `IsDefault` to detect an uninitialized instance
+
+## Output formatting
+
+`Regon` has canonical output only.
+
+- use `ToString()` for storage, logging, and wire formats
+- use `ToString("D9", null)` or `ToString("D14", null)` only when an API explicitly expects an `IFormattable` format token and you already know the variant
+- there are no public display-format variants comparable to `NipFormat`
+
+## Persistence
+
+Store the canonical string produced by `ToString()`.
+
+- write `regon.ToString()` to the database or serialized payload
+- read with `Regon.Parse(...)` when stored data is guaranteed to be valid
+- read with `Regon.TryParse(...)` when stored data may be malformed
+- keep the full canonical value so the REGON-9 versus REGON-14 distinction is preserved
+- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
+- for EF Core, use a value converter targeting `string`
+
+## Generator docs
+
+See [RegonGenerator](./regon-generator.md).
 
 ## Properties
 
@@ -515,26 +524,3 @@ if (!Regon.TryParse("12345678512348", out _, out RegonValidationError? error))
     Console.WriteLine(error);
 }
 ```
-
-## Output formatting
-
-`Regon` has canonical output only.
-
-- use `ToString()` for storage, logging, and wire formats
-- use `ToString("D9", null)` or `ToString("D14", null)` only when an API explicitly expects an `IFormattable` format token and you already know the variant
-- there are no public display-format variants comparable to `NipFormat`
-
-## Persistence
-
-Store the canonical string produced by `ToString()`.
-
-- write `regon.ToString()` to the database or serialized payload
-- read with `Regon.Parse(...)` when stored data is guaranteed to be valid
-- read with `Regon.TryParse(...)` when stored data may be malformed
-- keep the full canonical value so the REGON-9 versus REGON-14 distinction is preserved
-- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
-- for EF Core, use a value converter targeting `string`
-
-## Generator docs
-
-See [RegonGenerator](./regon-generator.md).

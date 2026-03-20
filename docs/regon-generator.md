@@ -4,12 +4,6 @@
 
 Available on: `netstandard2.0`, `net10.0`
 
-## Contents
-
-### Methods
-
-[Regon: Generate(RegonKind)](#method-generate) | [string: Invalid.NonNumeric()](#method-invalid-nonnumeric) | [string: Invalid.WrongChecksumRegon14()](#method-invalid-wrongchecksumregon14) | [string: Invalid.WrongChecksumRegon9()](#method-invalid-wrongchecksumregon9) | [string: Invalid.WrongLength()](#method-invalid-wronglength)
-
 ## Methods
 
 <a id="method-generate"></a>

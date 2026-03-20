@@ -8,21 +8,7 @@ Available on: `netstandard2.0`, `net10.0`
 
 ## Contents
 
-### Properties
-
-[DateTime: BirthDate](#property-birthdate) | [DateOnly: BirthDateOnly](#property-birthdateonly) | [Gender: Gender](#property-gender) | [bool: IsDefault](#property-isdefault)
-
-### Methods
-
-[int: CompareTo(Pesel)](#method-compareto-pesel) | [bool: Equals(object?)](#method-equals-object) | [bool: Equals(Pesel)](#method-equals-pesel) | [int: GetHashCode()](#method-gethashcode) | [Pesel: IParsable<Pesel>.Parse(string, IFormatProvider?)](#method-iparsable-parse) | [bool: IParsable<Pesel>.TryParse(string?, IFormatProvider?, out Pesel)](#method-iparsable-tryparse) | [Pesel: ISpanParsable<Pesel>.Parse(ReadOnlySpan<char>, IFormatProvider?)](#method-ispanparsable-parse) | [bool: ISpanParsable<Pesel>.TryParse(ReadOnlySpan<char>, IFormatProvider?, out Pesel)](#method-ispanparsable-tryparse) | [Pesel: Parse(ReadOnlySpan<char>)](#method-parse-span) | [Pesel: Parse(string)](#method-parse-string) | [string: ToString()](#method-tostring) | [string: ToString(string?, IFormatProvider?)](#method-tostring-format) | [bool: TryParse(ReadOnlySpan<char>, out Pesel)](#method-tryparse-span) | [bool: TryParse(ReadOnlySpan<char>, out Pesel, out PeselValidationError?)](#method-tryparse-span-error) | [bool: TryParse(string?, out Pesel)](#method-tryparse-string) | [bool: TryParse(string?, out Pesel, out PeselValidationError?)](#method-tryparse-string-error) | [ValidationResult<PeselValidationError>: Validate(ReadOnlySpan<char>)](#method-validate-span) | [ValidationResult<PeselValidationError>: Validate(string?)](#method-validate-string) | [bool: operator !=](#method-operator-ne) | [bool: operator ==](#method-operator-eq)
-
-### Enums
-
-[Gender](#enum-gender) | [PeselValidationError](#enum-peselvalidationerror)
-
-### Related
-
-[PeselGenerator](./pesel-generator.md)
+[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums)
 
 ## Accepted input
 
@@ -53,6 +39,28 @@ Important implementation notes:
 - the month digits encode the century, not just the calendar month
 - `BirthDate` returns a midnight `DateTime`; `BirthDateOnly` is available on `net10.0`
 - `default(Pesel)` is not a valid parsed value; use `IsDefault` before accessing domain properties on a value that might be uninitialized
+
+## Output formatting
+
+`Pesel` has one canonical output form.
+
+- use `ToString()` for storage, logging, and wire formats
+- use `ToString("D11", null)` only when an API explicitly expects an `IFormattable` format token
+- there are no public display-format variants
+
+## Persistence
+
+Store the canonical 11-digit string produced by `ToString()`.
+
+- write `pesel.ToString()` to the database or serialized payload
+- read with `Pesel.Parse(...)` when stored data is guaranteed to be valid
+- read with `Pesel.TryParse(...)` when stored data may be malformed
+- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
+- for EF Core, use a value converter targeting `string`
+
+## Generator docs
+
+See [PeselGenerator](./pesel-generator.md).
 
 ## Properties
 
@@ -507,25 +515,3 @@ if (!Pesel.TryParse("44051401459", out _, out PeselValidationError? error))
     Console.WriteLine(error);
 }
 ```
-
-## Output formatting
-
-`Pesel` has one canonical output form.
-
-- use `ToString()` for storage, logging, and wire formats
-- use `ToString("D11", null)` only when an API explicitly expects an `IFormattable` format token
-- there are no public display-format variants
-
-## Persistence
-
-Store the canonical 11-digit string produced by `ToString()`.
-
-- write `pesel.ToString()` to the database or serialized payload
-- read with `Pesel.Parse(...)` when stored data is guaranteed to be valid
-- read with `Pesel.TryParse(...)` when stored data may be malformed
-- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
-- for EF Core, use a value converter targeting `string`
-
-## Generator docs
-
-See [PeselGenerator](./pesel-generator.md).
