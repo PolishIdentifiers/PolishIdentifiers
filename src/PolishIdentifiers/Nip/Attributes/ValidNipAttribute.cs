@@ -13,7 +13,7 @@ namespace PolishIdentifiers;
 /// <para>
 /// Intended for use on DTO properties at the application boundary (e.g. API request models).
 /// For string values, accepts the same canonical and recognized formatted NIP inputs as
-/// <see cref="Nip.ValidateFormatted(string?)"/>.
+/// <see cref="Nip.Validate(string?)"/>.
 /// </para>
 /// <para>
 /// Domain types should use <see cref="Nip"/> directly instead of a string with this attribute.
@@ -37,7 +37,7 @@ public sealed class ValidNipAttribute : ValidationAttribute
     public override bool IsValid(object? value) => value switch
     {
         null   => true,
-        string s => Nip.ValidateFormatted(s).IsValid,
+        string s => Nip.Validate(s).IsValid,
         Nip n  => !n.IsDefault,
         _      => false,
     };

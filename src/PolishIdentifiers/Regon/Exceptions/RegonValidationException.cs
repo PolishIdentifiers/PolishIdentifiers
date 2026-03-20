@@ -4,6 +4,12 @@ namespace PolishIdentifiers;
 /// The exception thrown by <see cref="Regon.Parse(string)"/> and <see cref="Regon.Parse(System.ReadOnlySpan{char})"/>
 /// when the input is not a valid REGON number.
 /// </summary>
+/// <remarks>
+/// Prefer <see cref="Regon.TryParse(string?, out Regon, out RegonValidationError?)"/>,
+/// <see cref="Regon.TryParse(string?, out Regon)"/>, or <see cref="Regon.Validate(string?)"/>
+/// in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
+/// For normal application-boundary code, the typed-error overload is recommended.
+/// </remarks>
 public class RegonValidationException : Exception
 {
     /// <summary>

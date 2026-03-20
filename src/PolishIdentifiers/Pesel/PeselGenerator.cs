@@ -28,7 +28,7 @@ public static class PeselGenerator
     /// <remarks>This method is thread-safe.</remarks>
     public static Pesel Generate()
     {
-        var date   = RandomDate();
+        var date   = GetRandomDate();
         var gender = NextInt(2) == 0 ? Gender.Male : Gender.Female;
         return BuildPesel(date, gender);
     }
@@ -39,7 +39,7 @@ public static class PeselGenerator
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="gender"/> is not a supported <see cref="Gender"/> value.</exception>
     /// <remarks>This method is thread-safe.</remarks>
     public static Pesel Generate(Gender gender)
-        => BuildPesel(RandomDate(), gender);
+        => BuildPesel(GetRandomDate(), gender);
 
     /// <summary>
     /// Generates a valid PESEL for a person born on <paramref name="birthDate"/>, with a random gender.
@@ -236,7 +236,7 @@ public static class PeselGenerator
             throw new ArgumentOutOfRangeException(paramName, gender, "Unsupported gender value.");
     }
 
-    private static DateTime RandomDate()
+    private static DateTime GetRandomDate()
     {
         var year  = NextInt(1800, 2300);
         var month = NextInt(1, 13);

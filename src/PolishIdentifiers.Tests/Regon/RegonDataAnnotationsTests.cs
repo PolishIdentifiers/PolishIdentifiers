@@ -15,20 +15,20 @@ public class RegonDataAnnotationsTests
     private const string InvalidRegonWrongLength = "1234567";
     private const string ExpectedErrorMessage = "The Regon field is not a valid REGON.";
 
-    private sealed class RegonStringDto
+    private sealed class StringDto
     {
         [ValidRegon]
         public string? Regon { get; set; }
     }
 
-    private sealed class RequiredRegonStringDto
+    private sealed class RequiredStringDto
     {
         [Required]
         [ValidRegon]
         public string? Regon { get; set; }
     }
 
-    private sealed class RegonStructDto
+    private sealed class StrongTypeDto
     {
         [ValidRegon]
         public Regon Regon { get; set; }
@@ -52,7 +52,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_NullString_IsValid()
     {
-        var dto = new RegonStringDto { Regon = null };
+        var dto = new StringDto { Regon = null };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -63,13 +63,13 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_NullStringWithRequired_IsInvalidByRequiredOnly()
     {
-        var dto = new RequiredRegonStringDto { Regon = null };
+        var dto = new RequiredStringDto { Regon = null };
 
         var isValid = TryValidate(dto, out var results);
         var error = results.ShouldHaveSingleItem();
 
         isValid.ShouldBeFalse();
-        error.MemberNames.ShouldContain(nameof(RequiredRegonStringDto.Regon));
+        error.MemberNames.ShouldContain(nameof(RequiredStringDto.Regon));
     }
 
     // ── Valid strings ─────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_ValidRegon9String_IsValid()
     {
-        var dto = new RegonStringDto { Regon = ValidRegon9 };
+        var dto = new StringDto { Regon = ValidRegon9 };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -88,7 +88,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_ValidRegon14String_IsValid()
     {
-        var dto = new RegonStringDto { Regon = ValidRegon14 };
+        var dto = new StringDto { Regon = ValidRegon14 };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -99,7 +99,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_Regon9AllZerosString_IsValid()
     {
-        var dto = new RegonStringDto { Regon = ValidRegon9AllZeros };
+        var dto = new StringDto { Regon = ValidRegon9AllZeros };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -110,7 +110,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_Regon14AllZerosString_IsValid()
     {
-        var dto = new RegonStringDto { Regon = ValidRegon14AllZeros };
+        var dto = new StringDto { Regon = ValidRegon14AllZeros };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -123,20 +123,20 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_InvalidRegon_ReturnsMemberNameAndMessage()
     {
-        var dto = new RegonStringDto { Regon = InvalidRegon };
+        var dto = new StringDto { Regon = InvalidRegon };
 
         var isValid = TryValidate(dto, out var results);
         var error = results.ShouldHaveSingleItem();
 
         isValid.ShouldBeFalse();
-        error.MemberNames.ShouldContain(nameof(RegonStringDto.Regon));
+        error.MemberNames.ShouldContain(nameof(StringDto.Regon));
         error.ErrorMessage.ShouldBe(ExpectedErrorMessage);
     }
 
     [Fact]
     public void ValidRegonAttribute_EmptyString_IsInvalid()
     {
-        var dto = new RegonStringDto { Regon = string.Empty };
+        var dto = new StringDto { Regon = string.Empty };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -149,7 +149,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_ParsedRegon9Struct_IsValid()
     {
-        var dto = new RegonStructDto { Regon = Regon.Parse(ValidRegon9) };
+        var dto = new StrongTypeDto { Regon = Regon.Parse(ValidRegon9) };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -160,7 +160,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_ParsedRegon14Struct_IsValid()
     {
-        var dto = new RegonStructDto { Regon = Regon.Parse(ValidRegon14) };
+        var dto = new StrongTypeDto { Regon = Regon.Parse(ValidRegon14) };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -171,7 +171,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_ParsedRegon9AllZerosStruct_IsValid()
     {
-        var dto = new RegonStructDto { Regon = Regon.Parse(ValidRegon9AllZeros) };
+        var dto = new StrongTypeDto { Regon = Regon.Parse(ValidRegon9AllZeros) };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -182,7 +182,7 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_ParsedRegon14AllZerosStruct_IsValid()
     {
-        var dto = new RegonStructDto { Regon = Regon.Parse(ValidRegon14AllZeros) };
+        var dto = new StrongTypeDto { Regon = Regon.Parse(ValidRegon14AllZeros) };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -193,13 +193,13 @@ public class RegonDataAnnotationsTests
     [Fact]
     public void ValidRegonAttribute_DefaultRegonStruct_IsInvalid()
     {
-        var dto = new RegonStructDto();
+        var dto = new StrongTypeDto();
 
         var isValid = TryValidate(dto, out var results);
         var error = results.ShouldHaveSingleItem();
 
         isValid.ShouldBeFalse();
-        error.MemberNames.ShouldContain(nameof(RegonStructDto.Regon));
+        error.MemberNames.ShouldContain(nameof(StrongTypeDto.Regon));
     }
 
     // ── Unsupported type ──────────────────────────────────────────────────────
@@ -266,7 +266,7 @@ public class RegonDataAnnotationsTests
     public void ValidRegonAttribute_GetValidationResult_InvalidRegon_ReturnsError()
     {
         var attribute = new ValidRegonAttribute();
-        var context = new ValidationContext(new RegonStringDto()) { DisplayName = "Tax REGON" };
+        var context = new ValidationContext(new StringDto()) { DisplayName = "Tax REGON" };
 
         var result = attribute.GetValidationResult(InvalidRegon, context);
 
@@ -278,7 +278,7 @@ public class RegonDataAnnotationsTests
     public void ValidRegonAttribute_GetValidationResult_ValidRegon_ReturnsSuccess()
     {
         var attribute = new ValidRegonAttribute();
-        var context = new ValidationContext(new RegonStringDto());
+        var context = new ValidationContext(new StringDto());
 
         var result = attribute.GetValidationResult(ValidRegon9, context);
 

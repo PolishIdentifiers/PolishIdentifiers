@@ -21,7 +21,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>pesel nip regon dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>v1.0.0: First stable core release with Pesel, Nip, and Regon, including [ValidRegon] DataAnnotations support and generators for REGON-9 and REGON-14. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>Package includes Pesel, Nip, and Regon, including [ValidRegon] DataAnnotations support and generators for REGON-9 and REGON-14. See CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

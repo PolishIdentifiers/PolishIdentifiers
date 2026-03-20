@@ -269,4 +269,53 @@ public class RegonValidationTests
 
         error.ShouldBe(RegonValidationError.InvalidChecksum);
     }
+
+    [Fact]
+    public void Match_ValidRegon_OnErrorIsNotInvoked()
+    {
+        var result = Regon.Validate(ValidRegon9);
+        var onErrorCalled = false;
+
+        result.Match(onValid: () => true, onError: _ => { onErrorCalled = true; return false; });
+
+        onErrorCalled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Match_InvalidRegon_OnValidIsNotInvoked()
+    {
+        var result = Regon.Validate(InvalidChecksum9_d8is0);
+        var onValidCalled = false;
+
+        result.Match(onValid: () => { onValidCalled = true; return true; }, onError: _ => false);
+
+        onValidCalled.ShouldBeFalse();
+    }
+
+    // --- Default struct ---
+
+    [Fact]
+    public void Match_DefaultStruct_ThrowsInvalidOperationException()
+    {
+        var result = default(ValidationResult<RegonValidationError>);
+
+        Should.Throw<InvalidOperationException>(() =>
+            result.Match(onValid: () => "ok", onError: e => e.ToString()));
+    }
+
+    [Fact]
+    public void DefaultStruct_IsValidIsFalse()
+    {
+        var result = default(ValidationResult<RegonValidationError>);
+
+        result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DefaultStruct_ErrorIsNull()
+    {
+        var result = default(ValidationResult<RegonValidationError>);
+
+        result.Error.ShouldBeNull();
+    }
 }

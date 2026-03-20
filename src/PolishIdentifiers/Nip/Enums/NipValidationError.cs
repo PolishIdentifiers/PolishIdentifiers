@@ -4,22 +4,20 @@ namespace PolishIdentifiers;
 /// Identifies the specific rule violated when a NIP string fails validation.
 /// </summary>
 /// <remarks>
-/// Errors are reported in check order: characters → length → checksum.
-/// For the <c>*Formatted</c> path, <see cref="UnrecognizedFormat"/> is reported
-/// when the input does not match any of the five supported input formats.
+/// Errors are reported in check order: characters → length → format → checksum.
 /// Only the first violated rule is returned; subsequent rules are not evaluated.
 /// </remarks>
 public enum NipValidationError
 {
     /// <summary>
-    /// The validated input contains one or more characters that are not decimal digits (0-9).
-    /// On the formatted path, this is reported only after the input matches a recognized format.
+    /// The validated input contains one or more characters outside the supported public NIP character set:
+    /// decimal digits, uppercase <c>P</c>, uppercase <c>L</c>, space, and hyphen.
     /// </summary>
     InvalidCharacters,
 
     /// <summary>
-    /// The validated input does not consist of exactly 10 digits.
-    /// On the formatted path, this is reported only after the input matches a recognized format.
+    /// The validated input does not satisfy the public NIP length requirements.
+    /// This includes <see langword="null"/>, empty input, and digit-only input that does not consist of exactly 10 digits.
     /// </summary>
     InvalidLength,
 
@@ -31,8 +29,8 @@ public enum NipValidationError
     InvalidChecksum,
 
     /// <summary>
-    /// The input does not match any of the recognized formatted NIP patterns.
-    /// Only returned by the <c>*Formatted</c> methods.
+    /// The input uses only otherwise supported characters but does not match any of
+    /// the documented public NIP text representations.
     /// </summary>
     UnrecognizedFormat,
 }

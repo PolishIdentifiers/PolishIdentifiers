@@ -57,7 +57,7 @@ public class PeselGeneratorTests
         var date = new DateTime(1990, 5, 14);
         var pesel = PeselGenerator.Generate(date);
 
-        pesel.BirthDateTime.ShouldBe(date);
+        pesel.BirthDate.ShouldBe(date);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class PeselGeneratorTests
         var date = new DateTime(1990, 5, 14);
         var pesel = PeselGenerator.Generate(Gender.Male, date);
 
-        pesel.BirthDateTime.ShouldBe(date);
+        pesel.BirthDate.ShouldBe(date);
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class PeselGeneratorTests
         var date = new DateTime(1985, 11, 3);
         var pesel = PeselGenerator.Generate(Gender.Female, date);
 
-        pesel.BirthDateTime.ShouldBe(date);
+        pesel.BirthDate.ShouldBe(date);
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class PeselGeneratorTests
         var date  = new DateTime(year, month, day);
         var pesel = PeselGenerator.Generate(Gender.Male, date);
 
-        pesel.BirthDateTime.ShouldBe(date);
+        pesel.BirthDate.ShouldBe(date);
     }
 
     [Theory]
@@ -136,7 +136,7 @@ public class PeselGeneratorTests
         var date  = new DateTime(year, month, day);
         var pesel = PeselGenerator.Generate(Gender.Female, date);
 
-        pesel.BirthDateTime.ShouldBe(date);
+        pesel.BirthDate.ShouldBe(date);
     }
 
     [Theory]
@@ -147,7 +147,7 @@ public class PeselGeneratorTests
         var date  = new DateTime(year, month, day);
         var pesel = PeselGenerator.Generate(Gender.Male, date);
 
-        pesel.BirthDateTime.ShouldBe(date);
+        pesel.BirthDate.ShouldBe(date);
     }
 
     [Theory]
@@ -187,11 +187,27 @@ public class PeselGeneratorTests
     }
 
     [Fact]
+    public void Invalid_WrongDate_CalledMultipleTimes_AlwaysYieldsInvalidDate()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => PeselGenerator.Invalid.WrongDate()).ToList();
+
+        results.ShouldAllBe(s => Pesel.Validate(s).Error == PeselValidationError.InvalidDate);
+    }
+
+    [Fact]
     public void Invalid_WrongLength_YieldsExactlyInvalidLength()
     {
         var s = PeselGenerator.Invalid.WrongLength();
 
         Pesel.Validate(s).Error.ShouldBe(PeselValidationError.InvalidLength);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_CalledMultipleTimes_AlwaysYieldsInvalidLength()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => PeselGenerator.Invalid.WrongLength()).ToList();
+
+        results.ShouldAllBe(s => Pesel.Validate(s).Error == PeselValidationError.InvalidLength);
     }
 
     [Fact]
@@ -218,6 +234,14 @@ public class PeselGeneratorTests
         Pesel.Validate(s).Error.ShouldBe(PeselValidationError.InvalidCharacters);
     }
 
+    [Fact]
+    public void Invalid_NonNumeric_CalledMultipleTimes_AlwaysYieldsInvalidCharacters()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => PeselGenerator.Invalid.NonNumeric()).ToList();
+
+        results.ShouldAllBe(s => Pesel.Validate(s).Error == PeselValidationError.InvalidCharacters);
+    }
+
     // --- WrongChecksum: structural verification (independent of the validator) ---
 
     [Fact]
@@ -227,6 +251,24 @@ public class PeselGeneratorTests
 
         s.Length.ShouldBe(11);
         s.ShouldAllBe(c => c >= '0' && c <= '9');
+    }
+
+    // --- NonNumeric: structural verification ---
+
+    [Fact]
+    public void Invalid_NonNumeric_HasLength11()
+    {
+        var value = PeselGenerator.Invalid.NonNumeric();
+
+        value.Length.ShouldBe(11);
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_ContainsAtLeastOneNonDigit()
+    {
+        var value = PeselGenerator.Invalid.NonNumeric();
+
+        value.Any(c => c < '0' || c > '9').ShouldBeTrue();
     }
 
     // --- WrongDate: verifies the date is invalid while the checksum is valid ---
@@ -251,9 +293,9 @@ public class PeselGeneratorTests
         isValidRange.ShouldBeFalse();
     }
 
-#if NET10_0_OR_GREATER
-    // --- Generate(DateOnly) ---
+    // --- Generate(DateOnly) — net10 only ---
 
+#if NET10_0_OR_GREATER
     [Fact]
     public void Generate_WithDateOnly_ProducesValidPesel()
     {
@@ -267,18 +309,20 @@ public class PeselGeneratorTests
     public void Generate_WithMaleGenderAndDateOnly_HasCorrectDate()
     {
         var date = new DateOnly(1990, 5, 14);
+
         var pesel = PeselGenerator.Generate(Gender.Male, date);
 
-        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
+        DateOnly.FromDateTime(pesel.BirthDate).ShouldBe(date);
     }
 
     [Fact]
     public void Generate_WithFemaleGenderAndDateOnly_HasCorrectDate()
     {
         var date = new DateOnly(1985, 11, 3);
+
         var pesel = PeselGenerator.Generate(Gender.Female, date);
 
-        DateOnly.FromDateTime(pesel.BirthDateTime).ShouldBe(date);
+        DateOnly.FromDateTime(pesel.BirthDate).ShouldBe(date);
     }
 
     [Fact]
@@ -307,7 +351,7 @@ public class PeselGeneratorTests
         var fromDateOnly = PeselGenerator.Generate(Gender.Male, dateOnly);
         var fromDateTime = PeselGenerator.Generate(Gender.Male, dateTime);
 
-        DateOnly.FromDateTime(fromDateOnly.BirthDateTime).ShouldBe(DateOnly.FromDateTime(fromDateTime.BirthDateTime));
+        DateOnly.FromDateTime(fromDateOnly.BirthDate).ShouldBe(DateOnly.FromDateTime(fromDateTime.BirthDate));
     }
 #endif
 }

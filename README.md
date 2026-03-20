@@ -1,253 +1,163 @@
 # PolishIdentifiers
 
-> Strongly typed Polish formal identifiers for .NET.
+[![NuGet](https://img.shields.io/nuget/v/PolishIdentifiers.svg)](https://www.nuget.org/packages/PolishIdentifiers/)
+![CI](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml/badge.svg?branch=main)
 
-[![CI](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml/badge.svg)](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-![Targets: netstandard2.0 · net10.0](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net10.0-informational)
+PolishIdentifiers is a .NET library for strongly typed handling of PESEL, NIP, and REGON.
 
----
+It provides one unified `Parse` / `TryParse` / `Validate` API shape across the implemented identifiers, DataAnnotations attributes for request validation, strong identifier types instead of raw strings in domain code, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths. In practice, that makes it a single package for parsing, validation, formatting, generation, and request-model validation across the implemented identifiers.
 
-`PolishIdentifiers` provides value types for `Pesel`, `Nip`, and `Regon`, with parsing, validation, formatting, generation, and DataAnnotations support. The library performs offline structural validation only. It does not query government registries or external services.
+## Framework support
 
-Use `Pesel`, `Nip`, and `Regon` in your application model instead of raw `string` or `long` values once input has been validated at the boundary.
+Targets `netstandard2.0` and `net10.0`. The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-based PESEL members. See [Framework support](./docs/framework-support.md) for all target-specific differences.
 
-## Supported frameworks
+## Supported identifiers
 
-- `netstandard2.0`
-- `net10.0`
+| Type | Identifier | Accepted examples | Docs |
+|---|---|---|---|
+| `Pesel` | PESEL | `44051401458` | [PESEL](./docs/pesel.md) |
+| `Nip` | NIP | `1234563218`, `123-456-32-18`, `PL1234563218`, `PL 1234563218`, `PL 123-456-32-18` | [NIP](./docs/nip.md) |
+| `Regon` | REGON | `123456785`, `12345678512347` | [REGON](./docs/regon.md) |
 
-## Installation
+## Generators
+
+<table>
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Kind</th>
+            <th>Outputs</th>
+            <th>Docs</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td rowspan="2"><code>PeselGenerator</code></td>
+            <td>Valid</td>
+            <td>PESEL with random or specified birth date and gender</td>
+            <td rowspan="2"><a href="./docs/pesel-generator.md">PESEL generator</a></td>
+        </tr>
+        <tr>
+            <td>Invalid</td>
+            <td>invalid characters, wrong checksum, wrong date, wrong length</td>
+        </tr>
+        <tr>
+            <td rowspan="2"><code>NipGenerator</code></td>
+            <td>Valid</td>
+            <td>canonical valid NIP</td>
+            <td rowspan="2"><a href="./docs/nip-generator.md">NIP generator</a></td>
+        </tr>
+        <tr>
+            <td>Invalid</td>
+            <td>invalid characters, wrong checksum, wrong length</td>
+        </tr>
+        <tr>
+            <td rowspan="2"><code>RegonGenerator</code></td>
+            <td>Valid</td>
+            <td>REGON-9 and REGON-14</td>
+            <td rowspan="2"><a href="./docs/regon-generator.md">REGON generator</a></td>
+        </tr>
+        <tr>
+            <td>Invalid</td>
+            <td>invalid characters, wrong checksum for REGON-9, wrong checksum for REGON-14, wrong length</td>
+        </tr>
+    </tbody>
+</table>
+
+## Install
 
 ```powershell
 dotnet add package PolishIdentifiers
 ```
 
-## Supported identifiers
+## Quick introduction
 
-| Type | Input shape | Notes |
-|---|---|---|
-| `Pesel` | 11 digits | Decodes birth date and gender |
-| `Nip` | 10 digits | Also supports a separate formatted-input path |
-| `Regon` | 9 or 14 digits | `Regon14` includes an embedded `Regon9` base |
+PolishIdentifiers is designed around one consistent flow for each implemented identifier:
 
-## Quick start
+1. accept text input
+2. validate or parse using the identifier type
+3. keep the parsed identifier as a strong type in application code
+4. format it explicitly when producing output
 
-### Use strong types in the domain model
+For request handling, forms, imports, and DTO validation, prefer `TryParse(..., out value, out error)`.
 
 ```csharp
 using PolishIdentifiers;
 
-public sealed class Person
-{
-    public Person(Pesel pesel)
-    {
-        Pesel = pesel;
-    }
+var input = "44051401458";
 
-    public Pesel Pesel { get; }
+if (!Pesel.TryParse(input, out var pesel, out var error))
+{
+    Console.WriteLine($"Rejected PESEL: {error}");
+    return;
+}
+
+Console.WriteLine($"Birth date: {pesel.BirthDate:yyyy-MM-dd}");
+Console.WriteLine($"Gender: {pesel.Gender}");
+```
+
+```csharp
+using PolishIdentifiers;
+
+var input = "PL 123-456-32-18";
+
+if (!Nip.TryParse(input, out var nip, out var error))
+{
+    Console.WriteLine($"Rejected NIP: {error}");
+    return;
+}
+
+Console.WriteLine($"Canonical: {nip}");
+Console.WriteLine($"Display: {nip.ToString(NipFormat.Hyphenated)}");
+```
+
+```csharp
+using PolishIdentifiers;
+
+var input = "12345678512347";
+
+if (!Regon.TryParse(input, out var regon, out var error))
+{
+    Console.WriteLine($"Rejected REGON: {error}");
+    return;
+}
+
+Console.WriteLine($"Kind: {regon.Kind}");
+Console.WriteLine($"Base REGON-9: {regon.BaseRegon9}");
+```
+
+For ASP.NET Core request models, the package also includes `[ValidPesel]`, `[ValidNip]`, and `[ValidRegon]` attributes for DataAnnotations-based validation.
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+using PolishIdentifiers;
+
+public sealed class InvoiceRequest
+{
+    [ValidNip]
+    public string SellerNip { get; init; } = string.Empty;
+
+    [ValidPesel]
+    public string? BuyerPesel { get; init; }
+
+    [ValidRegon]
+    public string? SellerRegon { get; init; }
 }
 ```
 
+## Parse, TryParse, or Validate?
+
+- Use `TryParse` when you want a strong type and a non-throwing failure path.
+- Use `Parse` when invalid input is exceptional and should throw an identifier-specific validation exception.
+- Use `Validate` when you only need a pass-or-fail result with the first structured validation error and do not need the typed identifier instance.
+
 ```csharp
 using PolishIdentifiers;
 
-public sealed class Company
-{
-    public Company(Nip nip, Regon regon)
-    {
-        Nip = nip;
-        Regon = regon;
-    }
+var result = Nip.Validate("123-456-32-18");
 
-    public Nip Nip { get; }
-    public Regon Regon { get; }
+if (!result.IsValid)
+{
+    Console.WriteLine(result.Error);
 }
 ```
-
-### Parse and validate
-
-```csharp
-using PolishIdentifiers;
-
-Pesel pesel = Pesel.Parse("44051401458");
-Nip nip = Nip.Parse("1234563218");
-Regon regon = Regon.Parse("12345678512347");
-```
-
-```csharp
-using PolishIdentifiers;
-
-if (Pesel.TryParse("44051401458", out Pesel pesel))
-{
-    Console.WriteLine(pesel.BirthDateTime);
-}
-
-if (Nip.TryParse("1234563218", out Nip nip))
-{
-    Console.WriteLine(nip.IssuingTaxOfficePrefix);
-}
-
-if (Regon.TryParse("123456785", out Regon regon))
-{
-    Console.WriteLine(regon.Kind);
-}
-```
-
-```csharp
-using PolishIdentifiers;
-
-ValidationResult<PeselValidationError> peselResult = Pesel.Validate("44051401458");
-ValidationResult<NipValidationError> nipResult = Nip.Validate("1234563218");
-ValidationResult<RegonValidationError> regonResult = Regon.Validate("12345678512347");
-
-if (peselResult.IsValid && nipResult.IsValid && regonResult.IsValid)
-{
-    Console.WriteLine("all identifiers are valid");
-}
-```
-
-Formatted NIP input uses a separate API:
-
-```csharp
-using PolishIdentifiers;
-
-Nip nip = Nip.ParseFormatted("PL 123-456-32-18");
-
-Console.WriteLine(nip.ToString());
-Console.WriteLine(nip.ToString(NipFormat.Hyphenated));
-Console.WriteLine(nip.ToString(NipFormat.VatEu));
-```
-
-### Generation
-
-```csharp
-using PolishIdentifiers;
-
-Pesel anyPesel = PeselGenerator.Generate();
-Pesel knownPesel = PeselGenerator.Generate(Gender.Female, new DateTime(1990, 5, 14));
-
-Nip anyNip = NipGenerator.Generate();
-
-Regon regon9 = RegonGenerator.Generate(RegonKind.Regon9);
-Regon regon14 = RegonGenerator.Generate(RegonKind.Regon14);
-```
-
-```csharp
-using PolishIdentifiers;
-
-string invalidPesel = PeselGenerator.Invalid.WrongChecksum();
-string invalidNip = NipGenerator.Invalid.WrongLength();
-string invalidRegon = RegonGenerator.Invalid.WrongChecksumRegon14();
-```
-
-## API model
-
-| API | Use when | Success | Invalid input | `null` string input |
-|---|---|---|---|---|
-| `Parse(...)` | Invalid input is exceptional | Returns the strong type | Throws `PeselValidationException`, `NipValidationException`, or `RegonValidationException` | Throws `ArgumentNullException` |
-| `TryParse(...)` | Invalid input is expected | Returns `true` and sets the out parameter | Returns `false` and sets the out parameter to `default` | Returns `false` and sets the out parameter to `default` |
-| `Validate(...)` | You need a typed error without exceptions | Returns `ValidationResult<TError>.Valid()` | Returns `ValidationResult<TError>.Failure(...)` | Returns a failure result |
-
-`Nip` also has a separate formatted-input path:
-
-| Formatted NIP API | Use when | Invalid input | `null` string input |
-|---|---|---|---|
-| `ParseFormatted(...)` | The input contract explicitly allows one of the five recognized NIP formats | Throws `NipValidationException` | Throws `ArgumentNullException` |
-| `TryParseFormatted(...)` | Formatted NIP input is expected and exceptions are not wanted | Returns `false` and sets the out parameter to `default` | Returns `false` and sets the out parameter to `default` |
-| `ValidateFormatted(...)` | You need a typed error for formatted NIP input | Returns `NipValidationError.UnrecognizedFormat`, `InvalidChecksum`, or another NIP error | Returns `NipValidationError.UnrecognizedFormat` |
-
-## Identifier notes
-
-| Type | Input shape | Main properties | Validation order | Special notes |
-|---|---|---|---|---|
-| `Pesel` | 11 digits | `BirthDateTime`, `Gender` | `InvalidCharacters` -> `InvalidLength` -> `InvalidDate` -> `InvalidChecksum` | `.NET 10` also adds `BirthDateOnly`; generator overloads support birth years 1800-2299 |
-| `Nip` | 10 digits | `IssuingTaxOfficePrefix` | `InvalidCharacters` -> `InvalidLength` -> `InvalidChecksum` | Also supports `ParseFormatted(...)`, `TryParseFormatted(...)`, and `ValidateFormatted(...)`; output formats: `DigitsOnly`, `Hyphenated`, `VatEu` |
-| `Regon` | 9 or 14 digits | `Kind`, `IsRegon9`, `IsRegon14`, `BaseRegon` | `InvalidCharacters` -> `InvalidLength` -> `InvalidChecksum` | `Regon14` validation checks the embedded `Regon9` base first, then the 14-digit checksum |
-
-Recognized formatted NIP inputs:
-
-| Format | Example |
-|---|---|
-| Canonical | `1234563218` |
-| Hyphenated | `123-456-32-18` |
-| `PL` prefix | `PL1234563218` |
-| `PL` prefix with space | `PL 1234563218` |
-| `PL` prefix with space and hyphens | `PL 123-456-32-18` |
-
-Formatting is strict. Unsupported punctuation, lowercase `pl`, extra spaces, and leading or trailing whitespace are rejected.
-
-## Input and failure behavior
-
-Common rules:
-
-- Leading or trailing whitespace is invalid input
-- `default(Pesel)`, `default(Nip)`, and `default(Regon)` are invalid sentinel values
-- Calling domain properties or formatting methods on a default value throws `InvalidOperationException`
-
-Important edge cases:
-
-- `Nip.ValidateFormatted(null)` returns `NipValidationError.UnrecognizedFormat`
-- `0000000000` is a valid `Nip`
-- `000000000` and `00000000000000` are valid `Regon` values
-- `00000000000` is not a valid `Pesel`
-- For NIP, checksum remainder `10` is invalid
-- For REGON, checksum remainder `10` maps to check digit `0`
-
-## DataAnnotations
-
-The package includes:
-
-- `[ValidPesel]`
-- `[ValidNip]`
-- `[ValidRegon]`
-
-Behavior:
-
-- `null` is treated as valid by these attributes; combine with `[Required]` when the field must be present
-- `ValidNipAttribute` accepts the same canonical and recognized formatted string inputs as `Nip.ValidateFormatted(...)`
-- The attributes also validate strong-type values, not only strings
-- Default strong-type values are treated as invalid
-
-## Generators
-
-The package includes:
-
-- `PeselGenerator`
-- `NipGenerator`
-- `RegonGenerator`
-
-Use generators for tests, fixtures, and demos.
-
-- Valid generator methods return the strong type
-- `Invalid.*` helpers return `string`
-- Each `Invalid.*` helper is intended to violate exactly one public validation rule
-
-## Version-specific APIs
-
-Available only on `net10.0`:
-
-- `IParsable<T>` and `ISpanParsable<T>` for all implemented identifiers
-- `Pesel.BirthDateOnly`
-- `PeselGenerator.Generate(DateOnly)`
-- `PeselGenerator.Generate(Gender, DateOnly)`
-
-## Documentation
-
-- Repository docs index: [`docs/README.md`](./docs/README.md)
-- Shared behavior reference: [`docs/Common/ValidationAndBehavior.md`](./docs/Common/ValidationAndBehavior.md)
-- `Pesel` guides: [`docs/Pesel/`](./docs/Pesel/)
-- `Nip` guides: [`docs/Nip/`](./docs/Nip/)
-- `Regon` guides: [`docs/Regon/`](./docs/Regon/)
-
-## Non-goals
-
-This library does not:
-
-- query official registries
-- verify real-world assignment or current registration status
-- accept heuristic normalization beyond the documented `Nip` formatted-input path
-
-## License
-
-MIT

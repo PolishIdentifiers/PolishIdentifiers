@@ -4,8 +4,9 @@ namespace PolishIdentifiers;
 /// Represents a validated Polish tax identification number (NIP — Numer Identyfikacji Podatkowej).
 /// </summary>
 /// <remarks>
-/// Instances are obtained through the parsing APIs, including the formatted parsing methods,
-/// or through <see cref="NipGenerator"/>. The default instance is not valid; accessing domain properties on it
+/// Instances are obtained through the parsing APIs or through <see cref="NipGenerator"/>.
+/// Public parsing accepts the canonical 10-digit representation and the exact documented formatted NIP forms.
+/// The default instance is not valid; accessing domain properties on it
 /// throws <see cref="InvalidOperationException"/>. Use <see cref="IsDefault"/> to check before accessing.
 /// </remarks>
 #if NET10_0_OR_GREATER
@@ -25,12 +26,14 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
         _isInitialized = true;
     }
 
-    // --- Strict factories ---
+    // --- Factories ---
 
     /// <summary>
     /// Parses the string representation of a NIP number.
     /// </summary>
-    /// <param name="value">A 10-digit string representing a NIP number.</param>
+    /// <param name="value">
+    /// A NIP string in canonical digits or one of the documented supported formatted representations.
+    /// </param>
     /// <returns>A valid <see cref="Nip"/> instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     /// <exception cref="NipValidationException">
@@ -46,7 +49,9 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <summary>
     /// Parses the span representation of a NIP number.
     /// </summary>
-    /// <param name="value">A 10-character span representing a NIP number.</param>
+    /// <param name="value">
+    /// A NIP span in canonical digits or one of the documented supported formatted representations.
+    /// </param>
     /// <returns>A valid <see cref="Nip"/> instance.</returns>
     /// <exception cref="NipValidationException">
     /// Thrown when <paramref name="value"/> is not a valid NIP number.
@@ -63,7 +68,10 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <summary>
     /// Attempts to parse the string representation of a NIP number without throwing exceptions.
     /// </summary>
-    /// <param name="value">A 10-digit string representing a NIP number, or <see langword="null"/>.</param>
+    /// <param name="value">
+    /// A NIP string in canonical digits or one of the documented supported formatted representations,
+    /// or <see langword="null"/>.
+    /// </param>
     /// <param name="nip">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
     /// otherwise, <see langword="default"/>.
@@ -76,9 +84,40 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     }
 
     /// <summary>
+    /// Attempts to parse the string representation of a NIP number without throwing exceptions
+    /// and returns the first validation error when parsing fails.
+    /// </summary>
+    /// <param name="value">
+    /// A NIP string in canonical digits or one of the documented supported formatted representations,
+    /// or <see langword="null"/>.
+    /// </param>
+    /// <param name="nip">
+    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
+    /// otherwise, <see langword="default"/>.
+    /// </param>
+    /// <param name="error">
+    /// When this method returns <see langword="false"/>, contains the first <see cref="NipValidationError"/>
+    /// encountered; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParse(string? value, out Nip nip, out NipValidationError? error)
+    {
+        if (value is null)
+        {
+            nip = default;
+            error = NipValidationError.InvalidLength;
+            return false;
+        }
+
+        return TryParse(value.AsSpan(), out nip, out error);
+    }
+
+    /// <summary>
     /// Attempts to parse the span representation of a NIP number without throwing exceptions.
     /// </summary>
-    /// <param name="value">A 10-character span representing a NIP number.</param>
+    /// <param name="value">
+    /// A NIP span in canonical digits or one of the documented supported formatted representations.
+    /// </param>
     /// <param name="nip">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
     /// otherwise, <see langword="default"/>.
@@ -86,13 +125,36 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
     public static bool TryParse(ReadOnlySpan<char> value, out Nip nip)
     {
-        if (!NipValidator.TryParseCore(value, out var parsedValue, out _))
+        return TryParse(value, out nip, out _);
+    }
+
+    /// <summary>
+    /// Attempts to parse the span representation of a NIP number without throwing exceptions
+    /// and returns the first validation error when parsing fails.
+    /// </summary>
+    /// <param name="value">
+    /// A NIP span in canonical digits or one of the documented supported formatted representations.
+    /// </param>
+    /// <param name="nip">
+    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
+    /// otherwise, <see langword="default"/>.
+    /// </param>
+    /// <param name="error">
+    /// When this method returns <see langword="false"/>, contains the first <see cref="NipValidationError"/>
+    /// encountered; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParse(ReadOnlySpan<char> value, out Nip nip, out NipValidationError? error)
+    {
+        if (!NipValidator.TryParseCore(value, out var parsedValue, out var actualError))
         {
             nip = default;
+            error = actualError;
             return false;
         }
 
         nip = new Nip(parsedValue);
+        error = null;
         return true;
     }
 
@@ -103,7 +165,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <returns>
     /// A <see cref="ValidationResult{TError}"/> indicating whether the value is valid, and if not,
     /// the first <see cref="NipValidationError"/> encountered. Validation order:
-    /// characters → length → checksum.
+    /// characters → length → format → checksum.
     /// </returns>
     public static ValidationResult<NipValidationError> Validate(string? value)
         => NipValidator.Validate(value);
@@ -115,126 +177,10 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <returns>
     /// A <see cref="ValidationResult{TError}"/> indicating whether the value is valid, and if not,
     /// the first <see cref="NipValidationError"/> encountered. Validation order:
-    /// characters → length → checksum.
+    /// characters → length → format → checksum.
     /// </returns>
     public static ValidationResult<NipValidationError> Validate(ReadOnlySpan<char> value)
         => NipValidator.Validate(value);
-
-    // --- Formatted factories ---
-
-    /// <summary>
-    /// Parses a NIP string in one of the five recognized formatted patterns.
-    /// </summary>
-    /// <param name="value">A NIP string in canonical, hyphenated, or EU VAT format.</param>
-    /// <returns>A valid <see cref="Nip"/> instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
-    /// <exception cref="NipValidationException">
-    /// Thrown when <paramref name="value"/> is not a valid NIP number or is not in a recognized format.
-    /// </exception>
-    public static Nip ParseFormatted(string value)
-    {
-        if (value is null) throw new ArgumentNullException(nameof(value));
-        return ParseFormatted(value.AsSpan());
-    }
-
-    /// <summary>
-    /// Parses a NIP span in one of the five recognized formatted patterns.
-    /// </summary>
-    /// <param name="value">A NIP span in canonical, hyphenated, or EU VAT format.</param>
-    /// <returns>A valid <see cref="Nip"/> instance.</returns>
-    /// <exception cref="NipValidationException">
-    /// Thrown when <paramref name="value"/> is not a valid NIP number or is not in a recognized format.
-    /// </exception>
-    public static Nip ParseFormatted(ReadOnlySpan<char> value)
-    {
-        if (!TryParseFormattedCore(value, out var nip, out var error))
-            throw new NipValidationException(error);
-
-        return nip;
-    }
-
-    /// <summary>
-    /// Attempts to parse a NIP string in one of the five recognized formatted patterns.
-    /// </summary>
-    /// <param name="value">A NIP string in canonical, hyphenated, or EU VAT format, or <see langword="null"/>.</param>
-    /// <param name="nip">
-    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
-    /// otherwise, <see langword="default"/>.
-    /// </param>
-    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParseFormatted(string? value, out Nip nip)
-    {
-        if (value is null) { nip = default; return false; }
-        return TryParseFormatted(value.AsSpan(), out nip);
-    }
-
-    /// <summary>
-    /// Attempts to parse a NIP span in one of the five recognized formatted patterns.
-    /// </summary>
-    /// <param name="value">A NIP span in canonical, hyphenated, or EU VAT format.</param>
-    /// <param name="nip">
-    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
-    /// otherwise, <see langword="default"/>.
-    /// </param>
-    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParseFormatted(ReadOnlySpan<char> value, out Nip nip)
-    {
-        return TryParseFormattedCore(value, out nip, out _);
-    }
-
-    /// <summary>
-    /// Validates a formatted NIP string against all NIP rules.
-    /// Accepts five recognized input patterns: canonical, hyphenated, PL prefix variants.
-    /// </summary>
-    /// <param name="value">The formatted string to validate, or <see langword="null"/>.</param>
-    /// <returns>
-    /// A <see cref="ValidationResult{TError}"/> indicating whether the value is valid, and if not,
-    /// the first <see cref="NipValidationError"/> encountered.
-    /// </returns>
-    public static ValidationResult<NipValidationError> ValidateFormatted(string? value)
-    {
-        if (value is null)
-            return ValidationResult<NipValidationError>.Failure(NipValidationError.UnrecognizedFormat);
-        return ValidateFormatted(value.AsSpan());
-    }
-
-    /// <summary>
-    /// Validates a formatted NIP span against all NIP rules.
-    /// Accepts five recognized input patterns: canonical, hyphenated, PL prefix variants.
-    /// </summary>
-    /// <param name="value">The formatted span to validate.</param>
-    /// <returns>
-    /// A <see cref="ValidationResult{TError}"/> indicating whether the value is valid, and if not,
-    /// the first <see cref="NipValidationError"/> encountered.
-    /// </returns>
-    public static ValidationResult<NipValidationError> ValidateFormatted(ReadOnlySpan<char> value)
-    {
-        Span<char> digits = stackalloc char[10];
-        if (!NipInputNormalizer.TryNormalize(value, digits))
-            return ValidationResult<NipValidationError>.Failure(NipValidationError.UnrecognizedFormat);
-
-        return NipValidator.Validate(digits);
-    }
-
-    private static bool TryParseFormattedCore(ReadOnlySpan<char> value, out Nip nip, out NipValidationError error)
-    {
-        Span<char> digits = stackalloc char[10];
-        if (!NipInputNormalizer.TryNormalize(value, digits))
-        {
-            nip = default;
-            error = NipValidationError.UnrecognizedFormat;
-            return false;
-        }
-
-        if (!NipValidator.TryParseCore(digits, out var parsedValue, out error))
-        {
-            nip = default;
-            return false;
-        }
-
-        nip = new Nip(parsedValue);
-        return true;
-    }
 
 #if NET10_0_OR_GREATER
     // --- IParsable<Nip> / ISpanParsable<Nip> ---
@@ -269,7 +215,9 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     }
 
     /// <summary>
-    /// Gets the issuing tax office prefix (first three digits of the NIP).
+    /// Gets the issuing tax office prefix encoded in the first three digits of the NIP.
+    /// This identifies the tax office that originally issued the NIP.
+    /// It does not identify the taxpayer's current competent tax office.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
     public int IssuingTaxOfficePrefix
@@ -299,6 +247,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <param name="format">The output format to use.</param>
     /// <returns>A string representation in the requested format.</returns>
     /// <exception cref="InvalidOperationException">Thrown when called on a default instance.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="format"/> is not a supported <see cref="NipFormat"/> value.</exception>
     public string ToString(NipFormat format)
     {
         ThrowIfDefault();

@@ -28,25 +28,41 @@ public class NipGeneratorTests
     [Fact]
     public void Invalid_WrongChecksum_YieldsExactlyInvalidChecksum()
     {
-        var s = NipGenerator.Invalid.WrongChecksum();
+        var invalidValue = NipGenerator.Invalid.WrongChecksum();
 
-        Nip.Validate(s).Error.ShouldBe(NipValidationError.InvalidChecksum);
+        Nip.Validate(invalidValue).Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     [Fact]
     public void Invalid_WrongLength_YieldsExactlyInvalidLength()
     {
-        var s = NipGenerator.Invalid.WrongLength();
+        var invalidValue = NipGenerator.Invalid.WrongLength();
 
-        Nip.Validate(s).Error.ShouldBe(NipValidationError.InvalidLength);
+        Nip.Validate(invalidValue).Error.ShouldBe(NipValidationError.InvalidLength);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_CalledMultipleTimes_AlwaysYieldsInvalidLength()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => NipGenerator.Invalid.WrongLength()).ToList();
+
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidLength);
     }
 
     [Fact]
     public void Invalid_NonNumeric_YieldsExactlyInvalidCharacters()
     {
-        var s = NipGenerator.Invalid.NonNumeric();
+        var invalidValue = NipGenerator.Invalid.NonNumeric();
 
-        Nip.Validate(s).Error.ShouldBe(NipValidationError.InvalidCharacters);
+        Nip.Validate(invalidValue).Error.ShouldBe(NipValidationError.InvalidCharacters);
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_CalledMultipleTimes_AlwaysYieldsInvalidCharacters()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => NipGenerator.Invalid.NonNumeric()).ToList();
+
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidCharacters);
     }
 
     // --- WrongChecksum: structural verification ---
@@ -54,10 +70,10 @@ public class NipGeneratorTests
     [Fact]
     public void Invalid_WrongChecksum_HasCorrectLengthAndDigits()
     {
-        var s = NipGenerator.Invalid.WrongChecksum();
+        var invalidValue = NipGenerator.Invalid.WrongChecksum();
 
-        s.Length.ShouldBe(10);
-        s.ShouldAllBe(c => c >= '0' && c <= '9');
+        invalidValue.Length.ShouldBe(10);
+        invalidValue.ShouldAllBe(c => c >= '0' && c <= '9');
     }
 
     [Fact]
@@ -73,9 +89,9 @@ public class NipGeneratorTests
     [Fact]
     public void Invalid_WrongLength_HasInvalidLength()
     {
-        var s = NipGenerator.Invalid.WrongLength();
+        var invalidValue = NipGenerator.Invalid.WrongLength();
 
-        s.Length.ShouldNotBe(10);
+        invalidValue.Length.ShouldNotBe(10);
     }
 
     [Fact]
@@ -91,16 +107,16 @@ public class NipGeneratorTests
     [Fact]
     public void Invalid_NonNumeric_HasLength10()
     {
-        var s = NipGenerator.Invalid.NonNumeric();
+        var invalidValue = NipGenerator.Invalid.NonNumeric();
 
-        s.Length.ShouldBe(10);
+        invalidValue.Length.ShouldBe(10);
     }
 
     [Fact]
     public void Invalid_NonNumeric_ContainsAtLeastOneNonDigit()
     {
-        var s = NipGenerator.Invalid.NonNumeric();
+        var invalidValue = NipGenerator.Invalid.NonNumeric();
 
-        s.Any(c => c < '0' || c > '9').ShouldBeTrue();
+        invalidValue.Any(c => c < '0' || c > '9').ShouldBeTrue();
     }
 }

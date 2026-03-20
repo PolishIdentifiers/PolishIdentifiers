@@ -21,6 +21,7 @@ public class NipParsingTests
     private const string EmptyNip = "";
     private const string LeadingWhitespaceNip = " 1234563218";
     private const string TrailingWhitespaceNip = "1234563218 ";
+    private const string SupportedFormattedNip = "PL 123-456-32-18";
 
     public static TheoryData<string, NipValidationError> InvalidInputData => new()
     {
@@ -38,8 +39,8 @@ public class NipParsingTests
 
     public static TheoryData<string, NipValidationError> WhitespaceInputData => new()
     {
-        { LeadingWhitespaceNip, NipValidationError.InvalidCharacters },
-        { TrailingWhitespaceNip, NipValidationError.InvalidCharacters },
+        { LeadingWhitespaceNip, NipValidationError.UnrecognizedFormat },
+        { TrailingWhitespaceNip, NipValidationError.UnrecognizedFormat },
     };
 
     // --- Parse ---
@@ -202,6 +203,36 @@ public class NipParsingTests
         nip.ShouldBe(default);
     }
 
+    [Fact]
+    public void TryParse_WithError_ValidNip_ReturnsTrueAndNullError()
+    {
+        var success = Nip.TryParse(ValidNip, out var nip, out var error);
+
+        success.ShouldBeTrue();
+        nip.ToString().ShouldBe(ValidNip);
+        error.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryParse_WithError_InvalidChecksum_ReturnsFalseDefaultAndError()
+    {
+        var success = Nip.TryParse(InvalidChecksumNip, out var nip, out var error);
+
+        success.ShouldBeFalse();
+        nip.ShouldBe(default);
+        error.ShouldBe(NipValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void TryParse_WithError_Null_ReturnsInvalidLength()
+    {
+        var success = Nip.TryParse(null, out var nip, out var error);
+
+        success.ShouldBeFalse();
+        nip.ShouldBe(default);
+        error.ShouldBe(NipValidationError.InvalidLength);
+    }
+
     // --- Span overloads ---
 
     [Fact]
@@ -244,6 +275,26 @@ public class NipParsingTests
     public void TryParse_SpanOverload_EmptySpan_ReturnsFalse()
     {
         Nip.TryParse(ReadOnlySpan<char>.Empty, out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TryParse_SpanOverload_WithError_ValidNip_ReturnsTrueAndNullError()
+    {
+        var success = Nip.TryParse(ValidNip.AsSpan(), out var nip, out var error);
+
+        success.ShouldBeTrue();
+        nip.ToString().ShouldBe(ValidNip);
+        error.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryParse_SpanOverload_WithError_UnsupportedFormat_ReturnsUnrecognizedFormat()
+    {
+        var success = Nip.TryParse("PL-1234563218".AsSpan(), out var nip, out var error);
+
+        success.ShouldBeFalse();
+        nip.ShouldBe(default);
+        error.ShouldBe(NipValidationError.UnrecognizedFormat);
     }
 
     [Theory]
@@ -654,6 +705,15 @@ public class NipParsingTests
         nip.ToString(NipFormat.VatEu).ShouldBe("PL0123456789");
     }
 
+    [Fact]
+    public void ToString_UnsupportedNipFormat_ThrowsArgumentOutOfRangeException()
+    {
+        var nip = Nip.Parse(ValidNip);
+        var unsupportedFormat = (NipFormat)999;
+
+        Should.Throw<ArgumentOutOfRangeException>(() => nip.ToString(unsupportedFormat));
+    }
+
     // --- IFormattable ---
 
     [Theory]
@@ -817,6 +877,28 @@ public class NipParsingTests
     }
 
     [Fact]
+    public void IParsable_Parse_SupportedFormattedInput_ReturnsCanonicalNip()
+    {
+        static T CallParse<T>(string s) where T : IParsable<T> => T.Parse(s, null);
+
+        var nip = CallParse<Nip>(SupportedFormattedNip);
+
+        nip.ToString().ShouldBe(ValidNip);
+    }
+
+    [Fact]
+    public void IParsable_TryParse_SupportedFormattedInput_ReturnsTrueAndCanonicalNip()
+    {
+        static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>
+            => T.TryParse(s, null, out result);
+
+        var success = CallTryParse<Nip>(SupportedFormattedNip, out var nip);
+
+        success.ShouldBeTrue();
+        nip.ToString().ShouldBe(ValidNip);
+    }
+
+    [Fact]
     public void IParsable_Parse_InvalidNip_ThrowsNipValidationException()
     {
         static T CallParse<T>(string s) where T : IParsable<T> => T.Parse(s, null);
@@ -833,14 +915,14 @@ public class NipParsingTests
     }
 
     [Fact]
-    public void IParsable_Parse_WithProvider_ReturnsCanonicalNip()
+    public void IParsable_Parse_WithProvider_SupportedFormattedInput_ReturnsCanonicalNip()
     {
         static T CallParse<T>(string s, IFormatProvider? provider) where T : IParsable<T>
             => T.Parse(s, provider);
 
-        var nip = CallParse<Nip>(ValidNipWithLeadingZero, CultureInfo.GetCultureInfo("pl-PL"));
+        var nip = CallParse<Nip>(SupportedFormattedNip, CultureInfo.GetCultureInfo("pl-PL"));
 
-        nip.ToString().ShouldBe(ValidNipWithLeadingZero);
+        nip.ToString().ShouldBe(ValidNip);
     }
 
     [Fact]
@@ -878,6 +960,28 @@ public class NipParsingTests
             => T.TryParse(s, null, out result);
 
         CallTryParse<Nip>(ValidNip.AsSpan(), out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ISpanParsable_Parse_SupportedFormattedInput_ReturnsCanonicalNip()
+    {
+        static T CallParse<T>(ReadOnlySpan<char> s) where T : ISpanParsable<T> => T.Parse(s, null);
+
+        var nip = CallParse<Nip>(SupportedFormattedNip.AsSpan());
+
+        nip.ToString().ShouldBe(ValidNip);
+    }
+
+    [Fact]
+    public void ISpanParsable_TryParse_SupportedFormattedInput_ReturnsTrueAndCanonicalNip()
+    {
+        static bool CallTryParse<T>(ReadOnlySpan<char> s, out T result) where T : struct, ISpanParsable<T>
+            => T.TryParse(s, null, out result);
+
+        var success = CallTryParse<Nip>(SupportedFormattedNip.AsSpan(), out var nip);
+
+        success.ShouldBeTrue();
+        nip.ToString().ShouldBe(ValidNip);
     }
 
     [Fact]

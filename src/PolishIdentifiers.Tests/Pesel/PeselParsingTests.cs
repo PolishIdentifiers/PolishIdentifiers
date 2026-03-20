@@ -114,7 +114,7 @@ public class PeselParsingTests
         InvalidSeptember31Pesel
     };
 
-    public static TheoryData<string, int, int, int> BirthDateTimeData => new()
+    public static TheoryData<string, int, int, int> BirthDateData => new()
     {
         { ValidPesel, 1944, 5, 14 },
         { ValidPeselWithLeadingZero, 1902, 7, 8 },
@@ -278,6 +278,36 @@ public class PeselParsingTests
     }
 
     [Fact]
+    public void TryParse_WithError_ValidPesel_ReturnsTrueAndNullError()
+    {
+        var success = Pesel.TryParse(ValidPesel, out var pesel, out var error);
+
+        success.ShouldBeTrue();
+        pesel.ToString().ShouldBe(ValidPesel);
+        error.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryParse_WithError_InvalidDate_ReturnsFalseDefaultAndError()
+    {
+        var success = Pesel.TryParse(InvalidDatePesel, out var pesel, out var error);
+
+        success.ShouldBeFalse();
+        pesel.ShouldBe(default);
+        error.ShouldBe(PeselValidationError.InvalidDate);
+    }
+
+    [Fact]
+    public void TryParse_WithError_Null_ReturnsInvalidLength()
+    {
+        var success = Pesel.TryParse(null, out var pesel, out var error);
+
+        success.ShouldBeFalse();
+        pesel.ShouldBe(default);
+        error.ShouldBe(PeselValidationError.InvalidLength);
+    }
+
+    [Fact]
     public void TryParse_VeryLongNumericInput_ReturnsFalse()
     {
         Pesel.TryParse(VeryLongNumericPesel, out _).ShouldBeFalse();
@@ -360,6 +390,26 @@ public class PeselParsingTests
         pesel.ShouldBe(default);
     }
 
+    [Fact]
+    public void TryParse_SpanOverload_WithError_ValidPesel_ReturnsTrueAndNullError()
+    {
+        var success = Pesel.TryParse(ValidPesel.AsSpan(), out var pesel, out var error);
+
+        success.ShouldBeTrue();
+        pesel.ToString().ShouldBe(ValidPesel);
+        error.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryParse_SpanOverload_WithError_InvalidChecksum_ReturnsFalseAndError()
+    {
+        var success = Pesel.TryParse(InvalidChecksumPesel.AsSpan(), out var pesel, out var error);
+
+        success.ShouldBeFalse();
+        pesel.ShouldBe(default);
+        error.ShouldBe(PeselValidationError.InvalidChecksum);
+    }
+
     [Theory]
     [MemberData(nameof(InvalidInputStringsData))]
     public void TryParse_SpanOverload_InvalidInput_ReturnsFalse(string input)
@@ -393,26 +443,26 @@ public class PeselParsingTests
         ex.Error.ShouldBe(PeselValidationError.InvalidLength);
     }
 
-    // --- BirthDateTime ---
+    // --- BirthDate ---
 
     [Theory]
-    [MemberData(nameof(BirthDateTimeData))]
-    public void BirthDateTime_ReturnsCorrectDate(string input, int year, int month, int day)
+    [MemberData(nameof(BirthDateData))]
+    public void BirthDate_ReturnsCorrectDate(string input, int year, int month, int day)
     {
         var pesel = Pesel.Parse(input);
 
-        pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
+        pesel.BirthDate.ShouldBe(new DateTime(year, month, day));
     }
 
     [Theory]
     [InlineData(2000, 2, 29)]
     [InlineData(2004, 2, 29)]
-    public void BirthDateTime_LeapDayInLeapYear_ReturnsCorrectDate(int year, int month, int day)
+    public void BirthDate_LeapDayInLeapYear_ReturnsCorrectDate(int year, int month, int day)
     {
         var generated = PeselGenerator.Generate(Gender.Male, new DateTime(year, month, day));
         var pesel = Pesel.Parse(generated.ToString());
 
-        pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
+        pesel.BirthDate.ShouldBe(new DateTime(year, month, day));
     }
 
     [Theory]
@@ -448,12 +498,12 @@ public class PeselParsingTests
     [Theory]
     [InlineData(1804, 2, 29)]
     [InlineData(2104, 2, 29)]
-    public void BirthDateTime_LeapDayInNonStandardCenturyLeapYear_ReturnsCorrectDate(int year, int month, int day)
+    public void BirthDate_LeapDayInNonStandardCenturyLeapYear_ReturnsCorrectDate(int year, int month, int day)
     {
         var generated = PeselGenerator.Generate(Gender.Male, new DateTime(year, month, day));
         var pesel = Pesel.Parse(generated.ToString());
 
-        pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
+        pesel.BirthDate.ShouldBe(new DateTime(year, month, day));
     }
 
     [Theory]
@@ -462,28 +512,28 @@ public class PeselParsingTests
     [InlineData(2099, 12, 31)]
     [InlineData(2199, 12, 31)]
     [InlineData(2299, 12, 31)]
-    public void BirthDateTime_LastDayOfCenturyRange_ReturnsCorrectDate(int year, int month, int day)
+    public void BirthDate_LastDayOfCenturyRange_ReturnsCorrectDate(int year, int month, int day)
     {
         var generated = PeselGenerator.Generate(Gender.Male, new DateTime(year, month, day));
         var pesel = Pesel.Parse(generated.ToString());
 
-        pesel.BirthDateTime.ShouldBe(new DateTime(year, month, day));
+        pesel.BirthDate.ShouldBe(new DateTime(year, month, day));
     }
 
     [Fact]
-    public void BirthDateTime_Kind_IsUnspecified()
+    public void BirthDate_Kind_IsUnspecified()
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        pesel.BirthDateTime.Kind.ShouldBe(DateTimeKind.Unspecified);
+        pesel.BirthDate.Kind.ShouldBe(DateTimeKind.Unspecified);
     }
 
     [Fact]
-    public void BirthDateTime_TimeOfDay_IsZero()
+    public void BirthDate_TimeOfDay_IsZero()
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        pesel.BirthDateTime.TimeOfDay.ShouldBe(TimeSpan.Zero);
+        pesel.BirthDate.TimeOfDay.ShouldBe(TimeSpan.Zero);
     }
 
     // --- Gender ---
@@ -500,11 +550,11 @@ public class PeselParsingTests
     // --- Default struct ---
 
     [Fact]
-    public void DefaultPesel_BirthDateTime_ThrowsInvalidOperationException()
+    public void DefaultPesel_BirthDate_ThrowsInvalidOperationException()
     {
         var p = default(Pesel);
 
-        Should.Throw<InvalidOperationException>(() => { var _ = p.BirthDateTime; });
+        Should.Throw<InvalidOperationException>(() => { var _ = p.BirthDate; });
     }
 
     [Fact]
@@ -974,7 +1024,7 @@ public class PeselParsingTests
                 var input = inputs[i % inputs.Length];
                 var parsed = Pesel.Parse(input);
                 _ = parsed.ToString();
-                _ = parsed.BirthDateTime;
+                _ = parsed.BirthDate;
                 _ = parsed.Gender;
             }
             catch (Exception ex)
@@ -998,11 +1048,11 @@ public class PeselParsingTests
     }
 
     [Fact]
-    public void BirthDateOnly_IsConsistentWithBirthDateTime()
+    public void BirthDateOnly_IsConsistentWithBirthDate()
     {
         var pesel = Pesel.Parse(ValidPesel);
 
-        pesel.BirthDateOnly.ShouldBe(DateOnly.FromDateTime(pesel.BirthDateTime));
+        pesel.BirthDateOnly.ShouldBe(DateOnly.FromDateTime(pesel.BirthDate));
     }
 
     [Fact]
@@ -1241,7 +1291,7 @@ public class PeselCultureInvarianceTests
     [Theory]
     [InlineData("ar-SA")]
     [InlineData("fa-IR")]
-    public void BirthDateTime_WhenCurrentCultureHasNativeDigits_ReturnsCorrectDate(string cultureName)
+    public void BirthDate_WhenCurrentCultureHasNativeDigits_ReturnsCorrectDate(string cultureName)
     {
         var pesel = Pesel.Parse(ValidPesel);
         var savedCulture = CultureInfo.CurrentCulture;
@@ -1249,7 +1299,7 @@ public class PeselCultureInvarianceTests
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
 
-            pesel.BirthDateTime.ShouldBe(new DateTime(1944, 5, 14));
+            pesel.BirthDate.ShouldBe(new DateTime(1944, 5, 14));
         }
         finally
         {

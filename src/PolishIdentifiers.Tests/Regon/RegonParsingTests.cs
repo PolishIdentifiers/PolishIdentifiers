@@ -34,7 +34,7 @@ public class RegonParsingTests
         { TrailingWhitespaceRegon, RegonValidationError.InvalidCharacters },
     };
 
-    public static TheoryData<string> WhitespaceInputStrings => new()
+    public static TheoryData<string> WhitespaceInputStringsData => new()
     {
         LeadingWhitespaceRegon,
         TrailingWhitespaceRegon,
@@ -233,7 +233,7 @@ public class RegonParsingTests
     }
 
     [Theory]
-    [MemberData(nameof(WhitespaceInputStrings))]
+    [MemberData(nameof(WhitespaceInputStringsData))]
     public void TryParse_WhitespaceInput_ReturnsFalseAndDefault(string input)
     {
         var success = Regon.TryParse(input, out var regon);
@@ -249,6 +249,36 @@ public class RegonParsingTests
 
         success.ShouldBeFalse();
         regon.IsDefault.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_WithError_ValidRegon9_ReturnsTrueAndNullError()
+    {
+        var success = Regon.TryParse(ValidRegon9, out var regon, out var error);
+
+        success.ShouldBeTrue();
+        regon.ToString().ShouldBe(ValidRegon9);
+        error.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryParse_WithError_InvalidRegon_ReturnsFalseAndChecksumError()
+    {
+        var success = Regon.TryParse(InvalidRegon, out var regon, out var error);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+        error.ShouldBe(RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void TryParse_WithError_NullString_ReturnsInvalidLength()
+    {
+        var success = Regon.TryParse(null, out var regon, out var error);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+        error.ShouldBe(RegonValidationError.InvalidLength);
     }
 
     [Fact]
@@ -350,6 +380,26 @@ public class RegonParsingTests
         regon.IsDefault.ShouldBeTrue();
     }
 
+    [Fact]
+    public void TryParse_SpanOverload_WithError_ValidRegon14_ReturnsTrueAndNullError()
+    {
+        var success = Regon.TryParse(ValidRegon14.AsSpan(), out var regon, out var error);
+
+        success.ShouldBeTrue();
+        regon.ToString().ShouldBe(ValidRegon14);
+        error.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryParse_SpanOverload_WithError_InvalidCharacters_ReturnsFalseAndError()
+    {
+        var success = Regon.TryParse(InvalidRegonCharacters.AsSpan(), out var regon, out var error);
+
+        success.ShouldBeFalse();
+        regon.IsDefault.ShouldBeTrue();
+        error.ShouldBe(RegonValidationError.InvalidCharacters);
+    }
+
     // ── Validate consistency ──────────────────────────────────────────────────
 
     [Fact]
@@ -429,10 +479,10 @@ public class RegonParsingTests
         regon.IsRegon9.ShouldBeFalse();
     }
 
-    // ── Domain properties: BaseRegon ──────────────────────────────────────────
+    // ── Domain properties: BaseRegon9 ─────────────────────────────────────────
 
     [Fact]
-    public void BaseRegon_Regon9_ReturnsSelf()
+    public void BaseRegon9_Regon9_ReturnsSelf()
     {
         var regon = Regon.Parse(ValidRegon9);
 
@@ -440,7 +490,7 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_Regon14_ReturnsParentRegon9()
+    public void BaseRegon9_Regon14_ReturnsParentRegon9()
     {
         var regon14 = Regon.Parse(ValidRegon14);
         var expectedBase = Regon.Parse(ValidRegon9); // first 9 digits of ValidRegon14
@@ -449,7 +499,7 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_Regon14_BaseIsRegon9()
+    public void BaseRegon9_Regon14_BaseIsRegon9()
     {
         var regon14 = Regon.Parse(ValidRegon14);
 
@@ -457,7 +507,7 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_Regon14_BaseToStringHas9Digits()
+    public void BaseRegon9_Regon14_BaseToStringHas9Digits()
     {
         var regon14 = Regon.Parse(ValidRegon14);
 
@@ -465,7 +515,7 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_Regon14_BaseMatchesFirstNineDigits()
+    public void BaseRegon9_Regon14_BaseMatchesFirstNineDigits()
     {
         var regon14 = Regon.Parse(ValidRegon14);
         var expectedBase9 = ValidRegon14.Substring(0, 9);
@@ -474,7 +524,7 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_Regon14WithLeadingZeroBase_PreservesLeadingZeros()
+    public void BaseRegon9_Regon14WithLeadingZeroBase_PreservesLeadingZeros()
     {
         var regon14 = Regon.Parse(ValidRegon14WithLeadingZeroBase);
 
@@ -482,17 +532,17 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_Regon14AllZeros_ReturnsInitializedRegon9BaseMatchingFirstNineDigits()
+    public void BaseRegon9_Regon14AllZeros_ReturnsInitializedRegon9BaseMatchingFirstNineDigits()
     {
         var regon14 = Regon.Parse(ValidRegon14AllZeros);
-        var baseRegon = regon14.BaseRegon9;
+        var baseRegon9 = regon14.BaseRegon9;
 
         var expectedBase9 = ValidRegon14AllZeros.Substring(0, 9);
 
-        baseRegon.IsDefault.ShouldBeFalse();
-        baseRegon.IsRegon9.ShouldBeTrue();
-        baseRegon.ToString().Length.ShouldBe(9);
-        baseRegon.ToString().ShouldBe(expectedBase9);
+        baseRegon9.IsDefault.ShouldBeFalse();
+        baseRegon9.IsRegon9.ShouldBeTrue();
+        baseRegon9.ToString().Length.ShouldBe(9);
+        baseRegon9.ToString().ShouldBe(expectedBase9);
     }
 
     // ── IsDefault ────────────────────────────────────────────────────────────
@@ -538,7 +588,7 @@ public class RegonParsingTests
     }
 
     [Fact]
-    public void BaseRegon_DefaultInstance_ThrowsInvalidOperationException()
+    public void BaseRegon9_DefaultInstance_ThrowsInvalidOperationException()
     {
         Regon regon = default;
 
@@ -1005,7 +1055,7 @@ public class RegonParsingTests
     }
 
     [Theory]
-    [MemberData(nameof(WhitespaceInputStrings))]
+    [MemberData(nameof(WhitespaceInputStringsData))]
     public void IParsable_TryParse_WhitespaceInput_ReturnsFalseAndDefault(string input)
     {
         static bool CallTryParse<T>(string? s, out T result) where T : struct, IParsable<T>

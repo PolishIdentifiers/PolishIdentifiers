@@ -18,9 +18,9 @@ public class NipValidationTests
     // --- Invalid: wrong characters ---
     private const string InvalidCharacterAtEnd = "123456321X";
     private const string InvalidCharacterAtStart = "A234563218";
-    private const string InvalidCharacterSpace = "12345 3218";
     private const string InvalidCharacterDot = "1234563.18";
-    private const string InvalidCharacterHyphen = "123-456-32-18";
+    private const string InvalidCharacterLowercasePrefix = "pl1234563218";
+    private const string InvalidCharacterForeignPrefix = "DE1234563218";
 
     // --- Invalid: wrong length ---
     private const string EmptyNip = "";
@@ -56,9 +56,9 @@ public class NipValidationTests
     {
         InvalidCharacterAtEnd,
         InvalidCharacterAtStart,
-        InvalidCharacterSpace,
         InvalidCharacterDot,
-        InvalidCharacterHyphen,
+        InvalidCharacterLowercasePrefix,
+        InvalidCharacterForeignPrefix,
     };
 
     public static TheoryData<string?> InvalidLengthData => new()
@@ -188,17 +188,53 @@ public class NipValidationTests
         error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
-    // --- Strict path does NOT accept formatted input ---
-
-    [Theory]
-    [InlineData("123-456-32-18")]
-    [InlineData("PL1234563218")]
-    [InlineData("PL 1234563218")]
-    [InlineData("PL 123-456-32-18")]
-    public void Validate_FormattedInput_ReturnsInvalidCharacters(string nip)
+    [Fact]
+    public void Match_ValidNip_OnErrorIsNotInvoked()
     {
-        var result = Nip.Validate(nip);
+        var result = Nip.Validate(ValidNip);
+        var onErrorCalled = false;
 
-        result.Error.ShouldBe(NipValidationError.InvalidCharacters);
+        result.Match(onValid: () => true, onError: _ => { onErrorCalled = true; return false; });
+
+        onErrorCalled.ShouldBeFalse();
     }
+
+    [Fact]
+    public void Match_InvalidNip_OnValidIsNotInvoked()
+    {
+        var result = Nip.Validate(InvalidChecksum7);
+        var onValidCalled = false;
+
+        result.Match(onValid: () => { onValidCalled = true; return true; }, onError: _ => false);
+
+        onValidCalled.ShouldBeFalse();
+    }
+
+    // --- Default struct ---
+
+    [Fact]
+    public void Match_DefaultStruct_ThrowsInvalidOperationException()
+    {
+        var result = default(ValidationResult<NipValidationError>);
+
+        Should.Throw<InvalidOperationException>(() =>
+            result.Match(onValid: () => "ok", onError: e => e.ToString()));
+    }
+
+    [Fact]
+    public void DefaultStruct_IsValidIsFalse()
+    {
+        var result = default(ValidationResult<NipValidationError>);
+
+        result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DefaultStruct_ErrorIsNull()
+    {
+        var result = default(ValidationResult<NipValidationError>);
+
+        result.Error.ShouldBeNull();
+    }
+
 }

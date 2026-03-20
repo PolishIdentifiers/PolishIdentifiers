@@ -71,6 +71,32 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     }
 
     /// <summary>
+    /// Attempts to parse the string representation of a PESEL number without throwing exceptions
+    /// and returns the first validation error when parsing fails.
+    /// </summary>
+    /// <param name="value">An 11-digit string representing a PESEL number, or <see langword="null"/>.</param>
+    /// <param name="pesel">
+    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Pesel"/>;
+    /// otherwise, <see langword="default"/>.
+    /// </param>
+    /// <param name="error">
+    /// When this method returns <see langword="false"/>, contains the first <see cref="PeselValidationError"/>
+    /// encountered; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParse(string? value, out Pesel pesel, out PeselValidationError? error)
+    {
+        if (value is null)
+        {
+            pesel = default;
+            error = PeselValidationError.InvalidLength;
+            return false;
+        }
+
+        return TryParse(value.AsSpan(), out pesel, out error);
+    }
+
+    /// <summary>
     /// Attempts to parse the span representation of a PESEL number without throwing exceptions.
     /// </summary>
     /// <param name="value">An 11-character span representing a PESEL number.</param>
@@ -81,13 +107,34 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
     public static bool TryParse(ReadOnlySpan<char> value, out Pesel pesel)
     {
-        if (!PeselValidator.TryParseCore(value, out var parsedValue, out _))
+        return TryParse(value, out pesel, out _);
+    }
+
+    /// <summary>
+    /// Attempts to parse the span representation of a PESEL number without throwing exceptions
+    /// and returns the first validation error when parsing fails.
+    /// </summary>
+    /// <param name="value">An 11-character span representing a PESEL number.</param>
+    /// <param name="pesel">
+    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Pesel"/>;
+    /// otherwise, <see langword="default"/>.
+    /// </param>
+    /// <param name="error">
+    /// When this method returns <see langword="false"/>, contains the first <see cref="PeselValidationError"/>
+    /// encountered; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParse(ReadOnlySpan<char> value, out Pesel pesel, out PeselValidationError? error)
+    {
+        if (!PeselValidator.TryParseCore(value, out var parsedValue, out var actualError))
         {
             pesel = default;
+            error = actualError;
             return false;
         }
 
         pesel = new Pesel(parsedValue);
+        error = null;
         return true;
     }
 
@@ -155,7 +202,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// Only the date component is meaningful; the time component is always midnight.
     /// </remarks>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
-    public DateTime BirthDateTime
+    public DateTime BirthDate
     {
         get
         {
@@ -188,7 +235,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// Gets the date of birth encoded in the PESEL number as a <see cref="DateOnly"/> value.
     /// </summary>
     /// <remarks>
-    /// Equivalent to <see cref="BirthDateTime"/> without a time component.
+    /// Equivalent to <see cref="BirthDate"/> without a time component.
     /// Available on .NET 10 and later only.
     /// </remarks>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
@@ -196,7 +243,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     {
         get
         {
-            var dt = BirthDateTime;
+            var dt = BirthDate;
             return new DateOnly(dt.Year, dt.Month, dt.Day);
         }
     }

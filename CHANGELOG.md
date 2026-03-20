@@ -11,19 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-#### Generator API unification
+#### Unified parse ergonomics
 
-- `PeselGenerator.Random()` renamed to `PeselGenerator.Generate()`. Overloads: `Generate()`, `Generate(Gender)`, `Generate(DateTime)`, `Generate(Gender, DateTime)`, plus net10.0-only `Generate(DateOnly)` and `Generate(Gender, DateOnly)`.
-- `PeselGenerator.ForBirthDate(DateTime).Male/.Female/.WithGender(Gender)` fluent builder removed; replaced by flat `Generate(Gender, DateTime)` overloads.
-- `PeselDateBuilder` class removed.
-- `NipGenerator.Random()` renamed to `NipGenerator.Generate()`.
-- `RegonGenerator.RandomRegon9()` and `RegonGenerator.RandomRegon14()` replaced by a single `RegonGenerator.Generate(RegonKind kind)` with required `RegonKind` argument.
-
----
+- Added typed-error overloads for all implemented identifiers:
+  - `TryParse(string?, out T result, out TError? error)`
+  - `TryParse(ReadOnlySpan<char>, out T result, out TError? error)`
+- `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` now accept both canonical input and the exact documented supported formatted NIP representations
+- Removed the separate public `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, and `Nip.ValidateFormatted(...)` API split
+- `NipValidationError.UnrecognizedFormat` now applies on the unified NIP path for otherwise allowed-character layouts that do not match a documented accepted representation
+- Renamed `Pesel.BirthDateTime` to `Pesel.BirthDate`
+- Updated README, FAQ, examples, and canonical contracts to reflect the new recommended parse flow and public API shape
 
 ## [1.0.0] - 2026-03-13
 
-First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the package.
+`Pesel`, `Nip`, and `Regon` are included in the package.
 
 ### Added
 
@@ -33,7 +34,7 @@ First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the p
 - Strict factories: `Regon.Parse(string)` / `Regon.Parse(ReadOnlySpan<char>)`, `Regon.TryParse(...)`, `Regon.Validate(...)`
 - `RegonValidationError` enum: `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`
 - `RegonValidationException` - wraps `RegonValidationError`, thrown by `Parse`
-- `RegonKind`, `Regon.IsRegon9`, `Regon.IsRegon14`, and `Regon.BaseRegon`
+- `RegonKind`, `Regon.IsRegon9`, `Regon.IsRegon14`, and `Regon.BaseRegon9`
 - `Regon.IsDefault` with dedicated initialization-state handling so valid all-zero REGON values remain distinct from `default(Regon)`
 - `Regon.ToString()` and `IFormattable` support for canonical `D9` and `D14` output
 - `IFormattable`, `IEquatable<Regon>`, `IComparable<Regon>`, `==` / `!=` operators
@@ -61,7 +62,7 @@ First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the p
 ### Changed
 
 - Migrated the PESEL, NIP, and REGON unit test suites to Shouldly assertions
-- Extracted shared checksum weight definitions into `PeselAlgorithm`, `NipAlgorithm`, and `RegonAlgorithm` so generators and validators use the same algorithm constants
+- Extracted shared checksum weight definitions into `PeselChecksumWeights`, `NipChecksumWeights`, and `RegonChecksumWeights` so generators and validators use the same constants
 
 ## [0.2.0] - 2026-03-10
 
@@ -76,7 +77,7 @@ First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the p
 - `NipValidationError` enum: `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`, `UnrecognizedFormat`
 - `NipValidationException` — wraps `NipValidationError`, thrown by `Parse` and `ParseFormatted`
 - `Nip.IsDefault` — distinguishes a default struct instance from a parsed one
-- `Nip.IssuingTaxOfficePrefix` — first three digits of the identifier
+- `Nip.IssuingTaxOfficePrefix` — first three digits, identifying the tax office that originally issued the NIP rather than the taxpayer's current competent office
 - `Nip.ToString()` — always returns the 10-digit canonical form
 - `Nip.ToString(NipFormat)` with `DigitsOnly`, `Hyphenated`, and `VatEu`
 - `IFormattable`, `IEquatable<Nip>`, `IComparable<Nip>`, `==` / `!=` operators
@@ -88,7 +89,7 @@ First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the p
 - NIP checksum validation using the official mod 11 weighting algorithm (`6, 5, 7, 2, 3, 4, 5, 6, 7`)
 - `checksum == 10` is treated as `InvalidChecksum` (no fallback conversion to `0`)
 - Validation order for strict NIP input: characters → length → checksum
-- `NipGenerator.Random()` — generates a random valid NIP
+- `NipGenerator.Generate()` — generates a valid NIP
 - `NipGenerator.Invalid.WrongChecksum()` — valid in all other respects, checksum digit is wrong
 - `NipGenerator.Invalid.WrongLength()` — digit-only value created from a valid NIP by removing or appending 1–3 trailing digits
 - `NipGenerator.Invalid.NonNumeric()` — contains a non-digit character
@@ -123,7 +124,7 @@ First stable core release. `Pesel`, `Nip`, and `Regon` are now included in the p
 
 ## [0.1.0] - 2026-03-06
 
-First public release. PESEL support only — NIP, REGON and NRB are planned for v0.4.
+First public release. PESEL support only.
 
 ### Added
 
@@ -161,10 +162,12 @@ First public release. PESEL support only — NIP, REGON and NRB are planned for 
 
 #### Generator
 
-- `PeselGenerator.Random()` — generates a random valid PESEL
-- `PeselGenerator.ForBirthDate(DateTime)` — fluent builder; supports years 1800–2299
-- `PeselGenerator.ForBirthDate(DateOnly)` — DateOnly overload (net10.0 only)
-- `.Male()` / `.Female()` / `.WithGender(Gender)` — gender selection
+- `PeselGenerator.Generate()` — generates a valid PESEL
+- `PeselGenerator.Generate(Gender)` — generates a valid PESEL with the requested gender
+- `PeselGenerator.Generate(DateTime)` — generates a valid PESEL for the requested birth date
+- `PeselGenerator.Generate(Gender, DateTime)` — generates a valid PESEL for the requested gender and birth date
+- `PeselGenerator.Generate(DateOnly)` — DateOnly overload (net10.0 only)
+- `PeselGenerator.Generate(Gender, DateOnly)` — DateOnly overload with explicit gender (net10.0 only)
 - `PeselGenerator.Invalid.WrongChecksum()` — valid in all other respects, checksum digit is wrong
 - `PeselGenerator.Invalid.WrongDate()` — correct checksum, encoded month outside all valid century ranges
 - `PeselGenerator.Invalid.WrongLength()` — too short or too long

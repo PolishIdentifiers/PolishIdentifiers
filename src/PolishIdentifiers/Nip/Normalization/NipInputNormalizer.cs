@@ -1,60 +1,54 @@
 namespace PolishIdentifiers;
 
 /// <summary>
-/// Recognizes and normalizes the five supported NIP input formats
-/// into a canonical 10-digit span. Returns <c>false</c> when the
-/// input does not match any recognized pattern.
+/// Recognizes and normalizes NIP text representations that contain
+/// non-digit characters into a canonical 10-digit span.
+/// Returns <c>false</c> when the input does not match any recognized pattern.
 /// </summary>
 /// <remarks>
+/// The canonical all-digit format is handled directly by <see cref="NipValidator"/>
+/// before this method is invoked.
 /// Supported formats:
 /// <list type="number">
-///   <item><c>1234563218</c> — Canonical (10 digits)</item>
 ///   <item><c>123-456-32-18</c> — Hyphenated (13 chars)</item>
 ///   <item><c>PL1234563218</c> — PL prefix without space (12 chars)</item>
 ///   <item><c>PL 1234563218</c> — PL prefix with space (13 chars)</item>
 ///   <item><c>PL 123-456-32-18</c> — PL prefix + space + hyphens (16 chars)</item>
 /// </list>
-/// Everything else → <see cref="NipValidationError.UnrecognizedFormat"/>.
+/// Anything else maps to <see cref="NipValidationError.UnrecognizedFormat"/>.
 /// </remarks>
 internal static class NipInputNormalizer
 {
     /// <summary>
     /// Attempts to recognize the input format and extract 10 digits into <paramref name="digits"/>.
     /// </summary>
-    /// <param name="value">Raw input.</param>
+    /// <param name="value">Raw input containing non-digit characters.</param>
     /// <param name="digits">A span of at least 10 chars to receive the extracted digits.</param>
     /// <returns><c>true</c> if the format was recognized and digits extracted; <c>false</c> otherwise.</returns>
     internal static bool TryNormalize(ReadOnlySpan<char> value, Span<char> digits)
     {
-        // Format 1: Canonical — 10 digits
-        if (value.Length == 10 && AllDigits(value))
-        {
-            value.CopyTo(digits);
-            return true;
-        }
-
-        // Format 2: Hyphenated — 123-456-32-18 (13 chars)
+        // Format 1: Hyphenated — 123-456-32-18 (13 chars)
         if (value.Length == 13 && IsHyphenated(value))
         {
             ExtractHyphenated(value, digits);
             return true;
         }
 
-        // Format 3: PL prefix no space — PL1234563218 (12 chars)
-        if (value.Length == 12 && HasPlPrefix(value) && AllDigits(value.Slice(2)))
+        // Format 2: PL prefix no space — PL1234563218 (12 chars)
+        if (value.Length == 12 && HasPlPrefix(value) && IsAllDigits(value.Slice(2)))
         {
             value.Slice(2).CopyTo(digits);
             return true;
         }
 
-        // Format 4: PL prefix with space — PL 1234563218 (13 chars)
-        if (value.Length == 13 && HasPlPrefix(value) && value[2] == ' ' && AllDigits(value.Slice(3)))
+        // Format 3: PL prefix with space — PL 1234563218 (13 chars)
+        if (value.Length == 13 && HasPlPrefix(value) && value[2] == ' ' && IsAllDigits(value.Slice(3)))
         {
             value.Slice(3).CopyTo(digits);
             return true;
         }
 
-        // Format 5: PL prefix + space + hyphens — PL 123-456-32-18 (16 chars)
+        // Format 4: PL prefix + space + hyphens — PL 123-456-32-18 (16 chars)
         if (value.Length == 16 && HasPlPrefix(value) && value[2] == ' ' && IsHyphenated(value.Slice(3)))
         {
             ExtractHyphenated(value.Slice(3), digits);
@@ -64,7 +58,7 @@ internal static class NipInputNormalizer
         return false;
     }
 
-    private static bool AllDigits(ReadOnlySpan<char> span)
+    private static bool IsAllDigits(ReadOnlySpan<char> span)
     {
         foreach (var c in span)
         {

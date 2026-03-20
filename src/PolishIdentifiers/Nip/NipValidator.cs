@@ -9,30 +9,41 @@ internal static class NipValidator
 {
     public static ValidationResult<NipValidationError> Validate(ReadOnlySpan<char> value)
     {
-        if (!TryValidate(value, out var error))
+        Span<char> digits = stackalloc char[10];
+        if (!TryNormalizeAndValidate(value, digits, out var error))
             return ValidationResult<NipValidationError>.Failure(error);
 
         return ValidationResult<NipValidationError>.Valid();
     }
 
-    private static bool TryValidate(ReadOnlySpan<char> value, out NipValidationError error)
+    private static bool TryNormalizeAndValidate(ReadOnlySpan<char> value, Span<char> digits, out NipValidationError error)
     {
         foreach (var c in value)
         {
-            if (c < '0' || c > '9')
+            if ((c < '0' || c > '9') && c != 'P' && c != 'L' && c != ' ' && c != '-')
             {
                 error = NipValidationError.InvalidCharacters;
                 return false;
             }
         }
 
-        if (value.Length != 10)
+        if (IsAllDigits(value))
         {
-            error = NipValidationError.InvalidLength;
+            if (value.Length != 10)
+            {
+                error = NipValidationError.InvalidLength;
+                return false;
+            }
+
+            value.CopyTo(digits);
+        }
+        else if (!NipInputNormalizer.TryNormalize(value, digits))
+        {
+            error = NipValidationError.UnrecognizedFormat;
             return false;
         }
 
-        if (!IsChecksumValid(value))
+        if (!IsChecksumValid(digits))
         {
             error = NipValidationError.InvalidChecksum;
             return false;
@@ -49,6 +60,17 @@ internal static class NipValidator
         return Validate(value.AsSpan());
     }
 
+    private static bool IsAllDigits(ReadOnlySpan<char> value)
+    {
+        foreach (var c in value)
+        {
+            if (c < '0' || c > '9')
+                return false;
+        }
+
+        return true;
+    }
+
     private static bool IsChecksumValid(ReadOnlySpan<char> value)
     {
         var sum = WeightedSumCalculator.WeightedSum(value.Slice(0, 9), NipChecksumWeights.Weights);
@@ -62,18 +84,19 @@ internal static class NipValidator
     }
 
     /// <summary>
-    /// Validates and converts the strict 10-digit NIP representation.
+    /// Validates and converts any supported public NIP text representation.
     /// Used by <c>Parse</c> and <c>TryParse</c> to keep validation and construction in one place.
-    /// Error order matches <see cref="Validate(ReadOnlySpan{char})"/>: characters → length → checksum.
+    /// Error order matches <see cref="Validate(ReadOnlySpan{char})"/>: characters → length → format → checksum.
     /// </summary>
     internal static bool TryParseCore(ReadOnlySpan<char> value, out ulong result, out NipValidationError error)
     {
         result = 0;
+        Span<char> digits = stackalloc char[10];
 
-        if (!TryValidate(value, out error))
+        if (!TryNormalizeAndValidate(value, digits, out error))
             return false;
 
-        result = DigitParser.ParseUInt64(value);
+        result = DigitParser.ParseUInt64(digits);
         return true;
     }
 }

@@ -5,9 +5,10 @@ namespace PolishIdentifiers;
 /// represent a valid NIP number.
 /// </summary>
 /// <remarks>
-/// Prefer <see cref="Nip.TryParse(string?, out Nip)"/>, <see cref="Nip.TryParseFormatted(string?, out Nip)"/>,
-/// <see cref="Nip.Validate(string?)"/>, or <see cref="Nip.ValidateFormatted(string?)"/>
+/// Prefer <see cref="Nip.TryParse(string?, out Nip, out NipValidationError?)"/>,
+/// <see cref="Nip.TryParse(string?, out Nip)"/>, or <see cref="Nip.Validate(string?)"/>
 /// in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
+/// For normal application-boundary code, the typed-error overload is recommended.
 /// </remarks>
 public class NipValidationException : Exception
 {
