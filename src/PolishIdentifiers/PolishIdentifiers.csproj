@@ -21,7 +21,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>pesel nip regon dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>Package includes Pesel, Nip, and Regon, including [ValidRegon] DataAnnotations support and generators for REGON-9 and REGON-14. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>First stable release. Pesel, Nip, and Regon are included as strongly typed identifiers with a unified Parse / TryParse(out error) / Validate API surface. NIP accepts canonical digits and five documented formatted representations (plain, hyphenated, PL-prefixed). Pesel exposes BirthDate and Gender. Regon covers both REGON-9 and REGON-14 with two-step checksum validation. All three include DataAnnotations attributes ([ValidPesel], [ValidNip], [ValidRegon]) and valid/invalid generators. Targets netstandard2.0 and net10.0. See CHANGELOG.md for the full change history.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

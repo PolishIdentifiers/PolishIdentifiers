@@ -6,6 +6,17 @@ namespace PolishIdentifiers;
 /// </summary>
 public static class RegonGenerator
 {
+    // RNG strategy is split by target framework — this is intentional. Do not consolidate.
+    // net10.0:          Random.Shared is the platform's purpose-built concurrent RNG:
+    //                   thread-safe without locks, OS-entropy seeded, no per-thread state.
+    // netstandard2.0:   Random.Shared is not part of the netstandard2.0 API surface.
+    //                   ThreadLocal<Random> gives each thread an independent instance,
+    //                   eliminating data races on a shared Random field.
+    //                   Seeded via Guid.NewGuid().GetHashCode() because the netstandard2.0
+    //                   contract does not guarantee OS-entropy seeding across all conforming
+    //                   runtimes — older .NET Framework derives seeds from Environment.TickCount,
+    //                   where threads initialized within the same millisecond receive identical
+    //                   seeds and produce identical sequences.
 #if NET10_0_OR_GREATER
     private static int NextDigit() => System.Random.Shared.Next(10);
     private static int NextInt(int maxValue) => System.Random.Shared.Next(maxValue);
@@ -34,9 +45,11 @@ public static class RegonGenerator
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported REGON kind.")
         };
 
-    private static Regon GenerateRegon9()
+    private static Regon GenerateRegon9() => GenerateRegon9Core(out _);
+
+    private static Regon GenerateRegon9Core(out int[] digits)
     {
-        var digits = new int[9];
+        digits = new int[9];
 
         for (var i = 0; i < 8; i++)
             digits[i] = NextDigit();
@@ -57,12 +70,10 @@ public static class RegonGenerator
 
     private static Regon GenerateRegon14()
     {
-        var base9 = GenerateRegon9();
-        var base9Str = base9.ToString(); // "D9" — 9 digits
+        GenerateRegon9Core(out var base9Digits);
 
         var digits = new int[14];
-        for (var i = 0; i < 9; i++)
-            digits[i] = base9Str[i] - '0';
+        Array.Copy(base9Digits, digits, 9);
 
         for (var i = 9; i < 13; i++)
             digits[i] = NextDigit();

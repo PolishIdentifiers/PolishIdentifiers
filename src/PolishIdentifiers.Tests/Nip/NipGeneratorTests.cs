@@ -119,4 +119,17 @@ public class NipGeneratorTests
 
         invalidValue.Any(c => c < '0' || c > '9').ShouldBeTrue();
     }
+
+    // --- WrongChecksum: wrap-around ---
+
+    [Fact]
+    public void Invalid_WrongChecksum_WhenBaseCheckDigitIs9_WrapsToZeroAndYieldsInvalidChecksum()
+    {
+        // 0123456789: weighted sum = 185, 185 % 11 = 9, so check digit is 9.
+        // Applying WrongChecksum logic: (9 + 1) % 10 = 0 → produces "0123456780".
+        // The validator must still report InvalidChecksum, not any earlier error.
+        const string NipWithWrappedCheckDigit = "0123456780";
+
+        Nip.Validate(NipWithWrappedCheckDigit).Error.ShouldBe(NipValidationError.InvalidChecksum);
+    }
 }

@@ -22,15 +22,15 @@ public enum NipValidationError
     InvalidLength,
 
     /// <summary>
+    /// The input uses only otherwise supported characters but does not match any of
+    /// the documented public NIP text representations.
+    /// </summary>
+    UnrecognizedFormat,
+
+    /// <summary>
     /// The check digit (10th digit) does not match the value computed
     /// from the preceding nine digits using the NIP weighting algorithm (mod 11),
     /// or the weighted sum modulo 11 equals 10 (no valid check digit exists for this combination).
     /// </summary>
     InvalidChecksum,
-
-    /// <summary>
-    /// The input uses only otherwise supported characters but does not match any of
-    /// the documented public NIP text representations.
-    /// </summary>
-    UnrecognizedFormat,
 }

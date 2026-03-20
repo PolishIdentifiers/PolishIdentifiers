@@ -6,6 +6,17 @@ namespace PolishIdentifiers;
 /// </summary>
 public static class NipGenerator
 {
+    // RNG strategy is split by target framework — this is intentional. Do not consolidate.
+    // net10.0:          Random.Shared is the platform's purpose-built concurrent RNG:
+    //                   thread-safe without locks, OS-entropy seeded, no per-thread state.
+    // netstandard2.0:   Random.Shared is not part of the netstandard2.0 API surface.
+    //                   ThreadLocal<Random> gives each thread an independent instance,
+    //                   eliminating data races on a shared Random field.
+    //                   Seeded via Guid.NewGuid().GetHashCode() because the netstandard2.0
+    //                   contract does not guarantee OS-entropy seeding across all conforming
+    //                   runtimes — older .NET Framework derives seeds from Environment.TickCount,
+    //                   where threads initialized within the same millisecond receive identical
+    //                   seeds and produce identical sequences.
 #if NET10_0_OR_GREATER
     private static int NextDigit() => System.Random.Shared.Next(10);
     private static int NextInt(int maxValue) => System.Random.Shared.Next(maxValue);
@@ -26,12 +37,11 @@ public static class NipGenerator
     /// <remarks>This method is thread-safe.</remarks>
     public static Nip Generate()
     {
-        int[] digits;
+        Span<int> digits = stackalloc int[10]; // Declared outside the loop; indices [0..8] are always written before read.
         int checkDigit;
 
         do
         {
-            digits = new int[10];
             for (var i = 0; i < 9; i++)
                 digits[i] = NextDigit();
 
@@ -51,6 +61,7 @@ public static class NipGenerator
 
         return new Nip(value);
     }
+
 
     // --- Invalid generators (return string — Nip.Parse would throw) ---
 

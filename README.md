@@ -5,11 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Targets: netstandard2.0 · net10.0](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net10.0-informational)
 
-PolishIdentifiers is a .NET library for strongly typed handling of PESEL, NIP, and REGON.
+PolishIdentifiers is a .NET library that exposes PESEL, NIP, and REGON as strong identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings.
 
-It provides one unified `Parse` / `TryParse` / `Validate` API shape across the implemented identifiers, DataAnnotations attributes for request validation, strong identifier types instead of raw strings in domain code, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths. 
+These identifiers are implemented as tightly constrained `readonly struct` value types, with one unified `Parse` / `TryParse` / `Validate` API shape across the implemented surface, DataAnnotations attributes for request validation, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths.
 
-In practice, that makes it a single package for parsing, validation, formatting, generation, and request-model validation across the implemented identifiers.
+In practice, that gives you one package for parsing, validation, formatting, generation, and request-model validation while keeping strong identifier types throughout domain code.
 
 ## Framework support
 
