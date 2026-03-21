@@ -33,6 +33,14 @@ The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-base
 | `Nip` | NIP | `1234563218`, `123-456-32-18`, `PL1234563218`, `PL 1234563218`, `PL 123-456-32-18` | [NIP](./docs/nip.md) |
 | `Regon` | REGON | `123456785`, `12345678512347`                                                      | [REGON](./docs/regon.md) |
 
+## Parse, TryParse, Validate
+
+| Method | Use when |
+|---|---|
+| `TryParse` | You want a strong type and a non-throwing failure path; use the `out TError? error` overload to also receive the first structured validation error on failure |
+| `Parse` | Invalid input is exceptional and should throw an identifier-specific validation exception |
+| `Validate` | You only need a pass-or-fail result with the first structured validation error and do not need the typed identifier instance |
+
 ## Generators
 
 <table>
@@ -77,12 +85,6 @@ The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-base
         </tr>
     </tbody>
 </table>
-
-## Install
-
-```powershell
-dotnet add package PolishIdentifiers
-```
 
 ## Quick introduction
 
@@ -156,23 +158,6 @@ public sealed class InvoiceRequest
 
     [ValidRegon]
     public string? SellerRegon { get; init; }
-}
-```
-
-## Parse, TryParse, or Validate?
-
-- Use `TryParse` when you want a strong type and a non-throwing failure path.
-- Use `Parse` when invalid input is exceptional and should throw an identifier-specific validation exception.
-- Use `Validate` when you only need a pass-or-fail result with the first structured validation error and do not need the typed identifier instance.
-
-```csharp
-using PolishIdentifiers;
-
-var result = Nip.Validate("123-456-32-18");
-
-if (!result.IsValid)
-{
-    Console.WriteLine(result.Error);
 }
 ```
 
