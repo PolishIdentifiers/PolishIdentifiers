@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.0] - 2026-03-13
+## [1.0.0] - 2026-03-32
 
 `Pesel`, `Nip`, and `Regon` are included in the package.
+
+### Breaking changes
+
+- **[Breaking]** Removed `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, and `Nip.ValidateFormatted(...)` — use `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` instead
+- **[Breaking]** Renamed `Pesel.BirthDateTime` to `Pesel.BirthDate`
 
 ### Added
 
@@ -50,11 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `docs/faq.md` covering common questions and edge cases
 - Added `docs/framework-support.md` documenting `netstandard2.0` vs `net10.0` API differences
 - Added standalone runnable example projects for `Pesel`, `Nip`, and `Regon` under `examples/`
-
-### Breaking changes
-
-- **[Breaking]** Removed `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, and `Nip.ValidateFormatted(...)` — use `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` instead
-- **[Breaking]** Renamed `Pesel.BirthDateTime` to `Pesel.BirthDate`
 
 ### Changed
 
