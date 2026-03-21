@@ -130,6 +130,34 @@ if (pesel.IsDefault)
 }
 ```
 
+## Age and other derivations
+
+The `Pesel` type exposes properties that are direct structural decodes of the identifier digits: `BirthDate`, `BirthDateOnly`, and `Gender`. These values are read directly from the encoded PESEL fields.
+
+Deriving further values — such as age — is the consumer's responsibility. The recommended pattern for age calculation:
+
+```csharp
+using PolishIdentifiers;
+
+var pesel = Pesel.Parse("44051401458");
+
+// Pass today's date as a parameter for testability.
+static int CalculateAge(Pesel pesel, DateOnly referenceDate)
+{
+    var birth = DateOnly.FromDateTime(pesel.BirthDate);
+    int age = referenceDate.Year - birth.Year;
+    if (referenceDate < birth.AddYears(age))
+        age--;
+    return age;
+}
+
+int age = CalculateAge(pesel, DateOnly.FromDateTime(DateTime.Today));
+```
+
+Passing `referenceDate` explicitly instead of reading `DateTime.Today` inside the method makes the function deterministic and testable.
+
+> **Why this is not a library method:** `BirthDate` and `Gender` are decoded directly from specific digit positions in the PESEL number. Age requires external calendar state (today's date) and is not a structural property of the identifier itself. See [ADR-010](../.ai/canon/adr/ADR-010-pesel-derivation-philosophy.md) for the full rationale.
+
 ## Methods
 
 <a id="method-compareto-pesel"></a>

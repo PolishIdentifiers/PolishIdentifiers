@@ -8,7 +8,56 @@ Available on: `netstandard2.0`, `net10.0`
 
 ## Contents
 
-[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums) | [Exceptions](#exceptions)
+[REGON-9 and REGON-14: organization and local units](#regon-9-and-regon-14-organization-and-local-units) | [Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums) | [Exceptions](#exceptions)
+
+## REGON-9 and REGON-14: organization and local units
+
+REGON is assigned at two levels of the Polish administrative and business structure:
+
+**REGON-9** identifies a **legal entity** — a company, association, or other registered organization as a whole. This is the number you see on a company's national registration certificate and in most business documents. When someone says "the REGON of company X," they mean a REGON-9.
+
+**REGON-14** identifies a **local organizational unit** of a legal entity — a branch, outlet, regional office, or subsidiary location registered separately in the national statistical registry (GUS). The first 9 digits of a REGON-14 are always the REGON-9 of the parent entity; the remaining 5 digits identify the specific unit.
+
+This means a company with multiple registered branches will have one REGON-9 for the headquarters plus one REGON-14 per registered local unit — all sharing the same 9-digit base.
+
+The `Regon` type handles both variants through a single type. Use `Kind`, `IsRegon9`, and `IsRegon14` to distinguish them, and `BaseRegon9` to extract the parent entity from a REGON-14.
+
+```csharp
+using PolishIdentifiers;
+
+// Company headquarters
+var hq = Regon.Parse("123456785");
+Console.WriteLine(hq.Kind);       // Regon9
+Console.WriteLine(hq.IsRegon9);   // True
+
+// Local unit of the same company
+var branch = Regon.Parse("12345678512347");
+Console.WriteLine(branch.Kind);       // Regon14
+Console.WriteLine(branch.IsRegon14);  // True
+
+// The base REGON-9 of the parent is embedded in the branch
+Console.WriteLine(branch.BaseRegon9 == hq);  // True
+```
+
+In a company-management system, group imported REGON values by their `BaseRegon9` to associate branches with their parent entity:
+
+```csharp
+using PolishIdentifiers;
+
+// Group a mix of REGON-9 (companies) and REGON-14 (branches) values
+var entities = new Dictionary<Regon, List<Regon>>();
+
+foreach (var raw in importedRegonValues)
+{
+    if (!Regon.TryParse(raw, out var regon, out _))
+        continue;
+
+    var parentKey = regon.BaseRegon9; // same as `regon` itself for REGON-9
+    if (!entities.TryGetValue(parentKey, out var units))
+        entities[parentKey] = units = [];
+    units.Add(regon);
+}
+```
 
 ## Accepted input
 

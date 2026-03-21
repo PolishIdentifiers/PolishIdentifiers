@@ -24,6 +24,25 @@ Formatted NIP support is explicit format recognition, not heuristic cleanup. The
 
 That means lowercase prefixes, unsupported separators, extra internal spaces, and leading or trailing whitespace are rejected instead of being silently cleaned up.
 
+### Preparing user input
+
+When accepting NIP from a form, a document, or an external system, normalize the string before parsing:
+
+```csharp
+var normalized = rawInput.Trim().ToUpperInvariant();
+if (!Nip.TryParse(normalized, out var nip, out var error))
+{
+    // handle validation error
+}
+```
+
+This handles the most common real-world variations:
+
+- `pl1234563218` → `PL1234563218` (lowercase prefix from copy-paste)
+- `  1234563218  ` → `1234563218` (leading or trailing whitespace)
+
+The parser remains strict after normalization. Structural problems — wrong length, invalid checksum, unrecognized separators — still produce the appropriate `NipValidationError`.
+
 ## What it validates
 
 `Nip` validates:
@@ -46,6 +65,17 @@ Important implementation notes:
 - use [`ToString()`](#method-tostring) or [`ToString(NipFormat.DigitsOnly)`](#method-tostring-nipformat) for canonical storage and wire formats
 - use [`ToString(NipFormat.Hyphenated)`](#method-tostring-nipformat) when you need a conventional human-readable display form
 - use [`ToString(NipFormat.VatEu)`](#method-tostring-nipformat) when you need the `PL`-prefixed VAT-EU form
+
+```csharp
+using PolishIdentifiers;
+
+var nip = Nip.Parse("1234563218");
+
+Console.WriteLine(nip.ToString());                          // 1234563218
+Console.WriteLine(nip.ToString(NipFormat.DigitsOnly));      // 1234563218
+Console.WriteLine(nip.ToString(NipFormat.Hyphenated));      // 123-456-32-18
+Console.WriteLine(nip.ToString(NipFormat.VatEu));           // PL1234563218
+```
 
 ## Persistence
 

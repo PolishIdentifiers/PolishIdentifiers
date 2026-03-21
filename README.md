@@ -11,6 +11,14 @@ These identifiers are implemented as tightly constrained `readonly struct` value
 
 In practice, that gives you one package for parsing, validation, formatting, generation, and request-model validation while keeping strong identifier types throughout domain code.
 
+## Scope
+
+This library covers **strongly typed Polish formal identifiers** — identity, registration, and business numbers used in Polish administrative and commercial contexts.
+
+Currently implemented: `Pesel`, `Nip`, `Regon`.
+
+Internally documented and planned for future releases: Polish bank account number (NRB), Polish ID card number, Polish passport number, land register number. These are not yet available as public types.
+
 ## Framework support
 
 Targets `netstandard2.0` and `net10.0`.
@@ -167,3 +175,53 @@ if (!result.IsValid)
     Console.WriteLine(result.Error);
 }
 ```
+
+## Common patterns
+
+### Deduplicating records by NIP
+
+`Nip` is a value type with correct equality semantics. Two `Nip` values parsed from different format representations of the same 10-digit number are equal. Use a `HashSet<Nip>` or `Dictionary<Nip, T>` to deduplicate without format-specific string comparisons:
+
+```csharp
+using PolishIdentifiers;
+
+var seen = new HashSet<Nip>();
+
+foreach (var raw in importedNipValues)
+{
+    if (!Nip.TryParse(raw.Trim().ToUpperInvariant(), out var nip, out _))
+        continue;
+
+    if (!seen.Add(nip))
+        Console.WriteLine($"Duplicate NIP: {nip}");
+}
+```
+
+### Linking REGON branches to their parent company
+
+REGON-14 identifies a local organizational unit. Its first 9 digits are the REGON-9 of the parent entity. Use `BaseRegon9` to group branches under their parent:
+
+```csharp
+using PolishIdentifiers;
+
+var entities = new Dictionary<Regon, List<Regon>>();
+
+foreach (var raw in importedRegonValues)
+{
+    if (!Regon.TryParse(raw, out var regon, out _))
+        continue;
+
+    var parentKey = regon.BaseRegon9; // equals regon itself for REGON-9
+    if (!entities.TryGetValue(parentKey, out var units))
+        entities[parentKey] = units = [];
+    units.Add(regon);
+}
+```
+
+See [docs/patterns.md](./docs/patterns.md) for persistence, import loop, and person-vs-company decision patterns.
+
+## Design philosophy
+
+Domain properties on identifier types expose values that are **direct structural decodes of the identifier's own digit fields**: `Pesel.BirthDate` and `Pesel.Gender` are read directly from encoded digit positions in the PESEL number.
+
+Derivations that require external state — such as calculating age from birth date, or checking eligibility based on a reference date — are **consumer responsibilities**. These are not added to the library. See [docs/pesel.md](./docs/pesel.md#age-and-other-derivations) for the recommended pattern.
