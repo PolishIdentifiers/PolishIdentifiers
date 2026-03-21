@@ -8,7 +8,7 @@ Available on: `netstandard2.0`, `net10.0`
 
 ## Contents
 
-[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums)
+[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums) | [Exceptions](#exceptions)
 
 ## Accepted input
 
@@ -37,15 +37,15 @@ Important implementation notes:
 
 - a 14-digit REGON is validated in two steps: first the embedded 9-digit base, then the 14-digit checksum
 - for REGON, `sum % 11 == 10` maps to check digit `0`
-- `BaseRegon9` returns the embedded 9-digit base for REGON-14 and returns the current value for REGON-9
-- `default(Regon)` is distinct from valid all-zero REGON values; use `IsDefault` to detect an uninitialized instance
+- [`BaseRegon9`](#property-baseregon9) returns the embedded 9-digit base for REGON-14 and returns the current value for REGON-9
+- `default(Regon)` is distinct from valid all-zero REGON values; use [`IsDefault`](#property-isdefault) to detect an uninitialized instance
 
 ## Output formatting
 
 `Regon` has canonical output only.
 
-- use `ToString()` for storage, logging, and wire formats
-- use `ToString("D9", null)` or `ToString("D14", null)` only when an API explicitly expects an `IFormattable` format token and you already know the variant
+- use [`ToString()`](#method-tostring) for storage, logging, and wire formats
+- use [`ToString("D9", null)`](#method-tostring-format) or [`ToString("D14", null)`](#method-tostring-format) only when an API explicitly expects an `IFormattable` format token and you already know the variant
 - there are no public display-format variants comparable to `NipFormat`
 
 ## Persistence
@@ -53,10 +53,10 @@ Important implementation notes:
 Store the canonical string produced by `ToString()`.
 
 - write `regon.ToString()` to the database or serialized payload
-- read with `Regon.Parse(...)` when stored data is guaranteed to be valid
-- read with `Regon.TryParse(...)` when stored data may be malformed
+- read with [`Regon.Parse(...)`](#method-parse-string) when stored data is guaranteed to be valid
+- read with [`Regon.TryParse(...)`](#method-tryparse-string) when stored data may be malformed
 - keep the full canonical value so the REGON-9 versus REGON-14 distinction is preserved
-- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
+- no built-in JSON serializer converters are included; use [`TryParse`](#method-tryparse-string) at the deserialization boundary
 - for EF Core, use a value converter targeting `string`
 
 ## Generator docs
@@ -307,7 +307,7 @@ var regon = Regon.Parse(input);
 
 Available on: `netstandard2.0`, `net10.0`
 
-Parses a string and throws `RegonValidationException` when invalid.
+Parses a string and throws [`RegonValidationException`](#exception-regonvalidationexception) when invalid.
 
 ```csharp
 using PolishIdentifiers;
@@ -510,7 +510,7 @@ Console.WriteLine(regon14.Kind);
 
 Available on: `netstandard2.0`, `net10.0`
 
-Identifies the first public validation error returned by `TryParse` and `Validate`.
+Identifies the first public validation error returned by [`TryParse`](#method-tryparse-string) and [`Validate`](#method-validate-string).
 
 - `InvalidCharacters`: the input contains a non-digit character
 - `InvalidLength`: the input length is neither 9 nor 14
@@ -522,5 +522,31 @@ using PolishIdentifiers;
 if (!Regon.TryParse("12345678512348", out _, out RegonValidationError? error))
 {
     Console.WriteLine(error);
+}
+```
+
+## Exceptions
+
+<a id="exception-regonvalidationexception"></a>
+### RegonValidationException
+
+Available on: `netstandard2.0`, `net10.0`
+
+Thrown by [`Regon.Parse(string)`](#method-parse-string) and [`Regon.Parse(ReadOnlySpan<char>)`](#method-parse-span) when the input is not a valid REGON number.
+
+Prefer [`Regon.TryParse(string?, out Regon, out RegonValidationError?)`](#method-tryparse-string-error) or [`Regon.Validate(string?)`](#method-validate-string) in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
+
+- `Error` — the [`RegonValidationError`](#enum-regonvalidationerror) value that caused the failure
+
+```csharp
+using PolishIdentifiers;
+
+try
+{
+    var regon = Regon.Parse("invalid");
+}
+catch (RegonValidationException ex)
+{
+    Console.WriteLine(ex.Error);
 }
 ```

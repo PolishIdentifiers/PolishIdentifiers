@@ -8,7 +8,7 @@ Available on: `netstandard2.0`, `net10.0`
 
 ## Contents
 
-[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums)
+[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums) | [Exceptions](#exceptions)
 
 ## Accepted input
 
@@ -37,15 +37,15 @@ Important implementation notes:
 
 - century handling covers all supported PESEL ranges from 1800 through 2299
 - the month digits encode the century, not just the calendar month
-- `BirthDate` returns a midnight `DateTime`; `BirthDateOnly` is available on `net10.0`
-- `default(Pesel)` is not a valid parsed value; use `IsDefault` before accessing domain properties on a value that might be uninitialized
+- [`BirthDate`](#property-birthdate) returns a midnight `DateTime`; [`BirthDateOnly`](#property-birthdateonly) is available on `net10.0`
+- `default(Pesel)` is not a valid parsed value; use [`IsDefault`](#property-isdefault) before accessing domain properties on a value that might be uninitialized
 
 ## Output formatting
 
 `Pesel` has one canonical output form.
 
-- use `ToString()` for storage, logging, and wire formats
-- use `ToString("D11", null)` only when an API explicitly expects an `IFormattable` format token
+- use [`ToString()`](#method-tostring) for storage, logging, and wire formats
+- use [`ToString("D11", null)`](#method-tostring-format) only when an API explicitly expects an `IFormattable` format token
 - there are no public display-format variants
 
 ## Persistence
@@ -53,9 +53,9 @@ Important implementation notes:
 Store the canonical 11-digit string produced by `ToString()`.
 
 - write `pesel.ToString()` to the database or serialized payload
-- read with `Pesel.Parse(...)` when stored data is guaranteed to be valid
-- read with `Pesel.TryParse(...)` when stored data may be malformed
-- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
+- read with [`Pesel.Parse(...)`](#method-parse-string) when stored data is guaranteed to be valid
+- read with [`Pesel.TryParse(...)`](#method-tryparse-string) when stored data may be malformed
+- no built-in JSON serializer converters are included; use [`TryParse`](#method-tryparse-string) at the deserialization boundary
 - for EF Core, use a value converter targeting `string`
 
 ## Generator docs
@@ -291,7 +291,7 @@ var pesel = Pesel.Parse(input);
 
 Available on: `netstandard2.0`, `net10.0`
 
-Parses a string and throws `PeselValidationException` when invalid.
+Parses a string and throws [`PeselValidationException`](#exception-peselvalidationexception) when invalid.
 
 ```csharp
 using PolishIdentifiers;
@@ -500,7 +500,7 @@ switch (pesel.Gender)
 
 Available on: `netstandard2.0`, `net10.0`
 
-Identifies the first public validation error returned by `TryParse` and `Validate`.
+Identifies the first public validation error returned by [`TryParse`](#method-tryparse-string) and [`Validate`](#method-validate-string).
 
 - `InvalidCharacters`: the input contains one or more characters that are not decimal digits
 - `InvalidLength`: the input does not consist of exactly 11 characters
@@ -513,5 +513,31 @@ using PolishIdentifiers;
 if (!Pesel.TryParse("44051401459", out _, out PeselValidationError? error))
 {
     Console.WriteLine(error);
+}
+```
+
+## Exceptions
+
+<a id="exception-peselvalidationexception"></a>
+### PeselValidationException
+
+Available on: `netstandard2.0`, `net10.0`
+
+Thrown by [`Pesel.Parse(string)`](#method-parse-string) and [`Pesel.Parse(ReadOnlySpan<char>)`](#method-parse-span) when the input does not represent a valid PESEL number.
+
+Prefer [`Pesel.TryParse(string?, out Pesel, out PeselValidationError?)`](#method-tryparse-string-error) or [`Pesel.Validate(string?)`](#method-validate-string) in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
+
+- `Error` — the [`PeselValidationError`](#enum-peselvalidationerror) value that caused the failure
+
+```csharp
+using PolishIdentifiers;
+
+try
+{
+    var pesel = Pesel.Parse("invalid");
+}
+catch (PeselValidationException ex)
+{
+    Console.WriteLine(ex.Error);
 }
 ```

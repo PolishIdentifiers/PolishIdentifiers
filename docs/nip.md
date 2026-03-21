@@ -8,7 +8,7 @@ Available on: `netstandard2.0`, `net10.0`
 
 ## Contents
 
-[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums)
+[Accepted input](#accepted-input) | [What it validates](#what-it-validates) | [Output formatting](#output-formatting) | [Persistence](#persistence) | [Generator docs](#generator-docs) | [Properties](#properties) | [Methods](#methods) | [Enums](#enums) | [Exceptions](#exceptions)
 
 ## Accepted input
 
@@ -35,27 +35,27 @@ That means lowercase prefixes, unsupported separators, extra internal spaces, an
 Important implementation notes:
 
 - lowercase prefixes, unsupported separators, extra spaces, and leading or trailing whitespace are rejected
-- `IssuingTaxOfficePrefix` is historical metadata from the number itself; it is not a current routing or registry lookup signal
+- [`IssuingTaxOfficePrefix`](#property-issuingtaxofficeprefix) is historical metadata from the number itself; it is not a current routing or registry lookup signal
 - when the weighted checksum modulo 11 equals 10, the input is invalid; the check digit is not remapped to `0`
-- `default(Nip)` is not a valid parsed value; use `IsDefault` before accessing domain properties on a value that might be uninitialized
+- `default(Nip)` is not a valid parsed value; use [`IsDefault`](#property-isdefault) before accessing domain properties on a value that might be uninitialized
 
 ## Output formatting
 
-`Nip` supports explicit output formatting through `NipFormat`.
+`Nip` supports explicit output formatting through [`NipFormat`](#enum-nipformat).
 
-- use `ToString()` or `ToString(NipFormat.DigitsOnly)` for canonical storage and wire formats
-- use `ToString(NipFormat.Hyphenated)` when you need a conventional human-readable display form
-- use `ToString(NipFormat.VatEu)` when you need the `PL`-prefixed VAT-EU form
+- use [`ToString()`](#method-tostring) or [`ToString(NipFormat.DigitsOnly)`](#method-tostring-nipformat) for canonical storage and wire formats
+- use [`ToString(NipFormat.Hyphenated)`](#method-tostring-nipformat) when you need a conventional human-readable display form
+- use [`ToString(NipFormat.VatEu)`](#method-tostring-nipformat) when you need the `PL`-prefixed VAT-EU form
 
 ## Persistence
 
 Store the canonical 10-digit string produced by `ToString()`.
 
 - write `nip.ToString()` to the database or serialized payload
-- read with `Nip.Parse(...)` when stored data is guaranteed to be valid
-- read with `Nip.TryParse(...)` when stored data may be malformed
+- read with [`Nip.Parse(...)`](#method-parse-string) when stored data is guaranteed to be valid
+- read with [`Nip.TryParse(...)`](#method-tryparse-string) when stored data may be malformed
 - format only when producing output, not when persisting
-- no built-in JSON serializer converters are included; use `TryParse` at the deserialization boundary
+- no built-in JSON serializer converters are included; use [`TryParse`](#method-tryparse-string) at the deserialization boundary
 - for EF Core, use a value converter targeting `string`
 
 ## Generator docs
@@ -261,7 +261,7 @@ var nip = Nip.Parse(input);
 
 Available on: `netstandard2.0`, `net10.0`
 
-Parses a string and throws `NipValidationException` when invalid.
+Parses a string and throws [`NipValidationException`](#exception-nipvalidationexception) when invalid.
 
 ```csharp
 using PolishIdentifiers;
@@ -460,7 +460,7 @@ Console.WriteLine(left == right);
 
 Available on: `netstandard2.0`, `net10.0`
 
-Specifies the output format for `Nip.ToString(NipFormat)`.
+Specifies the output format for [`Nip.ToString(NipFormat)`](#method-tostring-nipformat).
 
 - `DigitsOnly`: ten consecutive digits such as `1234563218`
 - `Hyphenated`: digits separated by hyphens such as `123-456-32-18`
@@ -481,7 +481,7 @@ Console.WriteLine(nip.ToString(NipFormat.VatEu));
 
 Available on: `netstandard2.0`, `net10.0`
 
-Identifies the first public validation error returned by `TryParse` and `Validate`.
+Identifies the first public validation error returned by [`TryParse`](#method-tryparse-string) and [`Validate`](#method-validate-string).
 
 - `InvalidCharacters`: the input contains characters outside digits, uppercase `P`, uppercase `L`, space, and hyphen
 - `InvalidLength`: the input is `null`, empty, or digit-only with a length other than 10
@@ -494,5 +494,31 @@ using PolishIdentifiers;
 if (!Nip.TryParse("1234563219", out _, out NipValidationError? error))
 {
     Console.WriteLine(error);
+}
+```
+
+## Exceptions
+
+<a id="exception-nipvalidationexception"></a>
+### NipValidationException
+
+Available on: `netstandard2.0`, `net10.0`
+
+Thrown by [`Nip.Parse(string)`](#method-parse-string) and [`Nip.Parse(ReadOnlySpan<char>)`](#method-parse-span) when the input does not represent a valid NIP number.
+
+Prefer [`Nip.TryParse(string?, out Nip, out NipValidationError?)`](#method-tryparse-string-error) or [`Nip.Validate(string?)`](#method-validate-string) in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
+
+- `Error` — the [`NipValidationError`](#enum-nipvalidationerror) value that caused the failure
+
+```csharp
+using PolishIdentifiers;
+
+try
+{
+    var nip = Nip.Parse("invalid");
+}
+catch (NipValidationException ex)
+{
+    Console.WriteLine(ex.Error);
 }
 ```

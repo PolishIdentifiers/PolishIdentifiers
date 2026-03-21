@@ -7,21 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
-
-### Changed
-
-#### Unified parse ergonomics
-
-- Added typed-error overloads for all implemented identifiers:
-  - `TryParse(string?, out T result, out TError? error)`
-  - `TryParse(ReadOnlySpan<char>, out T result, out TError? error)`
-- `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` now accept both canonical input and the exact documented supported formatted NIP representations
-- Removed the separate public `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, and `Nip.ValidateFormatted(...)` API split
-- `NipValidationError.UnrecognizedFormat` now applies on the unified NIP path for otherwise allowed-character layouts that do not match a documented accepted representation
-- Renamed `Pesel.BirthDateTime` to `Pesel.BirthDate`
-- Updated README, FAQ, examples, and canonical contracts to reflect the new recommended parse flow and public API shape
-
 ## [1.0.0] - 2026-03-13
 
 `Pesel`, `Nip`, and `Regon` are included in the package.
@@ -59,7 +44,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error message: `"The {0} field is not a valid REGON."`
 - Member name and display name propagated correctly to `ValidationResult`
 
+#### Documentation and examples
+
+- Added comprehensive usage and reference documentation for all three identifiers: `docs/pesel.md`, `docs/nip.md`, `docs/regon.md`, `docs/pesel-generator.md`, `docs/nip-generator.md`, `docs/regon-generator.md`
+- Added `docs/faq.md` covering common questions and edge cases
+- Added `docs/framework-support.md` documenting `netstandard2.0` vs `net10.0` API differences
+- Added standalone runnable example projects for `Pesel`, `Nip`, and `Regon` under `examples/`
+
+### Breaking changes
+
+- **[Breaking]** Removed `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, and `Nip.ValidateFormatted(...)` — use `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` instead
+- **[Breaking]** Renamed `Pesel.BirthDateTime` to `Pesel.BirthDate`
+
 ### Changed
+
+#### Unified parse ergonomics
+
+- Added typed-error overloads for all implemented identifiers:
+  - `TryParse(string?, out T result, out TError? error)`
+  - `TryParse(ReadOnlySpan<char>, out T result, out TError? error)`
+- `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` now accept both canonical input and the exact documented supported formatted NIP representations
+- `NipValidationError.UnrecognizedFormat` now applies on the unified NIP path for otherwise allowed-character layouts that do not match a documented accepted representation
+- Updated README, FAQ, examples, and canonical contracts to reflect the new recommended parse flow and public API shape
 
 - Migrated the PESEL, NIP, and REGON unit test suites to Shouldly assertions
 - Extracted shared checksum weight definitions into `PeselChecksumWeights`, `NipChecksumWeights`, and `RegonChecksumWeights` so generators and validators use the same constants
