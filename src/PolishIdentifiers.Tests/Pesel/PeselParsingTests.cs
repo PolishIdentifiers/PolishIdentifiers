@@ -554,7 +554,7 @@ public class PeselParsingTests
     {
         var p = default(Pesel);
 
-        Should.Throw<InvalidOperationException>(() => { var _ = p.BirthDate; });
+        Should.Throw<InvalidOperationException>(() => p.BirthDate);
     }
 
     [Fact]
@@ -562,7 +562,7 @@ public class PeselParsingTests
     {
         var p = default(Pesel);
 
-        Should.Throw<InvalidOperationException>(() => { var _ = p.Gender; });
+        Should.Throw<InvalidOperationException>(() => p.Gender);
     }
 
     [Fact]
@@ -1060,7 +1060,7 @@ public class PeselParsingTests
     {
         var p = default(Pesel);
 
-        Should.Throw<InvalidOperationException>(() => { var _ = p.BirthDateOnly; });
+        Should.Throw<InvalidOperationException>(() => p.BirthDateOnly);
     }
 
     [Fact]

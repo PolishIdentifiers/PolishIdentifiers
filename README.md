@@ -149,7 +149,7 @@ var result = Nip.Validate("123-456-32-18");
 
 Console.WriteLine(result.IsValid); // True
 
-var bad = Pesel.Validate("00000000000");
+var bad = Pesel.Validate("44051401459");
 
 Console.WriteLine(bad.IsValid); // False
 Console.WriteLine(bad.Error);   // InvalidChecksum

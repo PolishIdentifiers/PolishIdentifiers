@@ -375,7 +375,7 @@ public class NipParsingTests
     {
         var nip = default(Nip);
 
-        Should.Throw<InvalidOperationException>(() => { var _ = nip.IssuingTaxOfficePrefix; });
+        Should.Throw<InvalidOperationException>(() => nip.IssuingTaxOfficePrefix);
     }
 
     [Fact]
