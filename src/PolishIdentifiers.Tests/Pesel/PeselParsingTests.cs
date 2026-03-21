@@ -562,7 +562,7 @@ public class PeselParsingTests
     {
         var p = default(Pesel);
 
-        Should.Throw<InvalidOperationException>(() => { var _ = p.Gender; });
+        Should.Throw<InvalidOperationException>(() => p.Gender);
     }
 
     [Fact]
