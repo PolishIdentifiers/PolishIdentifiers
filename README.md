@@ -86,63 +86,76 @@ The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-base
     </tbody>
 </table>
 
-## Quick introduction
+## Examples
 
-PolishIdentifiers is designed around one consistent flow for each implemented identifier:
-
-1. accept text input
-2. validate or parse using the identifier type
-3. keep the parsed identifier as a strong type in application code
-4. format it explicitly when producing output
-
-For request handling, forms, imports, and DTO validation, prefer `TryParse(..., out value, out error)`.
+### Parse — when invalid input is a bug
 
 ```csharp
 using PolishIdentifiers;
 
-var input = "44051401458";
+var nip = Nip.Parse("1234563218");
 
-if (!Pesel.TryParse(input, out var pesel, out var error))
+Console.WriteLine(nip);                              // 1234563218
+Console.WriteLine(nip.ToString(NipFormat.VatEu));   // PL1234563218
+```
+
+### TryParse — non-throwing path with typed error
+
+```csharp
+using PolishIdentifiers;
+
+if (!Pesel.TryParse("44051401458", out var pesel, out var error))
 {
-    Console.WriteLine($"Rejected PESEL: {error}");
+    Console.WriteLine($"Rejected: {error}"); // e.g. InvalidChecksum
     return;
 }
 
-Console.WriteLine($"Birth date: {pesel.BirthDate:yyyy-MM-dd}");
-Console.WriteLine($"Gender: {pesel.Gender}");
+Console.WriteLine(pesel.BirthDate.ToString("yyyy-MM-dd")); // 1944-05-14
+Console.WriteLine(pesel.Gender);                           // Male
 ```
 
 ```csharp
 using PolishIdentifiers;
 
-var input = "PL 123-456-32-18";
-
-if (!Nip.TryParse(input, out var nip, out var error))
+if (!Nip.TryParse("PL 123-456-32-18", out var nip, out var error))
 {
-    Console.WriteLine($"Rejected NIP: {error}");
+    Console.WriteLine($"Rejected: {error}");
     return;
 }
 
-Console.WriteLine($"Canonical: {nip}");
-Console.WriteLine($"Display: {nip.ToString(NipFormat.Hyphenated)}");
+Console.WriteLine(nip);                                   // 1234563218
+Console.WriteLine(nip.ToString(NipFormat.Hyphenated));    // 123-456-32-18
 ```
 
 ```csharp
 using PolishIdentifiers;
 
-var input = "12345678512347";
-
-if (!Regon.TryParse(input, out var regon, out var error))
+if (!Regon.TryParse("12345678512347", out var regon, out var error))
 {
-    Console.WriteLine($"Rejected REGON: {error}");
+    Console.WriteLine($"Rejected: {error}");
     return;
 }
 
-Console.WriteLine($"Kind: {regon.Kind}");
-Console.WriteLine($"Base REGON-9: {regon.BaseRegon9}");
+Console.WriteLine(regon.Kind);       // Regon14
+Console.WriteLine(regon.BaseRegon9); // 123456785
 ```
 
-For ASP.NET Core request models, the package also includes `[ValidPesel]`, `[ValidNip]`, and `[ValidRegon]` attributes for DataAnnotations-based validation.
+### Validate — check validity without allocating a typed instance
+
+```csharp
+using PolishIdentifiers;
+
+var result = Nip.Validate("123-456-32-18");
+
+Console.WriteLine(result.IsValid); // True
+
+var bad = Pesel.Validate("00000000000");
+
+Console.WriteLine(bad.IsValid); // False
+Console.WriteLine(bad.Error);   // InvalidChecksum
+```
+
+### DataAnnotations attributes
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -159,6 +172,26 @@ public sealed class InvoiceRequest
     [ValidRegon]
     public string? SellerRegon { get; init; }
 }
+```
+
+### Generators
+
+```csharp
+using PolishIdentifiers;
+
+// Valid values for seeding test data
+var pesel = PeselGenerator.Generate(Gender.Female, new DateTime(1990, 6, 15));
+var nip   = NipGenerator.Generate();
+var regon = RegonGenerator.Generate(RegonKind.Regon14);
+
+Console.WriteLine(pesel); // e.g. 90061512345
+Console.WriteLine(nip);   // e.g. 5261040828
+Console.WriteLine(regon); // e.g. 12345678512347
+
+// Intentionally invalid strings for negative test cases
+string badPesel = PeselGenerator.Invalid.WrongChecksum();
+string badNip   = NipGenerator.Invalid.WrongChecksum();
+string badRegon = RegonGenerator.Invalid.WrongChecksumRegon9();
 ```
 
 ## Common patterns
