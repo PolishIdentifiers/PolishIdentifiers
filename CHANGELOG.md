@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **[Breaking]** Removed `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, and `Nip.ValidateFormatted(...)` — use `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` instead
 - **[Breaking]** Renamed `Pesel.BirthDateTime` to `Pesel.BirthDate`
+- **[Breaking]** Renamed `PeselGenerator.Random()` to `PeselGenerator.Generate()`
+- **[Breaking]** Replaced `PeselGenerator.ForBirthDate(DateTime)` / `PeselGenerator.ForBirthDate(DateOnly)` fluent builder (and `.Male()` / `.Female()` / `.WithGender(Gender)`) with `PeselGenerator.Generate(DateTime)`, `PeselGenerator.Generate(DateOnly)`, `PeselGenerator.Generate(Gender, DateTime)`, and `PeselGenerator.Generate(Gender, DateOnly)` overloads
+- **[Breaking]** Renamed `NipGenerator.Random()` to `NipGenerator.Generate()`
 
 ### Added
 
@@ -95,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NIP checksum validation using the official mod 11 weighting algorithm (`6, 5, 7, 2, 3, 4, 5, 6, 7`)
 - `checksum == 10` is treated as `InvalidChecksum` (no fallback conversion to `0`)
 - Validation order for strict NIP input: characters → length → checksum
-- `NipGenerator.Generate()` — generates a valid NIP
+- `NipGenerator.Random()` — generates a random valid NIP
 - `NipGenerator.Invalid.WrongChecksum()` — valid in all other respects, checksum digit is wrong
 - `NipGenerator.Invalid.WrongLength()` — digit-only value created from a valid NIP by removing or appending 1–3 trailing digits
 - `NipGenerator.Invalid.NonNumeric()` — contains a non-digit character
@@ -168,12 +171,10 @@ First public release. PESEL support only.
 
 #### Generator
 
-- `PeselGenerator.Generate()` — generates a valid PESEL
-- `PeselGenerator.Generate(Gender)` — generates a valid PESEL with the requested gender
-- `PeselGenerator.Generate(DateTime)` — generates a valid PESEL for the requested birth date
-- `PeselGenerator.Generate(Gender, DateTime)` — generates a valid PESEL for the requested gender and birth date
-- `PeselGenerator.Generate(DateOnly)` — DateOnly overload (net10.0 only)
-- `PeselGenerator.Generate(Gender, DateOnly)` — DateOnly overload with explicit gender (net10.0 only)
+- `PeselGenerator.Random()` — generates a random valid PESEL
+- `PeselGenerator.ForBirthDate(DateTime)` — fluent builder; supports years 1800–2299
+- `PeselGenerator.ForBirthDate(DateOnly)` — DateOnly overload (net10.0 only)
+- `.Male()` / `.Female()` / `.WithGender(Gender)` — gender selection
 - `PeselGenerator.Invalid.WrongChecksum()` — valid in all other respects, checksum digit is wrong
 - `PeselGenerator.Invalid.WrongDate()` — correct checksum, encoded month outside all valid century ranges
 - `PeselGenerator.Invalid.WrongLength()` — too short or too long
