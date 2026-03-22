@@ -1,4 +1,5 @@
 using PolishIdentifiers;
+using Shouldly;
 
 namespace PolishIdentifiers.Tests;
 
@@ -17,9 +18,9 @@ public class NipValidationTests
     // --- Invalid: wrong characters ---
     private const string InvalidCharacterAtEnd = "123456321X";
     private const string InvalidCharacterAtStart = "A234563218";
-    private const string InvalidCharacterSpace = "12345 3218";
     private const string InvalidCharacterDot = "1234563.18";
-    private const string InvalidCharacterHyphen = "123-456-32-18";
+    private const string InvalidCharacterLowercasePrefix = "pl1234563218";
+    private const string InvalidCharacterForeignPrefix = "DE1234563218";
 
     // --- Invalid: wrong length ---
     private const string EmptyNip = "";
@@ -55,9 +56,9 @@ public class NipValidationTests
     {
         InvalidCharacterAtEnd,
         InvalidCharacterAtStart,
-        InvalidCharacterSpace,
         InvalidCharacterDot,
-        InvalidCharacterHyphen,
+        InvalidCharacterLowercasePrefix,
+        InvalidCharacterForeignPrefix,
     };
 
     public static TheoryData<string?> InvalidLengthData => new()
@@ -90,8 +91,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.True(result.IsValid);
-        Assert.Null(result.Error);
+        result.IsValid.ShouldBeTrue();
+        result.Error.ShouldBeNull();
     }
 
     // --- InvalidCharacters ---
@@ -102,8 +103,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidCharacters, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidCharacters);
     }
 
     // --- InvalidLength ---
@@ -114,8 +115,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidLength, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidLength);
     }
 
     // --- InvalidChecksum ---
@@ -126,8 +127,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(nip);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidChecksum, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Checksum mod 11 == 10 edge case ---
@@ -137,8 +138,8 @@ public class NipValidationTests
     {
         var result = Nip.Validate(ChecksumMod11Equals10);
 
-        Assert.False(result.IsValid);
-        Assert.Equal(NipValidationError.InvalidChecksum, result.Error);
+        result.IsValid.ShouldBeFalse();
+        result.Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Validation order: characters → length → checksum ---
@@ -148,7 +149,7 @@ public class NipValidationTests
     {
         var result = Nip.Validate(MultipleIssuesNip);
 
-        Assert.Equal(NipValidationError.InvalidCharacters, result.Error);
+        result.Error.ShouldBe(NipValidationError.InvalidCharacters);
     }
 
     // --- Span overload ---
@@ -156,15 +157,13 @@ public class NipValidationTests
     [Fact]
     public void Validate_SpanOverload_ValidNip_ReturnsValid()
     {
-        Assert.True(Nip.Validate(ValidNip.AsSpan()).IsValid);
+        Nip.Validate(ValidNip.AsSpan()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
     public void Validate_SpanOverload_InvalidChecksum_ReturnsInvalidChecksum()
     {
-        Assert.Equal(
-            NipValidationError.InvalidChecksum,
-            Nip.Validate(InvalidChecksum7.AsSpan()).Error);
+        Nip.Validate(InvalidChecksum7.AsSpan()).Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     // --- Match ---
@@ -176,7 +175,7 @@ public class NipValidationTests
 
         var value = result.Match(onValid: () => "ok", onError: e => e.ToString());
 
-        Assert.Equal("ok", value);
+        value.ShouldBe("ok");
     }
 
     [Fact]
@@ -186,20 +185,56 @@ public class NipValidationTests
 
         var error = result.Match(onValid: () => (NipValidationError?)null, onError: e => (NipValidationError?)e);
 
-        Assert.Equal(NipValidationError.InvalidChecksum, error);
+        error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
-    // --- Strict path does NOT accept formatted input ---
-
-    [Theory]
-    [InlineData("123-456-32-18")]
-    [InlineData("PL1234563218")]
-    [InlineData("PL 1234563218")]
-    [InlineData("PL 123-456-32-18")]
-    public void Validate_FormattedInput_ReturnsInvalidCharacters(string nip)
+    [Fact]
+    public void Match_ValidNip_OnErrorIsNotInvoked()
     {
-        var result = Nip.Validate(nip);
+        var result = Nip.Validate(ValidNip);
+        var onErrorCalled = false;
 
-        Assert.Equal(NipValidationError.InvalidCharacters, result.Error);
+        result.Match(onValid: () => true, onError: _ => { onErrorCalled = true; return false; });
+
+        onErrorCalled.ShouldBeFalse();
     }
+
+    [Fact]
+    public void Match_InvalidNip_OnValidIsNotInvoked()
+    {
+        var result = Nip.Validate(InvalidChecksum7);
+        var onValidCalled = false;
+
+        result.Match(onValid: () => { onValidCalled = true; return true; }, onError: _ => false);
+
+        onValidCalled.ShouldBeFalse();
+    }
+
+    // --- Default struct ---
+
+    [Fact]
+    public void Match_DefaultStruct_ThrowsInvalidOperationException()
+    {
+        var result = default(ValidationResult<NipValidationError>);
+
+        Should.Throw<InvalidOperationException>(() =>
+            result.Match(onValid: () => "ok", onError: e => e.ToString()));
+    }
+
+    [Fact]
+    public void DefaultStruct_IsValidIsFalse()
+    {
+        var result = default(ValidationResult<NipValidationError>);
+
+        result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DefaultStruct_ErrorIsNull()
+    {
+        var result = default(ValidationResult<NipValidationError>);
+
+        result.Error.ShouldBeNull();
+    }
+
 }

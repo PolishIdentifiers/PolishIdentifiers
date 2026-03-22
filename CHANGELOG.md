@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-03-22
+
+`Pesel`, `Nip`, and `Regon` are included in the package.
+
+### Breaking changes
+
+- **[Breaking]** Removed `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, and `Nip.ValidateFormatted(...)` — use `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` instead
+- **[Breaking]** Renamed `Pesel.BirthDateTime` to `Pesel.BirthDate`
+- **[Breaking]** Renamed `PeselGenerator.Random()` to `PeselGenerator.Generate()`
+- **[Breaking]** Replaced `PeselGenerator.ForBirthDate(DateTime)` / `PeselGenerator.ForBirthDate(DateOnly)` fluent builder (and `.Male()` / `.Female()` / `.WithGender(Gender)`) with `PeselGenerator.Generate(DateTime)`, `PeselGenerator.Generate(DateOnly)`, `PeselGenerator.Generate(Gender, DateTime)`, and `PeselGenerator.Generate(Gender, DateOnly)` overloads
+- **[Breaking]** Renamed `NipGenerator.Random()` to `NipGenerator.Generate()`
+
+### Added
+
+#### `Regon` - strongly typed identifier
+
+- `Regon` readonly struct covering both REGON-9 and REGON-14
+- Strict factories: `Regon.Parse(string)` / `Regon.Parse(ReadOnlySpan<char>)`, `Regon.TryParse(...)`, `Regon.Validate(...)`
+- `RegonValidationError` enum: `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`
+- `RegonValidationException` - wraps `RegonValidationError`, thrown by `Parse`
+- `RegonKind`, `Regon.IsRegon9`, `Regon.IsRegon14`, and `Regon.BaseRegon9`
+- `Regon.IsDefault` with dedicated initialization-state handling so valid all-zero REGON values remain distinct from `default(Regon)`
+- `Regon.ToString()` and `IFormattable` support for canonical `D9` and `D14` output
+- `IFormattable`, `IEquatable<Regon>`, `IComparable<Regon>`, `==` / `!=` operators
+- `IParsable<Regon>`, `ISpanParsable<Regon>` (net10.0 only)
+
+#### Validation and generation
+
+- REGON checksum validation for both 9-digit and 14-digit variants
+- Two-step REGON-14 validation: base REGON-9 validation first, then REGON-14 checksum validation
+- Support for valid canonical all-zero REGON values: `000000000` and `00000000000000`
+- `RegonGenerator.Generate(RegonKind)` - generates a valid REGON of the specified kind (Regon9 or Regon14)
+- `RegonGenerator.Invalid.WrongChecksumRegon9()` - valid in all other respects, REGON-9 checksum digit is wrong
+- `RegonGenerator.Invalid.WrongChecksumRegon14()` - embedded REGON-9 base stays valid while the REGON-14 checksum digit is wrong
+- `RegonGenerator.Invalid.WrongLength()` - digit-only value with invalid length
+- `RegonGenerator.Invalid.NonNumeric()` - contains a non-digit character
+
+#### DataAnnotations
+
+- `[ValidRegon]` attribute - validates `string`, `Regon`, and `Regon?`
+- For string values, `[ValidRegon]` accepts canonical 9-digit and 14-digit REGON input
+- `null` is treated as valid; compose with `[Required]` when the field is mandatory
+- Error message: `"The {0} field is not a valid REGON."`
+- Member name and display name propagated correctly to `ValidationResult`
+
+#### Documentation and examples
+
+- Added comprehensive usage and reference documentation for all three identifiers: `docs/pesel.md`, `docs/nip.md`, `docs/regon.md`, `docs/pesel-generator.md`, `docs/nip-generator.md`, `docs/regon-generator.md`
+- Added `docs/faq.md` covering common questions and edge cases
+- Added `docs/framework-support.md` documenting `netstandard2.0` vs `net10.0` API differences
+- Added standalone runnable example projects for `Pesel`, `Nip`, and `Regon` under `examples/`
+
+### Changed
+
+#### Unified parse ergonomics
+
+- Added typed-error overloads for all implemented identifiers:
+  - `TryParse(string?, out T result, out TError? error)`
+  - `TryParse(ReadOnlySpan<char>, out T result, out TError? error)`
+- `Nip.Parse(...)`, `Nip.TryParse(...)`, and `Nip.Validate(...)` now accept both canonical input and the exact documented supported formatted NIP representations
+- `NipValidationError.UnrecognizedFormat` now applies on the unified NIP path for otherwise allowed-character layouts that do not match a documented accepted representation
+- Updated README, FAQ, examples, and canonical contracts to reflect the new recommended parse flow and public API shape
+
+- Migrated the PESEL, NIP, and REGON unit test suites to Shouldly assertions
+- Extracted shared checksum weight definitions into `PeselChecksumWeights`, `NipChecksumWeights`, and `RegonChecksumWeights` so generators and validators use the same constants
+
 ## [0.2.0] - 2026-03-10
 
 ### Added
@@ -20,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `NipValidationError` enum: `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`, `UnrecognizedFormat`
 - `NipValidationException` — wraps `NipValidationError`, thrown by `Parse` and `ParseFormatted`
 - `Nip.IsDefault` — distinguishes a default struct instance from a parsed one
-- `Nip.IssuingTaxOfficePrefix` — first three digits of the identifier
+- `Nip.IssuingTaxOfficePrefix` — first three digits, identifying the tax office that originally issued the NIP rather than the taxpayer's current competent office
 - `Nip.ToString()` — always returns the 10-digit canonical form
 - `Nip.ToString(NipFormat)` with `DigitsOnly`, `Hyphenated`, and `VatEu`
 - `IFormattable`, `IEquatable<Nip>`, `IComparable<Nip>`, `==` / `!=` operators
@@ -67,7 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2026-03-06
 
-First public release. PESEL support only — NIP, REGON and NRB are planned for v0.4.
+First public release. PESEL support only.
 
 ### Added
 
@@ -119,6 +185,7 @@ First public release. PESEL support only — NIP, REGON and NRB are planned for 
 - `netstandard2.0` — compatible with .NET Framework 4.6.1+ and all legacy runtimes
 - `net10.0` — full modern API surface including `DateOnly`, `IParsable<T>`, `ISpanParsable<T>`
 
+[1.0.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/releases/tag/v0.1.0

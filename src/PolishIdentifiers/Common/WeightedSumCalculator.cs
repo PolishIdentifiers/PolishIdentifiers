@@ -1,9 +1,9 @@
 namespace PolishIdentifiers;
 
 /// <summary>
-/// Provides weighted-sum checksum calculation for Polish identifiers.
+/// Provides weighted-sum computation for Polish identifier validation.
 /// </summary>
-internal static class ChecksumCalculator
+internal static class WeightedSumCalculator
 {
     /// <summary>
     /// Computes a weighted sum for purely numeric identifiers (PESEL, NIP, REGON).

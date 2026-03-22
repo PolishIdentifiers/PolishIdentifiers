@@ -7,6 +7,7 @@ namespace PolishIdentifiers.Tests;
 public class NipDataAnnotationsTests
 {
     private const string ValidNip = "1234563218";
+    private const string AllZeroNip = "0000000000";
     private const string InvalidChecksumNip = "1234563217";
     private const string InvalidLengthNip = "123456321";
     private const string InvalidCharactersNip = "123456321X";
@@ -16,7 +17,7 @@ public class NipDataAnnotationsTests
     private const string VatEuHyphenatedNip = "PL 123-456-32-18";
     private const string LeadingWhitespaceNip = " 1234563218";
     private const string TrailingWhitespaceNip = "1234563218 ";
-    private const string ExpectedErrorMessage = "The Nip field is not a valid NIP.";
+    private const string DefaultDisplayNameErrorMessage = "The Nip field is not a valid NIP.";
     private const string AlternateDisplayName = "Tax ID";
     private const string AlternateDisplayNameErrorMessage = "The Tax ID field is not a valid NIP.";
 
@@ -95,7 +96,7 @@ public class NipDataAnnotationsTests
 
         isValid.ShouldBeFalse();
         error.MemberNames.ShouldContain(nameof(StringDto.Nip));
-        error.ErrorMessage.ShouldBe(ExpectedErrorMessage);
+        error.ErrorMessage.ShouldBe(DefaultDisplayNameErrorMessage);
     }
 
     [Fact]
@@ -145,6 +146,17 @@ public class NipDataAnnotationsTests
     }
 
     [Fact]
+    public void ValidNipAttribute_ParsedAllZeroNipStruct_IsValid()
+    {
+        var dto = new StrongTypeDto { Nip = Nip.Parse(AllZeroNip) };
+
+        var isValid = TryValidate(dto, out var results);
+
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void ValidNipAttribute_UnsupportedType_IsInvalid()
     {
         var dto = new ObjectDto { Nip = 12345 };
@@ -167,7 +179,7 @@ public class NipDataAnnotationsTests
 
         isValid.ShouldBeFalse();
         error.MemberNames.ShouldContain(nameof(StringDto.Nip));
-        error.ErrorMessage.ShouldBe(ExpectedErrorMessage);
+        error.ErrorMessage.ShouldBe(DefaultDisplayNameErrorMessage);
     }
 
     [Fact]
@@ -180,7 +192,7 @@ public class NipDataAnnotationsTests
 
         isValid.ShouldBeFalse();
         error.MemberNames.ShouldContain(nameof(RequiredStringDto.Nip));
-        error.ErrorMessage.ShouldBe(ExpectedErrorMessage);
+        error.ErrorMessage.ShouldBe(DefaultDisplayNameErrorMessage);
     }
 
     [Fact]
@@ -210,6 +222,7 @@ public class NipDataAnnotationsTests
         attribute.IsValid(VatEuNip).ShouldBeTrue();
         attribute.IsValid(InvalidChecksumNip).ShouldBeFalse();
         attribute.IsValid(Nip.Parse(ValidNip)).ShouldBeTrue();
+        attribute.IsValid(Nip.Parse(AllZeroNip)).ShouldBeTrue();
         attribute.IsValid(default(Nip)).ShouldBeFalse();
         attribute.IsValid(12345).ShouldBeFalse();
     }

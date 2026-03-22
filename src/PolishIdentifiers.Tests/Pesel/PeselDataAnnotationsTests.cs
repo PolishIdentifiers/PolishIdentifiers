@@ -7,12 +7,17 @@ namespace PolishIdentifiers.Tests;
 public class PeselDataAnnotationsTests
 {
     private const string ValidPesel = "44051401458";
+    private const string ValidPeselLeadingZero = "02070803628";
     private const string InvalidChecksumPesel = "44051401457";
     private const string InvalidLengthPesel = "4405140145";
+    private const string TooLongPesel = "440514014580";
     private const string InvalidCharactersPesel = "4405140145A";
     private const string InvalidDatePesel = "99223112345";
     private const string LeadingWhitespacePesel = " 44051401458";
     private const string TrailingWhitespacePesel = "44051401458 ";
+    private const string MiddleTabPesel = "4405140\t458";
+    private const string AllZerosPesel = "00000000000";
+    private const string AllNinesPesel = "99999999999";
 
     private sealed class StringDto
     {
@@ -43,16 +48,31 @@ public class PeselDataAnnotationsTests
     {
         InvalidChecksumPesel,
         InvalidLengthPesel,
+        TooLongPesel,
         InvalidCharactersPesel,
         InvalidDatePesel,
         LeadingWhitespacePesel,
-        TrailingWhitespacePesel
+        TrailingWhitespacePesel,
+        MiddleTabPesel,
+        AllZerosPesel,
+        AllNinesPesel
     };
 
     [Fact]
     public void ValidPeselAttribute_ValidString_IsValid()
     {
         var dto = new StringDto { Pesel = ValidPesel };
+
+        var isValid = TryValidate(dto, out var results);
+
+        isValid.ShouldBeTrue();
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ValidPeselAttribute_ValidStringWithLeadingZero_IsValid()
+    {
+        var dto = new StringDto { Pesel = ValidPeselLeadingZero };
 
         var isValid = TryValidate(dto, out var results);
 
@@ -120,6 +140,26 @@ public class PeselDataAnnotationsTests
     }
 
     [Fact]
+    public void ValidPeselAttribute_ParsedNullablePeselStruct_IsValid()
+    {
+        Pesel? value = Pesel.Parse(ValidPesel);
+
+        var result = new ValidPeselAttribute().GetValidationResult(value, new ValidationContext(new object()));
+
+        result.ShouldBe(DataAnnotationsValidationResult.Success);
+    }
+
+    [Fact]
+    public void ValidPeselAttribute_NullNullablePeselStruct_IsValid()
+    {
+        Pesel? value = null;
+
+        var result = new ValidPeselAttribute().GetValidationResult(value, new ValidationContext(new object()));
+
+        result.ShouldBe(DataAnnotationsValidationResult.Success);
+    }
+
+    [Fact]
     public void ValidPeselAttribute_UnsupportedType_IsInvalid()
     {
         var dto = new ObjectDto { Pesel = 12345 };
@@ -175,16 +215,48 @@ public class PeselDataAnnotationsTests
     }
 
     [Fact]
+    public void ValidPeselAttribute_GetValidationResult_DisplayNameAndMemberName_AreIndependent()
+    {
+        var attribute = new ValidPeselAttribute();
+        var context = new ValidationContext(new object())
+        {
+            MemberName = "peselField",
+            DisplayName = "Your PESEL"
+        };
+
+        var result = attribute.GetValidationResult(InvalidChecksumPesel, context);
+
+        result.ShouldNotBeNull();
+        result!.ErrorMessage.ShouldBe("The Your PESEL field is not a valid PESEL.");
+        result.MemberNames.ShouldContain("peselField");
+    }
+
+    [Fact]
+    public void ValidPeselAttribute_NullValue_PassesValidPeselButFailsRequired()
+    {
+        var attribute = new ValidPeselAttribute();
+        var required = new RequiredAttribute();
+
+        attribute.IsValid(null).ShouldBeTrue();
+        required.IsValid(null).ShouldBeFalse();
+    }
+
+    [Fact]
     public void ValidPeselAttribute_IsValid_ObjectOverload_CoversSupportedAndUnsupportedValues()
     {
         var attribute = new ValidPeselAttribute();
 
         attribute.IsValid(null).ShouldBeTrue();
         attribute.IsValid(ValidPesel).ShouldBeTrue();
+        attribute.IsValid(ValidPeselLeadingZero).ShouldBeTrue();
         attribute.IsValid(InvalidChecksumPesel).ShouldBeFalse();
+        attribute.IsValid(TooLongPesel).ShouldBeFalse();
+        attribute.IsValid(MiddleTabPesel).ShouldBeFalse();
+        attribute.IsValid(AllZerosPesel).ShouldBeFalse();
+        attribute.IsValid(AllNinesPesel).ShouldBeFalse();
         attribute.IsValid(Pesel.Parse(ValidPesel)).ShouldBeTrue();
         attribute.IsValid(default(Pesel)).ShouldBeFalse();
-        attribute.IsValid(12345).ShouldBeFalse();
+        attribute.IsValid(44051401458L).ShouldBeFalse();
     }
 
     private static bool TryValidate(object instance, out List<DataAnnotationsValidationResult> results)

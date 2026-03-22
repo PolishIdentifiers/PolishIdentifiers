@@ -1,4 +1,5 @@
-name: Publish
+name: Release
+run-name: Release - ${{ github.event.release.tag_name }}
 
 on:
   release:
@@ -6,7 +7,7 @@ on:
 
 jobs:
   publish:
-    name: Pack & Publish to NuGet.org
+    name: Pack & Publish Packages
     if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
     runs-on: ubuntu-latest
     permissions:
@@ -19,9 +20,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
+          dotnet-version: '8.0.x'
           global-json-file: global.json
 
-      - name: Verify release tag matches package version
+      - name: Verify Tag Matches Package Version
         run: |
           package_version="$(grep -oPm1 '(?<=<Version>)[^<]+' src/PolishIdentifiers/PolishIdentifiers.csproj)"
           tag_name="${{ github.event.release.tag_name }}"
@@ -38,7 +40,7 @@ jobs:
       - name: Build
         run: dotnet build PolishIdentifiers.slnx --no-restore -c Release
 
-      # Re-run tests before publishing so a broken release can't reach NuGet.
+      # Re-run tests before publishing so a broken release cannot reach either feed.
       - name: Test
         run: >
           dotnet test PolishIdentifiers.slnx
@@ -51,14 +53,14 @@ jobs:
           --no-build -c Release
           -o nupkg
 
-      - name: Push to NuGet.org
+      - name: Publish to NuGet.org
         run: >
           dotnet nuget push "nupkg/*.nupkg"
           --api-key ${{ secrets.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
 
-      - name: Push to GitHub Packages
+      - name: Publish to GitHub Packages
         run: >
           dotnet nuget push "nupkg/*.nupkg"
           --api-key ${{ secrets.GITHUB_TOKEN }}

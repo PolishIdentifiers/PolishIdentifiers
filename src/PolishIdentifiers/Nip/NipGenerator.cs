@@ -6,6 +6,17 @@ namespace PolishIdentifiers;
 /// </summary>
 public static class NipGenerator
 {
+    // RNG strategy is split by target framework — this is intentional. Do not consolidate.
+    // net10.0:          Random.Shared is the platform's purpose-built concurrent RNG:
+    //                   thread-safe without locks, OS-entropy seeded, no per-thread state.
+    // netstandard2.0:   Random.Shared is not part of the netstandard2.0 API surface.
+    //                   ThreadLocal<Random> gives each thread an independent instance,
+    //                   eliminating data races on a shared Random field.
+    //                   Seeded via Guid.NewGuid().GetHashCode() because the netstandard2.0
+    //                   contract does not guarantee OS-entropy seeding across all conforming
+    //                   runtimes — older .NET Framework derives seeds from Environment.TickCount,
+    //                   where threads initialized within the same millisecond receive identical
+    //                   seeds and produce identical sequences.
 #if NET10_0_OR_GREATER
     private static int NextDigit() => System.Random.Shared.Next(10);
     private static int NextInt(int maxValue) => System.Random.Shared.Next(maxValue);
@@ -19,33 +30,30 @@ public static class NipGenerator
     private static int NextInt(int maxValue) => CurrentRng.Next(maxValue);
 #endif
 
-    private static readonly int[] ChecksumWeights = [6, 5, 7, 2, 3, 4, 5, 6, 7];
-
     // --- Valid generators ---
 
-    /// <summary>Generates a random valid NIP.</summary>
+    /// <summary>Generates a valid NIP.</summary>
     /// <returns>A valid <see cref="Nip"/> instance.</returns>
     /// <remarks>This method is thread-safe.</remarks>
-    public static Nip Random()
+    public static Nip Generate()
     {
-        int[] digits;
-        int checksum;
+        Span<int> digits = stackalloc int[10]; // Declared outside the loop; indices [0..8] are always written before read.
+        int checkDigit;
 
         do
         {
-            digits = new int[10];
             for (var i = 0; i < 9; i++)
                 digits[i] = NextDigit();
 
             var sum = 0;
             for (var i = 0; i < 9; i++)
-                sum += digits[i] * ChecksumWeights[i];
+                sum += digits[i] * NipChecksumWeights.Weights[i];
 
-            checksum = sum % 11;
+            checkDigit = sum % 11;
         }
-        while (checksum == 10); // Retry if no valid check digit exists for this combination.
+        while (checkDigit == 10); // Retry if no valid check digit exists for this combination.
 
-        digits[9] = checksum;
+        digits[9] = checkDigit;
 
         ulong value = 0;
         foreach (var d in digits)
@@ -53,6 +61,7 @@ public static class NipGenerator
 
         return new Nip(value);
     }
+
 
     // --- Invalid generators (return string — Nip.Parse would throw) ---
 
@@ -72,7 +81,7 @@ public static class NipGenerator
         /// <returns>A 10-digit string that fails checksum validation.</returns>
         public static string WrongChecksum()
         {
-            var chars = NipGenerator.Random().ToString().ToCharArray();
+            var chars = NipGenerator.Generate().ToString().ToCharArray();
             chars[9] = (char)('0' + (chars[9] - '0' + 1) % 10);
             return new string(chars);
         }
@@ -84,7 +93,7 @@ public static class NipGenerator
         /// <returns>A digit-only string whose length differs from a valid NIP by 1 to 3 characters.</returns>
         public static string WrongLength()
         {
-            var value = NipGenerator.Random().ToString();
+            var value = NipGenerator.Generate().ToString();
             var delta = NextInt(MaxLengthDelta) + 1;
 
             return NextInt(2) == 0
@@ -99,7 +108,7 @@ public static class NipGenerator
         /// <returns>A 10-character string that fails character validation.</returns>
         public static string NonNumeric()
         {
-            var chars = NipGenerator.Random().ToString().ToCharArray();
+            var chars = NipGenerator.Generate().ToString().ToCharArray();
             chars[5] = 'X';
             return new string(chars);
         }

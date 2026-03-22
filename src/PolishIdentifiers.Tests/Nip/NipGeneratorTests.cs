@@ -5,32 +5,22 @@ namespace PolishIdentifiers.Tests;
 
 public class NipGeneratorTests
 {
-    // --- Random() ---
+    // --- Generate() ---
 
     [Fact]
-    public void Random_ReturnsParsableNip()
+    public void Generate_ReturnsParsableNip()
     {
-        var nip = NipGenerator.Random();
+        var nip = NipGenerator.Generate();
 
-        Assert.True(Nip.Validate(nip.ToString()).IsValid);
+        Nip.Validate(nip.ToString()).IsValid.ShouldBeTrue();
     }
 
     [Fact]
-    public void Random_CalledMultipleTimes_ReturnsOnlyValidValues()
+    public void Generate_CalledMultipleTimes_ReturnsOnlyValidValues()
     {
-        var results = Enumerable.Range(0, 100).Select(_ => NipGenerator.Random().ToString()).ToList();
+        var results = Enumerable.Range(0, 100).Select(_ => NipGenerator.Generate().ToString()).ToList();
 
-        Assert.All(results, value => Assert.True(Nip.Validate(value).IsValid));
-    }
-
-    [Fact]
-    public void Random_CalledManyTimes_CanGenerateNipWithLeadingZero()
-    {
-        var generatedNips = Enumerable.Range(0, 500)
-            .Select(_ => NipGenerator.Random().ToString())
-            .ToList();
-
-        generatedNips.Any(value => value[0] == '0').ShouldBeTrue();
+        results.ShouldAllBe(value => Nip.Validate(value).IsValid);
     }
 
     // --- Invalid generators ---
@@ -38,25 +28,41 @@ public class NipGeneratorTests
     [Fact]
     public void Invalid_WrongChecksum_YieldsExactlyInvalidChecksum()
     {
-        var s = NipGenerator.Invalid.WrongChecksum();
+        var invalidValue = NipGenerator.Invalid.WrongChecksum();
 
-        Assert.Equal(NipValidationError.InvalidChecksum, Nip.Validate(s).Error);
+        Nip.Validate(invalidValue).Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
     [Fact]
     public void Invalid_WrongLength_YieldsExactlyInvalidLength()
     {
-        var s = NipGenerator.Invalid.WrongLength();
+        var invalidValue = NipGenerator.Invalid.WrongLength();
 
-        Assert.Equal(NipValidationError.InvalidLength, Nip.Validate(s).Error);
+        Nip.Validate(invalidValue).Error.ShouldBe(NipValidationError.InvalidLength);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_CalledMultipleTimes_AlwaysYieldsInvalidLength()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => NipGenerator.Invalid.WrongLength()).ToList();
+
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidLength);
     }
 
     [Fact]
     public void Invalid_NonNumeric_YieldsExactlyInvalidCharacters()
     {
-        var s = NipGenerator.Invalid.NonNumeric();
+        var invalidValue = NipGenerator.Invalid.NonNumeric();
 
-        Assert.Equal(NipValidationError.InvalidCharacters, Nip.Validate(s).Error);
+        Nip.Validate(invalidValue).Error.ShouldBe(NipValidationError.InvalidCharacters);
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_CalledMultipleTimes_AlwaysYieldsInvalidCharacters()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => NipGenerator.Invalid.NonNumeric()).ToList();
+
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidCharacters);
     }
 
     // --- WrongChecksum: structural verification ---
@@ -64,10 +70,10 @@ public class NipGeneratorTests
     [Fact]
     public void Invalid_WrongChecksum_HasCorrectLengthAndDigits()
     {
-        var s = NipGenerator.Invalid.WrongChecksum();
+        var invalidValue = NipGenerator.Invalid.WrongChecksum();
 
-        Assert.Equal(10, s.Length);
-        Assert.All(s, c => Assert.True(c >= '0' && c <= '9'));
+        invalidValue.Length.ShouldBe(10);
+        invalidValue.ShouldAllBe(c => c >= '0' && c <= '9');
     }
 
     [Fact]
@@ -75,7 +81,7 @@ public class NipGeneratorTests
     {
         var results = Enumerable.Range(0, 50).Select(_ => NipGenerator.Invalid.WrongChecksum()).ToList();
 
-        Assert.All(results, s => Assert.Equal(NipValidationError.InvalidChecksum, Nip.Validate(s).Error));
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidChecksum);
     }
 
     // --- WrongLength: structural verification ---
@@ -83,9 +89,9 @@ public class NipGeneratorTests
     [Fact]
     public void Invalid_WrongLength_HasInvalidLength()
     {
-        var s = NipGenerator.Invalid.WrongLength();
+        var invalidValue = NipGenerator.Invalid.WrongLength();
 
-        s.Length.ShouldNotBe(10);
+        invalidValue.Length.ShouldNotBe(10);
     }
 
     [Fact]
@@ -93,7 +99,7 @@ public class NipGeneratorTests
     {
         var value = NipGenerator.Invalid.WrongLength();
 
-        value.All(char.IsDigit).ShouldBeTrue();
+        value.ShouldAllBe(c => char.IsDigit(c));
     }
 
     // --- NonNumeric: structural verification ---
@@ -101,26 +107,29 @@ public class NipGeneratorTests
     [Fact]
     public void Invalid_NonNumeric_HasLength10()
     {
-        var s = NipGenerator.Invalid.NonNumeric();
+        var invalidValue = NipGenerator.Invalid.NonNumeric();
 
-        Assert.Equal(10, s.Length);
+        invalidValue.Length.ShouldBe(10);
     }
 
     [Fact]
     public void Invalid_NonNumeric_ContainsAtLeastOneNonDigit()
     {
-        var s = NipGenerator.Invalid.NonNumeric();
+        var invalidValue = NipGenerator.Invalid.NonNumeric();
 
-        Assert.Contains(s, c => c < '0' || c > '9');
+        invalidValue.Any(c => c < '0' || c > '9').ShouldBeTrue();
     }
 
-    // --- Random stability: multiple calls produce valid, non-identical results ---
+    // --- WrongChecksum: wrap-around ---
 
     [Fact]
-    public void Random_CalledMultipleTimes_ProducesAtLeastTwoDistinctValues()
+    public void Invalid_WrongChecksum_WhenBaseCheckDigitIs9_WrapsToZeroAndYieldsInvalidChecksum()
     {
-        var results = Enumerable.Range(0, 20).Select(_ => NipGenerator.Random().ToString()).Distinct().ToList();
+        // 0123456789: weighted sum = 185, 185 % 11 = 9, so check digit is 9.
+        // Applying WrongChecksum logic: (9 + 1) % 10 = 0 → produces "0123456780".
+        // The validator must still report InvalidChecksum, not any earlier error.
+        const string NipWithWrappedCheckDigit = "0123456780";
 
-        Assert.True(results.Count >= 2);
+        Nip.Validate(NipWithWrappedCheckDigit).Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 }

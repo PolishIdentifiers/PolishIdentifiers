@@ -6,8 +6,10 @@ namespace PolishIdentifiers;
 /// represent a valid PESEL number.
 /// </summary>
 /// <remarks>
-/// Prefer <see cref="Pesel.TryParse(string?, out Pesel)"/> or <see cref="Pesel.Validate(string?)"/>
+/// Prefer <see cref="Pesel.TryParse(string?, out Pesel, out PeselValidationError?)"/>,
+/// <see cref="Pesel.TryParse(string?, out Pesel)"/>, or <see cref="Pesel.Validate(string?)"/>
 /// in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
+/// For normal application-boundary code, the typed-error overload is recommended.
 /// </remarks>
 public class PeselValidationException : Exception
 {
