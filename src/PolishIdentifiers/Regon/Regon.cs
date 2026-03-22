@@ -286,8 +286,10 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// Returns the canonical string representation of the REGON number using the specified format.
     /// </summary>
     /// <param name="format">
-    /// The format string. Accepted values are <see langword="null"/>, <c>""</c>, <c>"G"</c>, <c>"D9"</c> (REGON-9),
-    /// and <c>"D14"</c> (REGON-14). Passing <see langword="null"/> or empty uses the natural format for the variant.
+    /// The format string. Accepted values are <see langword="null"/>, <c>""</c>, <c>"G"</c>, and the natural
+    /// format token for this instance's variant: <c>"D9"</c> for a REGON-9, or <c>"D14"</c> for a REGON-14.
+    /// Passing the token for the other variant throws <see cref="FormatException"/>.
+    /// Passing <see langword="null"/> or empty uses the natural format for the variant.
     /// </param>
     /// <param name="formatProvider">Ignored. REGON numbers are always formatted with invariant digits.</param>
     /// <returns>A decimal string left-padded with zeros to the appropriate length.</returns>
