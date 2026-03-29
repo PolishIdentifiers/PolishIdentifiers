@@ -233,6 +233,42 @@ public class NipParsingTests
         error.ShouldBe(NipValidationError.InvalidLength);
     }
 
+    // --- TryParse(string?, IFormatProvider?, out Nip) ---
+
+    [Fact]
+    public void TryParse_WithFormatProvider_ValidNip_ReturnsTrue()
+    {
+        Nip.TryParse(ValidNip, null, out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_ValidNip_SetsOutParam()
+    {
+        Nip.TryParse(ValidNip, null, out var nip);
+
+        nip.ToString().ShouldBe(ValidNip);
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_InvalidNip_ReturnsFalse()
+    {
+        Nip.TryParse(InvalidChecksumNip, null, out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_InvalidNip_SetsOutParamToDefault()
+    {
+        Nip.TryParse(InvalidChecksumNip, null, out var nip);
+
+        nip.ShouldBe(default);
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_NullInput_ReturnsFalse()
+    {
+        Nip.TryParse(null, null, out _).ShouldBeFalse();
+    }
+
     // --- Span overloads ---
 
     [Fact]

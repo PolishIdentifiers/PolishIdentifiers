@@ -329,6 +329,42 @@ public class PeselParsingTests
         pesel.ShouldBe(default);
     }
 
+    // --- TryParse(string?, IFormatProvider?, out Pesel) ---
+
+    [Fact]
+    public void TryParse_WithFormatProvider_ValidPesel_ReturnsTrue()
+    {
+        Pesel.TryParse(ValidPesel, null, out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_ValidPesel_SetsOutParam()
+    {
+        Pesel.TryParse(ValidPesel, null, out var pesel);
+
+        pesel.ToString().ShouldBe(ValidPesel);
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_InvalidPesel_ReturnsFalse()
+    {
+        Pesel.TryParse(InvalidChecksumPesel, null, out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_InvalidPesel_SetsOutParamToDefault()
+    {
+        Pesel.TryParse(InvalidChecksumPesel, null, out var pesel);
+
+        pesel.ShouldBe(default);
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_NullInput_ReturnsFalse()
+    {
+        Pesel.TryParse(null, null, out _).ShouldBeFalse();
+    }
+
     // --- Span overloads ---
 
     [Fact]

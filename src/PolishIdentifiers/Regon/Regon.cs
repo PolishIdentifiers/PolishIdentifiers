@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace PolishIdentifiers;
 
 /// <summary>
@@ -9,6 +11,7 @@ namespace PolishIdentifiers;
 /// The default instance is not valid; accessing domain properties on it
 /// throws <see cref="InvalidOperationException"/>. Use <see cref="IsDefault"/> to check before accessing.
 /// </remarks>
+[TypeConverter(typeof(RegonTypeConverter))]
 #if NET10_0_OR_GREATER
 public readonly struct Regon
     : IEquatable<Regon>, IComparable<Regon>, IFormattable,
@@ -103,6 +106,21 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
 
         return TryParse(value.AsSpan(), out regon, out error);
     }
+
+    /// <summary>
+    /// Attempts to parse the string representation of a REGON number without throwing exceptions.
+    /// This overload is recognised by ASP.NET Core Minimal APIs for route and query parameter binding
+    /// on both <c>netstandard2.0</c> and <c>net10.0</c> targets.
+    /// </summary>
+    /// <param name="value">A 9- or 14-digit string representing a REGON number, or <see langword="null"/>.</param>
+    /// <param name="_">Not used. Exists to satisfy the Minimal API binding convention.</param>
+    /// <param name="regon">
+    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Regon"/>;
+    /// otherwise, <see langword="default"/>.
+    /// </param>
+    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParse(string? value, IFormatProvider? _, out Regon regon)
+        => TryParse(value, out regon);
 
     /// <summary>
     /// Attempts to parse the span representation of a REGON number without throwing exceptions.

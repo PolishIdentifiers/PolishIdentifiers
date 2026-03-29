@@ -7,9 +7,9 @@
 
 PolishIdentifiers is a .NET library that exposes PESEL, NIP, and REGON as strong identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings plus includes their strong validation.
 
-These identifiers are implemented as tightly constrained `readonly struct` value types, with one unified `Parse` / `TryParse` / `Validate` API shape across the implemented surface, DataAnnotations attributes for request validation, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths.
+These identifiers are implemented as tightly constrained `readonly struct` value types, with one unified `Parse` / `TryParse` / `Validate` API shape across the implemented surface, `TypeConverter` support, DataAnnotations attributes for request validation, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths.
 
-In practice, that gives you one package for parsing, validation, formatting, generation, and request-model validation while keeping strong identifier types throughout domain code.
+In practice, that gives you one package for parsing, validation, formatting, generation, ASP.NET Core MVC and Minimal API parameter binding, and request-model validation while keeping strong identifier types throughout domain code.
 
 ## Scope
 
@@ -17,21 +17,19 @@ This library covers **strongly typed Polish formal identifiers** — identity, r
 
 Currently implemented: `Pesel`, `Nip`, `Regon`.
 
-Internally documented and planned for future releases: Polish bank account number (NRB), Polish ID card number, Polish passport number, land register number. These are not yet available as public types.
-
 ## Framework support
 
 Targets `netstandard2.0` and `net10.0`.
 
-The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-based PESEL members. See [Framework support](./docs/framework-support.md) for all target-specific differences.
+The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-based PESEL members. All targets include `TryParse(string?, IFormatProvider?, out T)`, which enables ASP.NET Core Minimal API route and query parameter binding without any additional configuration. See [Framework support](./docs/framework-support.md) for all target-specific differences.
 
 ## Supported identifiers
 
-| Type | Identifier | Accepted formats                                                                   | Docs |
-|---|---|------------------------------------------------------------------------------------|---|
-| `Pesel` | PESEL | `44051401458`                                                                      | [PESEL](./docs/pesel.md) |
-| `Nip` | NIP | `1234563218`, `123-456-32-18`, `PL1234563218`, `PL 1234563218`, `PL 123-456-32-18` | [NIP](./docs/nip.md) |
-| `Regon` | REGON | `123456785`, `12345678512347`                                                      | [REGON](./docs/regon.md) |
+| Type | Identifier | Annotation | Accepted formats                                                                   | Docs |
+|---|---|---|------------------------------------------------------------------------------------|---|
+| `Pesel` | PESEL | `[ValidPesel]` | `44051401458`                                                                      | [PESEL](./docs/pesel.md) |
+| `Nip` | NIP | `[ValidNip]` | `1234563218`, `123-456-32-18`, `PL1234563218`, `PL 1234563218`, `PL 123-456-32-18` | [NIP](./docs/nip.md) |
+| `Regon` | REGON | `[ValidRegon]` | `123456785`, `12345678512347`                                                      | [REGON](./docs/regon.md) |
 
 ## Parse, TryParse, Validate
 
@@ -85,6 +83,17 @@ The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-base
         </tr>
     </tbody>
 </table>
+
+## TypeConverters
+
+Each identifier type registers a `TypeConverter`; ASP.NET Core MVC and Minimal APIs support binding through different mechanisms.
+
+| Scenario | netstandard2.0 | net10.0 | Uses TypeConverter? |
+|---|---|---|---|
+| MVC route/query/form binding | Supported | Supported | Yes |
+| Minimal API binding | Supported | Supported | No |
+
+Minimal API binding uses `public static TryParse(string?, IFormatProvider?, out T)` rather than `TypeConverter`.
 
 ## Examples
 
@@ -194,52 +203,21 @@ string badNip   = NipGenerator.Invalid.WrongChecksum();
 string badRegon = RegonGenerator.Invalid.WrongChecksumRegon9();
 ```
 
-## Common patterns
-
-### Deduplicating records by NIP
-
-`Nip` is a value type with correct equality semantics. Two `Nip` values parsed from different format representations of the same 10-digit number are equal. Use a `HashSet<Nip>` or `Dictionary<Nip, T>` to deduplicate without format-specific string comparisons:
+### MVC / Controllers
 
 ```csharp
+using Microsoft.AspNetCore.Mvc;
 using PolishIdentifiers;
 
-var seen = new HashSet<Nip>();
+[HttpGet("{nip}")]
+public IActionResult Get(Nip nip) => Ok(nip);
 
-foreach (var raw in importedNipValues)
-{
-    if (!Nip.TryParse(raw.Trim().ToUpperInvariant(), out var nip, out _))
-        continue;
+// Query string
+[HttpGet]
+public IActionResult Find([FromQuery] Pesel pesel) => Ok(pesel);
 
-    if (!seen.Add(nip))
-        Console.WriteLine($"Duplicate NIP: {nip}");
-}
+// Minimal API
+app.MapGet("/companies/{regon}", (Regon regon) => Results.Ok(regon));
 ```
 
-### Linking REGON branches to their parent company
-
-REGON-14 identifies a local organizational unit. Its first 9 digits are the REGON-9 of the parent entity. Use `BaseRegon9` to group branches under their parent:
-
-```csharp
-using PolishIdentifiers;
-
-var entities = new Dictionary<Regon, List<Regon>>();
-
-foreach (var raw in importedRegonValues)
-{
-    if (!Regon.TryParse(raw, out var regon, out _))
-        continue;
-
-    var parentKey = regon.BaseRegon9; // equals regon itself for REGON-9
-    if (!entities.TryGetValue(parentKey, out var units))
-        entities[parentKey] = units = [];
-    units.Add(regon);
-}
-```
-
-See [docs/patterns.md](./docs/patterns.md) for persistence, import loop, and person-vs-company decision patterns.
-
-## Design philosophy
-
-Domain properties on identifier types expose values that are **direct structural decodes of the identifier's own digit fields**: `Pesel.BirthDate` and `Pesel.Gender` are read directly from encoded digit positions in the PESEL number.
-
-Derivations that require external state — such as calculating age from birth date, or checking eligibility based on a reference date — are **consumer responsibilities**. These are not added to the library. See [docs/pesel.md](./docs/pesel.md#age-and-other-derivations) for the recommended pattern.
+For route, query-string, and form binding, the types bind from a single string via `TypeConverter` / `TryParse`. For JSON request bodies, add JSON converters in your application.

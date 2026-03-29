@@ -223,6 +223,25 @@ var pesel = Pesel.Parse("44051401458");
 Console.WriteLine(pesel.GetHashCode());
 ```
 
+<a id="method-tryparse-with-format-provider"></a>
+### bool: TryParse(string?, IFormatProvider?, out Pesel)
+
+Available on: `netstandard2.0`, `net10.0`
+
+Enables ASP.NET Core Minimal API route and query parameter binding on both targets.
+The `IFormatProvider` argument is ignored; the method delegates to `TryParse(string?, out Pesel)`.
+
+```csharp
+using PolishIdentifiers;
+
+var app = WebApplication.Create(args);
+
+// Works on netstandard2.0 and net10.0 targets
+app.MapGet("/persons/{pesel}", (Pesel pesel) => pesel.BirthDate.ToShortDateString());
+
+app.Run();
+```
+
 <a id="method-iparsable-parse"></a>
 ### Pesel: IParsable<Pesel>.Parse(string, IFormatProvider?)
 

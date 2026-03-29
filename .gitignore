@@ -132,3 +132,4 @@ Properties/launchSettings.json
 .env.local
 .env.*
 healthchecksdb
+prompts

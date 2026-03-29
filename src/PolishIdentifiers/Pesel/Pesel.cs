@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace PolishIdentifiers;
 
 /// <summary>
@@ -8,6 +10,7 @@ namespace PolishIdentifiers;
 /// The default instance is not valid; accessing domain properties on it
 /// throws <see cref="InvalidOperationException"/>. Use <see cref="IsDefault"/> to check before accessing.
 /// </remarks>
+[TypeConverter(typeof(PeselTypeConverter))]
 #if NET10_0_OR_GREATER
 public readonly struct Pesel
     : IEquatable<Pesel>, IComparable<Pesel>, IFormattable,
@@ -95,6 +98,21 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
 
         return TryParse(value.AsSpan(), out pesel, out error);
     }
+
+    /// <summary>
+    /// Attempts to parse the string representation of a PESEL number without throwing exceptions.
+    /// This overload is recognised by ASP.NET Core Minimal APIs for route and query parameter binding
+    /// on both <c>netstandard2.0</c> and <c>net10.0</c> targets.
+    /// </summary>
+    /// <param name="value">An 11-digit string representing a PESEL number, or <see langword="null"/>.</param>
+    /// <param name="_">Not used. Exists to satisfy the Minimal API binding convention.</param>
+    /// <param name="pesel">
+    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Pesel"/>;
+    /// otherwise, <see langword="default"/>.
+    /// </param>
+    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParse(string? value, IFormatProvider? _, out Pesel pesel)
+        => TryParse(value, out pesel);
 
     /// <summary>
     /// Attempts to parse the span representation of a PESEL number without throwing exceptions.

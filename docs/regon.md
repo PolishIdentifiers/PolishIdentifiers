@@ -260,6 +260,25 @@ var regon = Regon.Parse("12345678512347");
 Console.WriteLine(regon.GetHashCode());
 ```
 
+<a id="method-tryparse-with-format-provider"></a>
+### bool: TryParse(string?, IFormatProvider?, out Regon)
+
+Available on: `netstandard2.0`, `net10.0`
+
+Enables ASP.NET Core Minimal API route and query parameter binding on both targets.
+The `IFormatProvider` argument is ignored; the method delegates to `TryParse(string?, out Regon)`.
+
+```csharp
+using PolishIdentifiers;
+
+var app = WebApplication.Create(args);
+
+// Works on netstandard2.0 and net10.0 targets
+app.MapGet("/entities/{regon}", (Regon regon) => regon.Kind.ToString());
+
+app.Run();
+```
+
 <a id="method-iparsable-parse"></a>
 ### Regon: IParsable<Regon>.Parse(string, IFormatProvider?)
 
