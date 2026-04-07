@@ -114,6 +114,11 @@ copilot-chat/
 .ai-temp/
 .llm/
 .llm-cache/
+.github/copilot-instructions.md
+.github/agents/*.agent.md
+.github/instructions/*.instructions.md
+AGENTS.md
+CLAUDE.md
 
 # ==============================
 # Editors
@@ -132,3 +137,4 @@ Properties/launchSettings.json
 .env.local
 .env.*
 healthchecksdb
+.github/prompts/

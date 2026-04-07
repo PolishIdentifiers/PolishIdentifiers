@@ -1,7 +1,7 @@
 namespace PolishIdentifiers;
 
 /// <summary>
-/// Represents the biological sex encoded in a PESEL number.
+/// Represents the sex as encoded in the PESEL civil registry.
 /// </summary>
 public enum Gender
 {

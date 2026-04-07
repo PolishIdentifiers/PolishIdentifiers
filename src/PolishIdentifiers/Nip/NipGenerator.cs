@@ -113,6 +113,18 @@ public static class NipGenerator
             return new string(chars);
         }
 
+        /// <summary>
+        /// Returns a NIP string that uses only valid NIP characters but does not match
+        /// any of the documented public NIP text representations.
+        /// Triggers <see cref="NipValidationError.UnrecognizedFormat"/>.
+        /// </summary>
+        /// <returns>A string that fails format recognition only.</returns>
+        public static string UnrecognizedFormat()
+        {
+            var nip = NipGenerator.Generate().ToString();
+            return "PL-" + nip;
+        }
+
         private static string AppendRandomDigits(string value, int count)
         {
             var chars = new char[value.Length + count];

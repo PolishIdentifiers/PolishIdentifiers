@@ -105,7 +105,10 @@ Use the presence of REGON or a combination of Pesel + NIP as your disambiguating
 Parse each NIP value with `Nip.TryParse` before inserting or comparing. Two `Nip` values are equal if they encode the same 10-digit number, regardless of the input format. Use a `Dictionary<Nip, T>` or `HashSet<Nip>` to group or deduplicate by value:
 
 ```csharp
+using System.Collections.Generic;
 using PolishIdentifiers;
+
+string[] importedNipValues = { "123-456-32-18", "1234563218", "8567346215" };
 
 var seen = new HashSet<Nip>();
 
@@ -128,6 +131,8 @@ Use the static `Validate` method instead of `TryParse` when you only need to che
 ```csharp
 using PolishIdentifiers;
 
+string[] importedNipValues = { "1234563218", "44051401459", "invalid" };
+
 foreach (var raw in importedNipValues)
 {
     var result = Nip.Validate(raw);
@@ -136,4 +141,4 @@ foreach (var raw in importedNipValues)
 }
 ```
 
-`Validate` is the zero-allocation path for high-volume validation loops.
+`Validate` is the low-allocation path for high-volume validation loops when you do not need the parsed identifier instance.

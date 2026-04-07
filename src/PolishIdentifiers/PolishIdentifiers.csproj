@@ -11,7 +11,7 @@
 
   <PropertyGroup Label="NuGet">
     <PackageId>PolishIdentifiers</PackageId>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <Authors>PolishIdentifiers</Authors>
     <Copyright>Copyright (c) PolishIdentifiers Contributors</Copyright>
     <Description>.NET library for PESEL, NIP, and REGON. Strongly typed identifiers with validation, parsing, generation, structured error codes, DataAnnotations support, and span-based validation. Targets netstandard2.0 and net10.0.</Description>
@@ -21,7 +21,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>pesel nip regon dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>First stable release. Pesel, Nip, and Regon are included as strongly typed identifiers with a unified Parse / TryParse(out error) / Validate API surface. NIP accepts canonical digits and five documented formatted representations (plain, hyphenated, PL-prefixed). Pesel exposes BirthDate and Gender. Regon covers both REGON-9 and REGON-14 with two-step checksum validation. All three include DataAnnotations attributes ([ValidPesel], [ValidNip], [ValidRegon]) and valid/invalid generators. Targets netstandard2.0 and net10.0. See CHANGELOG.md for the full change history.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.0.0 contains two breaking changes: Nip.IssuingTaxOfficePrefix now returns string (zero-padded, e.g. "012") instead of int, and the out parameter names on TryParse overloads for Pesel, Nip, and Regon were renamed from identifier-specific names to result. It also adds TypeConverter support for Pesel, Nip, and Regon, TryParse(string?, IFormatProvider?, out T) overloads for ASP.NET Core Minimal API binding on all supported targets, and NipGenerator.Invalid.UnrecognizedFormat(). See CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
