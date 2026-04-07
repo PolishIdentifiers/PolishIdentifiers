@@ -207,7 +207,7 @@ First public release. PESEL support only.
 - `netstandard2.0` — compatible with .NET Framework 4.6.1+ and all legacy runtimes
 - `net10.0` — full modern API surface including `DateOnly`, `IParsable<T>`, `ISpanParsable<T>`
 
-[1.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v1.0.0...v1.1.0
+[2.0.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.0...v0.1.1
