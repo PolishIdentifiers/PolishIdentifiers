@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Globalization;
+using System.Threading.Tasks;
 using PolishIdentifiers;
 using Shouldly;
 
@@ -231,48 +233,6 @@ public class NipParsingTests
         error.ShouldBe(NipValidationError.InvalidLength);
     }
 
-    // --- TryParse(string?, IFormatProvider?, out Nip) ---
-
-    [Fact]
-    public void TryParse_WithFormatProvider_ValidNip_ReturnsTrue()
-    {
-        Nip.TryParse(ValidNip, null, out _).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_ValidNip_SetsOutParam()
-    {
-        Nip.TryParse(ValidNip, null, out var nip);
-
-        nip.ToString().ShouldBe(ValidNip);
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_InvalidNip_ReturnsFalse()
-    {
-        Nip.TryParse(InvalidChecksumNip, null, out _).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_InvalidNip_SetsOutParamToDefault()
-    {
-        Nip.TryParse(InvalidChecksumNip, null, out var nip);
-
-        nip.ShouldBe(default);
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_NullInput_ReturnsFalse()
-    {
-        Nip.TryParse(null, null, out _).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_NonNullProvider_ReturnsTrue()
-    {
-        Nip.TryParse(ValidNip, CultureInfo.InvariantCulture, out _).ShouldBeTrue();
-    }
-
     // --- Span overloads ---
 
     [Fact]
@@ -373,11 +333,11 @@ public class NipParsingTests
     // --- IssuingTaxOfficePrefix ---
 
     [Theory]
-    [InlineData("1234563218", "123")]
-    [InlineData("7680002466", "768")]
-    [InlineData("0123456789", "012")]
-    [InlineData("5270000001", "527")]
-    public void IssuingTaxOfficePrefix_ReturnsFirstThreeDigitsAsZeroPaddedString(string input, string expectedPrefix)
+    [InlineData("1234563218", 123)]
+    [InlineData("7680002466", 768)]
+    [InlineData("0123456789", 12)]
+    [InlineData("5270000001", 527)]
+    public void IssuingTaxOfficePrefix_ReturnsFirstThreeDigitsAsInt(string input, int expectedPrefix)
     {
         var nip = Nip.Parse(input);
 
@@ -385,11 +345,11 @@ public class NipParsingTests
     }
 
     [Fact]
-    public void IssuingTaxOfficePrefix_AllZeroNip_ReturnsTripleZero()
+    public void IssuingTaxOfficePrefix_AllZeroNip_ReturnsZero()
     {
         var nip = Nip.Parse(AllZeroNip);
 
-        nip.IssuingTaxOfficePrefix.ShouldBe("000");
+        nip.IssuingTaxOfficePrefix.ShouldBe(0);
     }
 
     // --- Default struct ---
@@ -860,6 +820,38 @@ public class NipParsingTests
         var copy = original;
 
         copy.ShouldBe(original);
+    }
+
+    // --- Thread safety ---
+
+    [Fact]
+    public void Parse_ParallelLoad_ProducesNoFailures()
+    {
+        var inputs = new[]
+        {
+            ValidNip,
+            AnotherValidNip,
+            ValidNipWithLeadingZero,
+        };
+
+        var failures = new ConcurrentBag<Exception>();
+
+        Parallel.For(0, 500, i =>
+        {
+            try
+            {
+                var input = inputs[i % inputs.Length];
+                var parsed = Nip.Parse(input);
+                _ = parsed.ToString();
+                _ = parsed.IssuingTaxOfficePrefix;
+            }
+            catch (Exception ex)
+            {
+                failures.Add(ex);
+            }
+        });
+
+        failures.ShouldBeEmpty();
     }
 
     // --- net10 only ---

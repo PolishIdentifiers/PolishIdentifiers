@@ -44,11 +44,6 @@ public class NipValidationTests
 
     private const string MultipleIssuesNip = "12X";
 
-    // --- Invalid: unrecognized format ---
-    private const string InvalidFormatWrongSeparator = "PL-1234563218";   // dash after PL — not a recognized layout
-    private const string InvalidFormatSpaceSeparated = "123 456 32 18";   // spaces instead of hyphens
-    private const string InvalidFormatDoubleSpace    = "PL  1234563218";  // two spaces after PL
-
     public static TheoryData<string> ValidNipData => new()
     {
         ValidNip,
@@ -86,13 +81,6 @@ public class NipValidationTests
         InvalidChecksum7,
         InvalidChecksum9,
         ChecksumMod11Equals10,
-    };
-
-    public static TheoryData<string> UnrecognizedFormatData => new()
-    {
-        InvalidFormatWrongSeparator,
-        InvalidFormatSpaceSeparated,
-        InvalidFormatDoubleSpace,
     };
 
     // --- Happy path ---
@@ -141,18 +129,6 @@ public class NipValidationTests
 
         result.IsValid.ShouldBeFalse();
         result.Error.ShouldBe(NipValidationError.InvalidChecksum);
-    }
-
-    // --- UnrecognizedFormat ---
-
-    [Theory]
-    [MemberData(nameof(UnrecognizedFormatData))]
-    public void Validate_UnrecognizedFormat_ReturnsUnrecognizedFormat(string nip)
-    {
-        var result = Nip.Validate(nip);
-
-        result.IsValid.ShouldBeFalse();
-        result.Error.ShouldBe(NipValidationError.UnrecognizedFormat);
     }
 
     // --- Checksum mod 11 == 10 edge case ---

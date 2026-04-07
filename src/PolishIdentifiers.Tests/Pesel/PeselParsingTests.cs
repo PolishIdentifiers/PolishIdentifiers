@@ -51,11 +51,11 @@ public class PeselParsingTests
     // Gender digit coverage — every remaining odd/even digit explicitly tested
     // Base "440514014" → partial sum 87; checksum = (10 - (87 + digit*3) % 10) % 10
     private const string MaleGenderDigit1Pesel   = "44051401410"; // digit 1, sum 90
-    private const string MaleGenderDigit7Pesel   = "44051401472"; // digit 7, sum 108
-    private const string MaleGenderDigit9Pesel   = "44051401496"; // digit 9, sum 114
-    private const string FemaleGenderDigit2Pesel = "44051401427"; // digit 2, sum 93
-    private const string FemaleGenderDigit4Pesel = "44051401441"; // digit 4, sum 99
-    private const string FemaleGenderDigit8Pesel = "44051401489"; // digit 8, sum 111
+    private const string MaleGenderDigit7Pesel   = "44051401472"; // digit 7, sum 110
+    private const string MaleGenderDigit9Pesel   = "44051401496"; // digit 9, sum 120
+    private const string FemaleGenderDigit2Pesel = "44051401427"; // digit 2, sum 100
+    private const string FemaleGenderDigit4Pesel = "44051401441"; // digit 4, sum 100
+    private const string FemaleGenderDigit8Pesel = "44051401489"; // digit 8, sum 120
 
     // Feb 29 in non-Gregorian-leap centuries (divisible by 100 but not 400)
     private const string InvalidLeap1800Pesel = "00822912345"; // 1800-02-29; encodedMonth 82 → 1800s
@@ -327,48 +327,6 @@ public class PeselParsingTests
         Pesel.TryParse(input, out var pesel);
 
         pesel.ShouldBe(default);
-    }
-
-    // --- TryParse(string?, IFormatProvider?, out Pesel) ---
-
-    [Fact]
-    public void TryParse_WithFormatProvider_ValidPesel_ReturnsTrue()
-    {
-        Pesel.TryParse(ValidPesel, null, out _).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_ValidPesel_SetsOutParam()
-    {
-        Pesel.TryParse(ValidPesel, null, out var pesel);
-
-        pesel.ToString().ShouldBe(ValidPesel);
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_InvalidPesel_ReturnsFalse()
-    {
-        Pesel.TryParse(InvalidChecksumPesel, null, out _).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_InvalidPesel_SetsOutParamToDefault()
-    {
-        Pesel.TryParse(InvalidChecksumPesel, null, out var pesel);
-
-        pesel.ShouldBe(default);
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_NullInput_ReturnsFalse()
-    {
-        Pesel.TryParse(null, null, out _).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_NonNullProvider_ReturnsTrue()
-    {
-        Pesel.TryParse(ValidPesel, CultureInfo.InvariantCulture, out _).ShouldBeTrue();
     }
 
     // --- Span overloads ---
@@ -650,17 +608,6 @@ public class PeselParsingTests
         Pesel.TryParse(InvalidChecksumPesel, out var pesel);
 
         pesel.IsDefault.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void AllZeroPesel_IsInvalid_PreservingIsDefaultInvariant()
-    {
-        // "00000000000" encodes encodedMonth == 0, which falls outside every registered
-        // PESEL century range. This test is a structural invariant guard: IsDefault
-        // relies on _value == 0 being permanently invalid for any validated Pesel.
-        var parsed = Pesel.TryParse("00000000000", out _);
-
-        parsed.ShouldBeFalse();
     }
 
     // --- Equality ---

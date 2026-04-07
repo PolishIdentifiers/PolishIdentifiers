@@ -1,4 +1,3 @@
-using System.Globalization;
 using PolishIdentifiers;
 using Shouldly;
 
@@ -399,48 +398,6 @@ public class RegonParsingTests
         success.ShouldBeFalse();
         regon.IsDefault.ShouldBeTrue();
         error.ShouldBe(RegonValidationError.InvalidCharacters);
-    }
-
-    // ── TryParse(string?, IFormatProvider?, out Regon) ────────────────────────
-
-    [Fact]
-    public void TryParse_WithFormatProvider_ValidRegon9_ReturnsTrue()
-    {
-        Regon.TryParse(ValidRegon9, null, out _).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_ValidRegon9_SetsOutParam()
-    {
-        Regon.TryParse(ValidRegon9, null, out var regon);
-
-        regon.ToString().ShouldBe(ValidRegon9);
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_InvalidRegon_ReturnsFalse()
-    {
-        Regon.TryParse(InvalidRegon, null, out _).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_InvalidRegon_SetsOutParamToDefault()
-    {
-        Regon.TryParse(InvalidRegon, null, out var regon);
-
-        regon.IsDefault.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_NullInput_ReturnsFalse()
-    {
-        Regon.TryParse(null, null, out _).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void TryParse_WithFormatProvider_NonNullProvider_ReturnsTrue()
-    {
-        Regon.TryParse(ValidRegon9, CultureInfo.InvariantCulture, out _).ShouldBeTrue();
     }
 
     // ── Validate consistency ──────────────────────────────────────────────────

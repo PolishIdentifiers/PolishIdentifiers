@@ -38,6 +38,15 @@ public class PeselValidationTests
 
     private const string MultipleValidationIssuesPesel = "12X";
 
+    private const string Century1800StartPesel = "00810101234";
+    private const string Century1800EndPesel = "99920101234";
+    private const string Century1900StartPesel = "00010101234";
+    private const string Century1900EndPesel = "99120101234";
+    private const string Century2000StartPesel = "00210101234";
+    private const string Century2000EndPesel = "99320101234";
+    private const string Century2100StartPesel = "00410101234";
+    private const string Century2200StartPesel = "00610101234";
+
     public static TheoryData<string> ValidPeselData => new()
     {
         ValidPesel,
@@ -82,6 +91,18 @@ public class PeselValidationTests
         InvalidChecksum6Pesel,
         InvalidChecksum7Pesel,
         InvalidChecksum9Pesel
+    };
+
+    public static TheoryData<string> CenturyEncodingData => new()
+    {
+        Century1800StartPesel,
+        Century1800EndPesel,
+        Century1900StartPesel,
+        Century1900EndPesel,
+        Century2000StartPesel,
+        Century2000EndPesel,
+        Century2100StartPesel,
+        Century2200StartPesel
     };
 
     // --- Happy path ---
@@ -161,6 +182,17 @@ public class PeselValidationTests
         var result = Pesel.Validate(MultipleValidationIssuesPesel);
 
         result.Error.ShouldBe(PeselValidationError.InvalidCharacters);
+    }
+
+    // --- Century encoding (full specification 1800–2299) ---
+
+    [Theory]
+    [MemberData(nameof(CenturyEncodingData))]
+    public void Validate_CenturyEncoding_DateIsNotInvalid(string pesel)
+    {
+        var result = Pesel.Validate(pesel);
+
+        result.Error.ShouldNotBe(PeselValidationError.InvalidDate);
     }
 
     // --- Span overload ---

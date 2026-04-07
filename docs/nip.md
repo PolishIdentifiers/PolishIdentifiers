@@ -29,10 +29,6 @@ That means lowercase prefixes, unsupported separators, extra internal spaces, an
 When accepting NIP from a form, a document, or an external system, normalize the string before parsing:
 
 ```csharp
-using PolishIdentifiers;
-
-string rawInput = " pl1234563218 ";
-
 var normalized = rawInput.Trim().ToUpperInvariant();
 if (!Nip.TryParse(normalized, out var nip, out var error))
 {
@@ -99,11 +95,11 @@ See [NipGenerator](./nip-generator.md).
 ## Properties
 
 <a id="property-issuingtaxofficeprefix"></a>
-### string: IssuingTaxOfficePrefix
+### int: IssuingTaxOfficePrefix
 
 Available on: `netstandard2.0`, `net10.0`
 
-Returns the first three digits of the NIP as a 3-character string.
+Returns the first three digits of the NIP.
 
 ```csharp
 using PolishIdentifiers;
@@ -197,25 +193,6 @@ using PolishIdentifiers;
 var nip = Nip.Parse("1234563218");
 
 Console.WriteLine(nip.GetHashCode());
-```
-
-<a id="method-tryparse-with-format-provider"></a>
-### bool: TryParse(string?, IFormatProvider?, out Nip)
-
-Available on: `netstandard2.0`, `net10.0`
-
-Enables ASP.NET Core Minimal API route and query parameter binding on both targets.
-The `IFormatProvider` argument is ignored; the method delegates to `TryParse(string?, out Nip)`.
-
-```csharp
-using PolishIdentifiers;
-
-var app = WebApplication.Create(args);
-
-// Works on netstandard2.0 and net10.0 targets
-app.MapGet("/companies/{nip}", (Nip nip) => nip.ToString());
-
-app.Run();
 ```
 
 <a id="method-iparsable-parse"></a>
@@ -535,12 +512,11 @@ Console.WriteLine(nip.ToString(NipFormat.VatEu));
 Available on: `netstandard2.0`, `net10.0`
 
 Identifies the first public validation error returned by [`TryParse`](#method-tryparse-string) and [`Validate`](#method-validate-string).
-Validation order is characters -> length -> format -> checksum.
 
 - `InvalidCharacters`: the input contains characters outside digits, uppercase `P`, uppercase `L`, space, and hyphen
 - `InvalidLength`: the input is `null`, empty, or digit-only with a length other than 10
-- `UnrecognizedFormat`: the input uses otherwise allowed characters but does not match one of the supported NIP text representations
 - `InvalidChecksum`: the final digit does not match the checksum, or the weighted sum modulo 11 equals 10
+- `UnrecognizedFormat`: the input uses otherwise allowed characters but does not match one of the supported NIP text representations
 
 ```csharp
 using PolishIdentifiers;
