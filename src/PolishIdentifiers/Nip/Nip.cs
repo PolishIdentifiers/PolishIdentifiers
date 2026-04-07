@@ -240,10 +240,10 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// This identifies the tax office that originally issued the NIP.
     /// It does not identify the taxpayer's current competent tax office.
     /// </summary>
-    /// <returns>
+    /// <value>
     /// A 3-character string containing the zero-padded first three digits of the NIP,
     /// for example <c>"012"</c> for a NIP beginning with <c>0</c>.
-    /// </returns>
+    /// </value>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
     public string IssuingTaxOfficePrefix
     {
