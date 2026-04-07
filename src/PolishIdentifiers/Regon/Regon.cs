@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace PolishIdentifiers;
 
 /// <summary>
@@ -9,6 +11,7 @@ namespace PolishIdentifiers;
 /// The default instance is not valid; accessing domain properties on it
 /// throws <see cref="InvalidOperationException"/>. Use <see cref="IsDefault"/> to check before accessing.
 /// </remarks>
+[TypeConverter(typeof(RegonTypeConverter))]
 #if NET10_0_OR_GREATER
 public readonly struct Regon
     : IEquatable<Regon>, IComparable<Regon>, IFormattable,
@@ -67,15 +70,15 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// Attempts to parse the string representation of a REGON number without throwing exceptions.
     /// </summary>
     /// <param name="value">A 9- or 14-digit string representing a REGON number, or <see langword="null"/>.</param>
-    /// <param name="regon">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Regon"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string? value, out Regon regon)
+    public static bool TryParse(string? value, out Regon result)
     {
-        if (value is null) { regon = default; return false; }
-        return TryParse(value.AsSpan(), out regon);
+        if (value is null) { result = default; return false; }
+        return TryParse(value.AsSpan(), out result);
     }
 
     /// <summary>
@@ -83,7 +86,7 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// and returns the first validation error when parsing fails.
     /// </summary>
     /// <param name="value">A 9- or 14-digit string representing a REGON number, or <see langword="null"/>.</param>
-    /// <param name="regon">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Regon"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
@@ -92,30 +95,45 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// encountered; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string? value, out Regon regon, out RegonValidationError? error)
+    public static bool TryParse(string? value, out Regon result, out RegonValidationError? error)
     {
         if (value is null)
         {
-            regon = default;
+            result = default;
             error = RegonValidationError.InvalidLength;
             return false;
         }
 
-        return TryParse(value.AsSpan(), out regon, out error);
+        return TryParse(value.AsSpan(), out result, out error);
     }
+
+    /// <summary>
+    /// Attempts to parse the string representation of a REGON number without throwing exceptions.
+    /// This overload is recognised by ASP.NET Core Minimal APIs for route and query parameter binding
+    /// on both <c>netstandard2.0</c> and <c>net10.0</c> targets.
+    /// </summary>
+    /// <param name="value">A 9- or 14-digit string representing a REGON number, or <see langword="null"/>.</param>
+    /// <param name="_">Not used. Exists to satisfy the Minimal API binding convention.</param>
+    /// <param name="result">
+    /// When this method returns <see langword="true"/>, contains the parsed <see cref="Regon"/>;
+    /// otherwise, <see langword="default"/>.
+    /// </param>
+    /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParse(string? value, IFormatProvider? _, out Regon result)
+        => TryParse(value, out result);
 
     /// <summary>
     /// Attempts to parse the span representation of a REGON number without throwing exceptions.
     /// </summary>
     /// <param name="value">A 9- or 14-character span representing a REGON number.</param>
-    /// <param name="regon">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Regon"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(ReadOnlySpan<char> value, out Regon regon)
+    public static bool TryParse(ReadOnlySpan<char> value, out Regon result)
     {
-        return TryParse(value, out regon, out _);
+        return TryParse(value, out result, out _);
     }
 
     /// <summary>
@@ -123,7 +141,7 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// and returns the first validation error when parsing fails.
     /// </summary>
     /// <param name="value">A 9- or 14-character span representing a REGON number.</param>
-    /// <param name="regon">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Regon"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
@@ -132,16 +150,16 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// encountered; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(ReadOnlySpan<char> value, out Regon regon, out RegonValidationError? error)
+    public static bool TryParse(ReadOnlySpan<char> value, out Regon result, out RegonValidationError? error)
     {
         if (!RegonValidator.TryParseCore(value, out var parsedValue, out var isRegon14, out var actualError))
         {
-            regon = default;
+            result = default;
             error = actualError;
             return false;
         }
 
-        regon = new Regon(parsedValue, isRegon14);
+        result = new Regon(parsedValue, isRegon14);
         error = null;
         return true;
     }
@@ -286,8 +304,9 @@ public readonly struct Regon : IEquatable<Regon>, IComparable<Regon>, IFormattab
     /// Returns the canonical string representation of the REGON number using the specified format.
     /// </summary>
     /// <param name="format">
-    /// The format string. Accepted values are <see langword="null"/>, <c>""</c>, <c>"G"</c>, and the natural
-    /// format token for this instance's variant: <c>"D9"</c> for a REGON-9, or <c>"D14"</c> for a REGON-14.
+    /// The format string. Comparison is case-insensitive. Accepted values are <see langword="null"/>, <c>""</c>,
+    /// <c>"G"</c>, <c>"g"</c>, and the natural format token for this instance's variant:
+    /// <c>"D9"</c> or <c>"d9"</c> for a REGON-9, or <c>"D14"</c> or <c>"d14"</c> for a REGON-14.
     /// Passing the token for the other variant throws <see cref="FormatException"/>.
     /// Passing <see langword="null"/> or empty uses the natural format for the variant.
     /// </param>

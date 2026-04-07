@@ -39,26 +39,6 @@ Console.WriteLine(branch.IsRegon14);  // True
 Console.WriteLine(branch.BaseRegon9 == hq);  // True
 ```
 
-In a company-management system, group imported REGON values by their `BaseRegon9` to associate branches with their parent entity:
-
-```csharp
-using PolishIdentifiers;
-
-// Group a mix of REGON-9 (companies) and REGON-14 (branches) values
-var entities = new Dictionary<Regon, List<Regon>>();
-
-foreach (var raw in importedRegonValues)
-{
-    if (!Regon.TryParse(raw, out var regon, out _))
-        continue;
-
-    var parentKey = regon.BaseRegon9; // same as `regon` itself for REGON-9
-    if (!entities.TryGetValue(parentKey, out var units))
-        entities[parentKey] = units = [];
-    units.Add(regon);
-}
-```
-
 ## Accepted input
 
 `Regon` accepts only canonical digit input of length 9 or 14.
@@ -258,6 +238,25 @@ using PolishIdentifiers;
 var regon = Regon.Parse("12345678512347");
 
 Console.WriteLine(regon.GetHashCode());
+```
+
+<a id="method-tryparse-with-format-provider"></a>
+### bool: TryParse(string?, IFormatProvider?, out Regon)
+
+Available on: `netstandard2.0`, `net10.0`
+
+Enables ASP.NET Core Minimal API route and query parameter binding on both targets.
+The `IFormatProvider` argument is ignored; the method delegates to `TryParse(string?, out Regon)`.
+
+```csharp
+using PolishIdentifiers;
+
+var app = WebApplication.Create(args);
+
+// Works on netstandard2.0 and net10.0 targets
+app.MapGet("/entities/{regon}", (Regon regon) => regon.Kind.ToString());
+
+app.Run();
 ```
 
 <a id="method-iparsable-parse"></a>

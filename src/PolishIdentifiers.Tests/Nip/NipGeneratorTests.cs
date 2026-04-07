@@ -120,6 +120,42 @@ public class NipGeneratorTests
         invalidValue.Any(c => c < '0' || c > '9').ShouldBeTrue();
     }
 
+    // --- UnrecognizedFormat ---
+
+    [Fact]
+    public void Invalid_UnrecognizedFormat_YieldsExactlyUnrecognizedFormat()
+    {
+        var invalidValue = NipGenerator.Invalid.UnrecognizedFormat();
+
+        Nip.Validate(invalidValue).Error.ShouldBe(NipValidationError.UnrecognizedFormat);
+    }
+
+    [Fact]
+    public void Invalid_UnrecognizedFormat_CalledMultipleTimes_AlwaysYieldsUnrecognizedFormat()
+    {
+        var results = Enumerable.Range(0, 50).Select(_ => NipGenerator.Invalid.UnrecognizedFormat()).ToList();
+
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.UnrecognizedFormat);
+    }
+
+    [Fact]
+    public void Invalid_UnrecognizedFormat_ContainsOnlyValidNipCharacters()
+    {
+        var invalidValue = NipGenerator.Invalid.UnrecognizedFormat();
+
+        invalidValue.ShouldAllBe(c =>
+            (c >= '0' && c <= '9') || c == 'P' || c == 'L' || c == ' ' || c == '-');
+    }
+
+    [Fact]
+    public void Invalid_UnrecognizedFormat_EmbeddedDigitsAreValidNip()
+    {
+        var invalidValue = NipGenerator.Invalid.UnrecognizedFormat();
+
+        var embedded = invalidValue.Substring(3);
+        Nip.Validate(embedded).IsValid.ShouldBeTrue();
+    }
+
     // --- WrongChecksum: wrap-around ---
 
     [Fact]
