@@ -62,15 +62,15 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// Attempts to parse the string representation of a PESEL number without throwing exceptions.
     /// </summary>
     /// <param name="value">An 11-digit string representing a PESEL number, or <see langword="null"/>.</param>
-    /// <param name="pesel">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Pesel"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string? value, out Pesel pesel)
+    public static bool TryParse(string? value, out Pesel result)
     {
-        if (value is null) { pesel = default; return false; }
-        return TryParse(value.AsSpan(), out pesel);
+        if (value is null) { result = default; return false; }
+        return TryParse(value.AsSpan(), out result);
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// and returns the first validation error when parsing fails.
     /// </summary>
     /// <param name="value">An 11-digit string representing a PESEL number, or <see langword="null"/>.</param>
-    /// <param name="pesel">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Pesel"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
@@ -87,16 +87,16 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// encountered; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string? value, out Pesel pesel, out PeselValidationError? error)
+    public static bool TryParse(string? value, out Pesel result, out PeselValidationError? error)
     {
         if (value is null)
         {
-            pesel = default;
+            result = default;
             error = PeselValidationError.InvalidLength;
             return false;
         }
 
-        return TryParse(value.AsSpan(), out pesel, out error);
+        return TryParse(value.AsSpan(), out result, out error);
     }
 
     /// <summary>
@@ -106,26 +106,26 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// </summary>
     /// <param name="value">An 11-digit string representing a PESEL number, or <see langword="null"/>.</param>
     /// <param name="_">Not used. Exists to satisfy the Minimal API binding convention.</param>
-    /// <param name="pesel">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Pesel"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string? value, IFormatProvider? _, out Pesel pesel)
-        => TryParse(value, out pesel);
+    public static bool TryParse(string? value, IFormatProvider? _, out Pesel result)
+        => TryParse(value, out result);
 
     /// <summary>
     /// Attempts to parse the span representation of a PESEL number without throwing exceptions.
     /// </summary>
     /// <param name="value">An 11-character span representing a PESEL number.</param>
-    /// <param name="pesel">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Pesel"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(ReadOnlySpan<char> value, out Pesel pesel)
+    public static bool TryParse(ReadOnlySpan<char> value, out Pesel result)
     {
-        return TryParse(value, out pesel, out _);
+        return TryParse(value, out result, out _);
     }
 
     /// <summary>
@@ -133,7 +133,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// and returns the first validation error when parsing fails.
     /// </summary>
     /// <param name="value">An 11-character span representing a PESEL number.</param>
-    /// <param name="pesel">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Pesel"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
@@ -142,16 +142,16 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// encountered; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(ReadOnlySpan<char> value, out Pesel pesel, out PeselValidationError? error)
+    public static bool TryParse(ReadOnlySpan<char> value, out Pesel result, out PeselValidationError? error)
     {
         if (!PeselValidator.TryParseCore(value, out var parsedValue, out var actualError))
         {
-            pesel = default;
+            result = default;
             error = actualError;
             return false;
         }
 
-        pesel = new Pesel(parsedValue);
+        result = new Pesel(parsedValue);
         error = null;
         return true;
     }
@@ -203,11 +203,17 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// rather than through one of the <c>Parse</c>, <c>TryParse</c>, or <see cref="PeselGenerator"/> methods.
     /// Accessing any domain property on a default instance throws <see cref="InvalidOperationException"/>.
     /// </summary>
+    // Invariant: numeric value 0 is always and only default(Pesel).
+    // No valid PESEL encodes to 0 because encodedMonth == 0 is rejected by
+    // TryDecodeYearMonth — it falls outside every registered century range
+    // (1–12, 21–32, 41–52, 61–72, 81–92), as defined by Polish civil registry
+    // regulation. _isInitialized is therefore not needed here, unlike Nip/Regon.
+    // See also: AllZeroPesel_IsInvalid_PreservingIsDefaultInvariant test.
     public bool IsDefault => _value == 0;
 
     private void ThrowIfDefault()
     {
-        if (_value == 0)
+        if (IsDefault)
             throw new InvalidOperationException(
                 "Cannot access properties on a default Pesel instance. Use Parse or TryParse.");
     }
@@ -236,7 +242,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     }
 
     /// <summary>
-    /// Gets the gender encoded in the PESEL number.
+    /// Gets the sex as encoded in the PESEL civil registry.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
     public Gender Gender
@@ -284,7 +290,8 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
     /// Returns the 11-digit string representation of the PESEL number using the specified format.
     /// </summary>
     /// <param name="format">
-    /// The format string. Accepted values are <see langword="null"/>, <c>""</c>, <c>"G"</c>, and <c>"D11"</c>.
+    /// The format string. Comparison is case-insensitive. Accepted values are
+    /// <see langword="null"/>, <c>""</c>, <c>"G"</c>, <c>"g"</c>, <c>"D11"</c>, and <c>"d11"</c>.
     /// All produce the same 11-digit output.
     /// </param>
     /// <param name="formatProvider">Ignored. PESEL numbers are always formatted with invariant digits.</param>
@@ -330,6 +337,7 @@ public readonly struct Pesel : IEquatable<Pesel>, IComparable<Pesel>, IFormattab
 
     /// <summary>
     /// Compares this instance to another <see cref="Pesel"/> by numeric value.
+    /// Default instances sort before initialized instances.
     /// </summary>
     /// <param name="other">The instance to compare with.</param>
     /// <returns>

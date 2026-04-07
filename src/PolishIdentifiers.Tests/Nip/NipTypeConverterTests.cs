@@ -255,4 +255,40 @@ public class NipTypeConverterTests
     {
         TypeDescriptor.GetConverter(typeof(Nip)).ShouldBeOfType<NipTypeConverter>();
     }
+
+    [Fact]
+    public void TypeDescriptor_GetConverter_ForNullableNip_ReturnsNullableConverter()
+    {
+        TypeDescriptor.GetConverter(typeof(Nip?)).ShouldBeOfType<NullableConverter>();
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_Null_ReturnsNull()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Nip?));
+
+        var result = converter.ConvertFrom(null!);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_ValidCanonical_ReturnsNip()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Nip?));
+
+        var result = converter.ConvertFrom(ValidNip);
+
+        result.ShouldBeOfType<Nip>().ToString().ShouldBe(ValidNip);
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_InvalidInput_ThrowsFormatExceptionWithDomainInnerException()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Nip?));
+
+        var ex = Should.Throw<FormatException>(() => converter.ConvertFrom(InvalidChecksumNip));
+
+        ex.InnerException.ShouldBeOfType<NipValidationException>();
+    }
 }

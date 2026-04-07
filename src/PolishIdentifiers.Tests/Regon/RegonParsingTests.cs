@@ -1,3 +1,4 @@
+using System.Globalization;
 using PolishIdentifiers;
 using Shouldly;
 
@@ -434,6 +435,12 @@ public class RegonParsingTests
     public void TryParse_WithFormatProvider_NullInput_ReturnsFalse()
     {
         Regon.TryParse(null, null, out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TryParse_WithFormatProvider_NonNullProvider_ReturnsTrue()
+    {
+        Regon.TryParse(ValidRegon9, CultureInfo.InvariantCulture, out _).ShouldBeTrue();
     }
 
     // ── Validate consistency ──────────────────────────────────────────────────

@@ -42,7 +42,10 @@ Console.WriteLine(branch.BaseRegon9 == hq);  // True
 In a company-management system, group imported REGON values by their `BaseRegon9` to associate branches with their parent entity:
 
 ```csharp
+using System.Collections.Generic;
 using PolishIdentifiers;
+
+string[] importedRegonValues = { "123456785", "12345678512347", "invalid" };
 
 // Group a mix of REGON-9 (companies) and REGON-14 (branches) values
 var entities = new Dictionary<Regon, List<Regon>>();
@@ -54,7 +57,7 @@ foreach (var raw in importedRegonValues)
 
     var parentKey = regon.BaseRegon9; // same as `regon` itself for REGON-9
     if (!entities.TryGetValue(parentKey, out var units))
-        entities[parentKey] = units = [];
+        entities[parentKey] = units = new List<Regon>();
     units.Add(regon);
 }
 ```

@@ -12,6 +12,7 @@ public class PeselTypeConverterTests
     private const string TooShortPesel = "4405140145";
     private const string TooLongPesel = "440514014580";
     private const string InvalidChecksumPesel = "44051401457";
+    private const string InvalidDatePesel = "99223112345";
     private const string EmptyPesel = "";
 
     public static TheoryData<string> InvalidInputData => new()
@@ -20,6 +21,7 @@ public class PeselTypeConverterTests
         TooShortPesel,
         TooLongPesel,
         InvalidChecksumPesel,
+        InvalidDatePesel,
     };
 
     // ── CanConvertFrom ────────────────────────────────────────────────────────
@@ -188,4 +190,41 @@ public class PeselTypeConverterTests
     {
         TypeDescriptor.GetConverter(typeof(Pesel)).ShouldBeOfType<PeselTypeConverter>();
     }
+
+    [Fact]
+    public void TypeDescriptor_GetConverter_ForNullablePesel_ReturnsNullableConverter()
+    {
+        TypeDescriptor.GetConverter(typeof(Pesel?)).ShouldBeOfType<NullableConverter>();
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_Null_ReturnsNull()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Pesel?));
+
+        var result = converter.ConvertFrom(null!);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_ValidCanonical_ReturnsPesel()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Pesel?));
+
+        var result = converter.ConvertFrom(ValidPesel);
+
+        result.ShouldBeOfType<Pesel>().ToString().ShouldBe(ValidPesel);
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_InvalidInput_ThrowsFormatExceptionWithDomainInnerException()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Pesel?));
+
+        var ex = Should.Throw<FormatException>(() => converter.ConvertFrom(InvalidChecksumPesel));
+
+        ex.InnerException.ShouldBeOfType<PeselValidationException>();
+    }
 }
+

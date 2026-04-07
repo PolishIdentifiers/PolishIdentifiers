@@ -75,15 +75,15 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// A NIP string in canonical digits or one of the documented supported formatted representations,
     /// or <see langword="null"/>.
     /// </param>
-    /// <param name="nip">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string? value, out Nip nip)
+    public static bool TryParse(string? value, out Nip result)
     {
-        if (value is null) { nip = default; return false; }
-        return TryParse(value.AsSpan(), out nip);
+        if (value is null) { result = default; return false; }
+        return TryParse(value.AsSpan(), out result);
     }
 
     /// <summary>
@@ -94,7 +94,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// A NIP string in canonical digits or one of the documented supported formatted representations,
     /// or <see langword="null"/>.
     /// </param>
-    /// <param name="nip">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
@@ -103,16 +103,16 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// encountered; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string? value, out Nip nip, out NipValidationError? error)
+    public static bool TryParse(string? value, out Nip result, out NipValidationError? error)
     {
         if (value is null)
         {
-            nip = default;
+            result = default;
             error = NipValidationError.InvalidLength;
             return false;
         }
 
-        return TryParse(value.AsSpan(), out nip, out error);
+        return TryParse(value.AsSpan(), out result, out error);
     }
 
     /// <summary>
@@ -125,13 +125,13 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// or <see langword="null"/>.
     /// </param>
     /// <param name="_">Not used. Exists to satisfy the Minimal API binding convention.</param>
-    /// <param name="nip">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string? value, IFormatProvider? _, out Nip nip)
-        => TryParse(value, out nip);
+    public static bool TryParse(string? value, IFormatProvider? _, out Nip result)
+        => TryParse(value, out result);
 
     /// <summary>
     /// Attempts to parse the span representation of a NIP number without throwing exceptions.
@@ -139,14 +139,14 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <param name="value">
     /// A NIP span in canonical digits or one of the documented supported formatted representations.
     /// </param>
-    /// <param name="nip">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(ReadOnlySpan<char> value, out Nip nip)
+    public static bool TryParse(ReadOnlySpan<char> value, out Nip result)
     {
-        return TryParse(value, out nip, out _);
+        return TryParse(value, out result, out _);
     }
 
     /// <summary>
@@ -156,7 +156,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// <param name="value">
     /// A NIP span in canonical digits or one of the documented supported formatted representations.
     /// </param>
-    /// <param name="nip">
+    /// <param name="result">
     /// When this method returns <see langword="true"/>, contains the parsed <see cref="Nip"/>;
     /// otherwise, <see langword="default"/>.
     /// </param>
@@ -165,16 +165,16 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// encountered; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns><see langword="true"/> if <paramref name="value"/> was successfully parsed; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(ReadOnlySpan<char> value, out Nip nip, out NipValidationError? error)
+    public static bool TryParse(ReadOnlySpan<char> value, out Nip result, out NipValidationError? error)
     {
         if (!NipValidator.TryParseCore(value, out var parsedValue, out var actualError))
         {
-            nip = default;
+            result = default;
             error = actualError;
             return false;
         }
 
-        nip = new Nip(parsedValue);
+        result = new Nip(parsedValue);
         error = null;
         return true;
     }
@@ -240,13 +240,17 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// This identifies the tax office that originally issued the NIP.
     /// It does not identify the taxpayer's current competent tax office.
     /// </summary>
+    /// <returns>
+    /// A 3-character string containing the zero-padded first three digits of the NIP,
+    /// for example <c>"012"</c> for a NIP beginning with <c>0</c>.
+    /// </returns>
     /// <exception cref="InvalidOperationException">Thrown when accessed on a default instance.</exception>
-    public int IssuingTaxOfficePrefix
+    public string IssuingTaxOfficePrefix
     {
         get
         {
             ThrowIfDefault();
-            return (int)(_value / 10_000_000UL);
+            return (_value / 10_000_000UL).ToString("D3", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 
@@ -279,7 +283,8 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
     /// Returns the 10-digit canonical string representation of the NIP number using the specified format.
     /// </summary>
     /// <param name="format">
-    /// The format string. Accepted values are <see langword="null"/>, <c>""</c>, <c>"G"</c>, and <c>"D10"</c>.
+    /// The format string. Comparison is case-insensitive. Accepted values are
+    /// <see langword="null"/>, <c>""</c>, <c>"G"</c>, <c>"g"</c>, <c>"D10"</c>, and <c>"d10"</c>.
     /// All produce the same 10-digit output.
     /// </param>
     /// <param name="formatProvider">Ignored. NIP numbers are always formatted with invariant digits.</param>
@@ -327,6 +332,7 @@ public readonly struct Nip : IEquatable<Nip>, IComparable<Nip>, IFormattable
 
     /// <summary>
     /// Compares this instance to another <see cref="Nip"/> by numeric value.
+    /// Default instances sort before initialized instances.
     /// </summary>
     /// <param name="other">The instance to compare with.</param>
     /// <returns>

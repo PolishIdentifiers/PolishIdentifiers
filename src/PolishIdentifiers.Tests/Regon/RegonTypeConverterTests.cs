@@ -321,4 +321,40 @@ public class RegonTypeConverterTests
     {
         TypeDescriptor.GetConverter(typeof(Regon)).ShouldBeOfType<RegonTypeConverter>();
     }
+
+    [Fact]
+    public void TypeDescriptor_GetConverter_ForNullableRegon_ReturnsNullableConverter()
+    {
+        TypeDescriptor.GetConverter(typeof(Regon?)).ShouldBeOfType<NullableConverter>();
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_Null_ReturnsNull()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Regon?));
+
+        var result = converter.ConvertFrom(null!);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_ValidRegon9_ReturnsRegon()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Regon?));
+
+        var result = converter.ConvertFrom(ValidRegon9);
+
+        result.ShouldBeOfType<Regon>().ToString().ShouldBe(ValidRegon9);
+    }
+
+    [Fact]
+    public void NullableConverter_ConvertFrom_InvalidInput_ThrowsFormatExceptionWithDomainInnerException()
+    {
+        var converter = TypeDescriptor.GetConverter(typeof(Regon?));
+
+        var ex = Should.Throw<FormatException>(() => converter.ConvertFrom(InvalidChecksumRegon9));
+
+        ex.InnerException.ShouldBeOfType<RegonValidationException>();
+    }
 }

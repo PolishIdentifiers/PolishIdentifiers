@@ -37,7 +37,7 @@ Important implementation notes:
 
 - century handling covers all supported PESEL ranges from 1800 through 2299
 - the month digits encode the century, not just the calendar month
-- [`BirthDate`](#property-birthdate) returns a midnight `DateTime`; [`BirthDateOnly`](#property-birthdateonly) is available on `net10.0`
+- [`BirthDate`](#property-birthdate) returns a midnight `DateTime`; [`BirthDateOnly`](#property-birthdateonly) is available on `net10.0` only
 - `default(Pesel)` is not a valid parsed value; use [`IsDefault`](#property-isdefault) before accessing domain properties on a value that might be uninitialized
 
 ## Output formatting
@@ -84,7 +84,7 @@ Console.WriteLine(pesel.BirthDate.ToString("yyyy-MM-dd"));
 
 Available on: `net10.0`
 
-Returns the birth date as `DateOnly`.
+Returns the birth date as `DateOnly`. This property is gated by `#if NET10_0_OR_GREATER` and is not available on `netstandard2.0`.
 
 ```csharp
 using PolishIdentifiers;
@@ -94,12 +94,23 @@ var pesel = Pesel.Parse("44051401458");
 Console.WriteLine(pesel.BirthDateOnly);
 ```
 
+On other targets, use [`BirthDate`](#property-birthdate) directly. If your consuming application targets a framework that exposes `DateOnly`, you can derive the equivalent value from `BirthDate`:
+
+```csharp
+using PolishIdentifiers;
+
+var pesel = Pesel.Parse("44051401458");
+
+var dateOnly = DateOnly.FromDateTime(pesel.BirthDate);
+Console.WriteLine(dateOnly);
+```
+
 <a id="property-gender"></a>
 ### [Gender](#enum-gender): Gender
 
 Available on: `netstandard2.0`, `net10.0`
 
-Returns the gender encoded in the PESEL number.
+Returns the sex as encoded in the PESEL civil registry.
 
 ```csharp
 using PolishIdentifiers;
@@ -134,7 +145,7 @@ if (pesel.IsDefault)
 
 The `Pesel` type exposes properties that are direct structural decodes of the identifier digits: `BirthDate`, `BirthDateOnly`, and `Gender`. These values are read directly from the encoded PESEL fields.
 
-Deriving further values — such as age — is the consumer's responsibility. The recommended pattern for age calculation:
+Deriving further values — such as age — is the consumer's responsibility. The example below uses `DateOnly` in the consuming application; if your target framework does not expose `DateOnly`, keep the calculation in `DateTime`.
 
 ```csharp
 using PolishIdentifiers;
@@ -156,7 +167,7 @@ int age = CalculateAge(pesel, DateOnly.FromDateTime(DateTime.Today));
 
 Passing `referenceDate` explicitly instead of reading `DateTime.Today` inside the method makes the function deterministic and testable.
 
-> **Why this is not a library method:** `BirthDate` and `Gender` are decoded directly from specific digit positions in the PESEL number. Age requires external calendar state (today's date) and is not a structural property of the identifier itself. See [ADR-010](../.ai/canon/adr/ADR-010-pesel-derivation-philosophy.md) for the full rationale.
+> **Why this is not a library method:** `BirthDate` and `Gender` are decoded directly from specific digit positions in the PESEL number. Age requires external calendar state (today's date) and is not a structural property of the identifier itself.
 
 ## Methods
 
@@ -171,7 +182,7 @@ Compares two PESEL values by numeric value.
 using PolishIdentifiers;
 
 var left = Pesel.Parse("44051401458");
-var right = Pesel.Parse("02211312375");
+var right = Pesel.Parse("02211312372");
 
 Console.WriteLine(left.CompareTo(right));
 ```
@@ -368,7 +379,7 @@ Console.WriteLine(value);
 
 Available on: `netstandard2.0`, `net10.0`
 
-Accepts `null`, `""`, `"G"`, and `"D11"`; all return canonical output.
+Accepts `null`, `""`, `"G"`, `"g"`, `"D11"`, and `"d11"` (comparison is case-insensitive); all return canonical output.
 
 ```csharp
 using PolishIdentifiers;
@@ -493,7 +504,7 @@ Tests value inequality.
 using PolishIdentifiers;
 
 var left = Pesel.Parse("44051401458");
-var right = Pesel.Parse("02211312375");
+var right = Pesel.Parse("02211312372");
 
 Console.WriteLine(left != right);
 ```
@@ -521,7 +532,7 @@ Console.WriteLine(left == right);
 
 Available on: `netstandard2.0`, `net10.0`
 
-Represents the biological sex encoded in the PESEL number.
+Represents the sex as encoded in the PESEL civil registry.
 
 - `Female`: encoded as an even digit in the 10th PESEL position
 - `Male`: encoded as an odd digit in the 10th PESEL position

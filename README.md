@@ -69,7 +69,7 @@ The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-base
         </tr>
         <tr>
             <td>Invalid</td>
-            <td>invalid characters, wrong checksum, wrong length</td>
+            <td>invalid characters, wrong checksum, wrong length, unrecognized format</td>
         </tr>
         <tr>
             <td rowspan="2"><code>RegonGenerator</code></td>
@@ -97,7 +97,7 @@ Minimal API binding uses `public static TryParse(string?, IFormatProvider?, out 
 
 ## Examples
 
-### Parse — when invalid input is a bug
+### Parse
 
 ```csharp
 using PolishIdentifiers;
@@ -108,7 +108,7 @@ Console.WriteLine(nip);                              // 1234563218
 Console.WriteLine(nip.ToString(NipFormat.VatEu));   // PL1234563218
 ```
 
-### TryParse — non-throwing path with typed error
+### TryParse
 
 ```csharp
 using PolishIdentifiers;
@@ -126,6 +126,7 @@ Console.WriteLine(pesel.Gender);                           // Male
 ```csharp
 using PolishIdentifiers;
 
+// Other accepted NIP inputs: "1234563218", "123-456-32-18", "PL1234563218", "PL 1234563218"
 if (!Nip.TryParse("PL 123-456-32-18", out var nip, out var error))
 {
     Console.WriteLine($"Rejected: {error}");
@@ -133,7 +134,9 @@ if (!Nip.TryParse("PL 123-456-32-18", out var nip, out var error))
 }
 
 Console.WriteLine(nip);                                   // 1234563218
+Console.WriteLine(nip.ToString(NipFormat.DigitsOnly));    // 1234563218
 Console.WriteLine(nip.ToString(NipFormat.Hyphenated));    // 123-456-32-18
+Console.WriteLine(nip.ToString(NipFormat.VatEu));         // PL1234563218
 ```
 
 ```csharp
@@ -149,7 +152,7 @@ Console.WriteLine(regon.Kind);       // Regon14
 Console.WriteLine(regon.BaseRegon9); // 123456785
 ```
 
-### Validate — check validity without allocating a typed instance
+### Validate
 
 ```csharp
 using PolishIdentifiers;
@@ -209,15 +212,27 @@ string badRegon = RegonGenerator.Invalid.WrongChecksumRegon9();
 using Microsoft.AspNetCore.Mvc;
 using PolishIdentifiers;
 
-[HttpGet("{nip}")]
-public IActionResult Get(Nip nip) => Ok(nip);
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
 
-// Query string
-[HttpGet]
-public IActionResult Find([FromQuery] Pesel pesel) => Ok(pesel);
+var app = builder.Build();
 
-// Minimal API
+app.MapControllers();
 app.MapGet("/companies/{regon}", (Regon regon) => Results.Ok(regon));
+
+app.Run();
+
+[ApiController]
+[Route("api/identifiers")]
+public sealed class IdentifiersController : ControllerBase
+{
+    [HttpGet("nips/{nip}")]
+    public IActionResult GetNip(Nip nip) => Ok(nip);
+
+    [HttpGet("persons")]
+    public IActionResult Find([FromQuery] Pesel pesel) => Ok(pesel);
+}
 ```
 
 For route, query-string, and form binding, the types bind from a single string via `TypeConverter` / `TryParse`. For JSON request bodies, add JSON converters in your application.
+

@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
----
+
+## [2.0.0] - 2026-03-29
+
+### Breaking changes
+
+- **[Breaking]** `Nip.IssuingTaxOfficePrefix` now returns `string` instead of `int`. The value is always exactly 3 characters, zero-padded (e.g. `"012"` for a NIP beginning with `0`). Any code that stored the result in an `int`, performed numeric comparisons, or used arithmetic on this property must be updated. This is a binary-breaking change.
+- **[Breaking]** Renamed the public `out` parameter names on `Pesel.TryParse(...)`, `Nip.TryParse(...)`, and `Regon.TryParse(...)` from identifier-specific names (`pesel`, `nip`, `regon`) to `result`. This does not affect existing compiled binaries, Minimal API binding, or positional-call source code, but it is a source-breaking change for callers that use named arguments on those parameters. The break is caught at compile time — the compiler produces a named-argument mismatch error that identifies the affected call sites directly.
+
+### Added
+
+- Added `TypeConverter` support for `Pesel`, `Nip`, and `Regon`, enabling string conversion in ComponentModel-based scenarios.
+- Added `PeselTypeConverter`, `NipTypeConverter`, and `RegonTypeConverter`.
+- Added `TryParse(string?, IFormatProvider?, out T)` overloads for `Pesel`, `Nip`, and `Regon`, enabling ASP.NET Core Minimal API route and query parameter binding on all supported targets.
+- Added `NipGenerator.Invalid.UnrecognizedFormat()` for generating NIP strings that use valid NIP characters but intentionally fail with `NipValidationError.UnrecognizedFormat`.
+
+### Changed
+
+- `Pesel`, `Nip`, and `Regon` now support broader ASP.NET Core binding scenarios, including MVC/controller binding via `TypeConverter` and Minimal API parameter binding via the new `TryParse` overloads.
 
 ## [1.0.0] - 2026-03-22
 
@@ -83,7 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Strict factories: `Nip.Parse(string)` / `Nip.Parse(ReadOnlySpan<char>)`, `Nip.TryParse(...)`, `Nip.Validate(...)`
 - Formatted factories: `Nip.ParseFormatted(...)`, `Nip.TryParseFormatted(...)`, `Nip.ValidateFormatted(...)`
 - Recognized formatted input patterns: canonical digits, hyphenated, `PL1234563218`, `PL 1234563218`, `PL 123-456-32-18`
-- `NipValidationError` enum: `InvalidCharacters`, `InvalidLength`, `InvalidChecksum`, `UnrecognizedFormat`
+- `NipValidationError` enum: `InvalidCharacters`, `InvalidLength`, `UnrecognizedFormat`, `InvalidChecksum`
 - `NipValidationException` — wraps `NipValidationError`, thrown by `Parse` and `ParseFormatted`
 - `Nip.IsDefault` — distinguishes a default struct instance from a parsed one
 - `Nip.IssuingTaxOfficePrefix` — first three digits, identifying the tax office that originally issued the NIP rather than the taxpayer's current competent office
@@ -120,6 +137,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [0.1.1] - 2026-03-07
+
+### Breaking changes
+
+- **[Breaking]** `PeselValidationError.InvalidCharacters` is now integer value `0` and `PeselValidationError.InvalidLength` is now `1`; both values swapped relative to 0.1.0. Code that compared or stored these enum values as integers must be updated.
+
 
 ### Changed
 
@@ -185,7 +207,10 @@ First public release. PESEL support only.
 - `netstandard2.0` — compatible with .NET Framework 4.6.1+ and all legacy runtimes
 - `net10.0` — full modern API surface including `DateOnly`, `IParsable<T>`, `ISpanParsable<T>`
 
+[1.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/releases/tag/v0.1.0
+
+
