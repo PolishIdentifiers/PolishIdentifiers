@@ -44,8 +44,9 @@ Important implementation notes:
 
 `Pesel` has one canonical output form.
 
-- use [`ToString()`](#method-tostring) for storage, logging, and wire formats
+- use [`ToString()`](#method-tostring) for canonical storage and wire formats
 - use [`ToString("D11", null)`](#method-tostring-format) only when an API explicitly expects an `IFormattable` format token
+- avoid logging the full PESEL value in application diagnostics; prefer the validation error, a record key, or explicit redaction outside the library
 - there are no public display-format variants
 
 ## Persistence

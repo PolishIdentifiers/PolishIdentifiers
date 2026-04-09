@@ -5,11 +5,32 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Targets: netstandard2.0 · net10.0](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net10.0-informational)
 
+## Available NuGet Packages
+
+| Package | Description |
+|---|---|
+| [NuGet PolishIdentifiers](https://www.nuget.org/packages/PolishIdentifiers/) | Core library - strongly typed PESEL, NIP, and REGON with validation, parsing, formatting, generators, and DataAnnotations attributes |
+| [NuGet PolishIdentifiers.SystemTextJson](https://www.nuget.org/packages/PolishIdentifiers.SystemTextJson/) | Integration package for `System.Text.Json` converters for `Pesel`, `Nip`, and `Regon` |
+
 PolishIdentifiers is a .NET library that exposes PESEL, NIP, and REGON as strong identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings plus includes their strong validation.
 
-These identifiers are implemented as tightly constrained `readonly struct` value types, with one unified `Parse` / `TryParse` / `Validate` API shape across the implemented surface, `TypeConverter` support, DataAnnotations attributes for request validation, generators for valid and intentionally invalid test values, broad unit-test coverage, and `ReadOnlySpan<char>`-based parsing and validation for low-allocation paths.
+## Design decisions
 
-In practice, that gives you one package for parsing, validation, formatting, generation, ASP.NET Core MVC and Minimal API parameter binding, and request-model validation while keeping strong identifier types throughout domain code.
+- Strong domain types first: PESEL, NIP, and REGON are exposed as dedicated identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings.
+- Constrained value semantics: implemented identifiers are tightly constrained `readonly struct` value types to keep invalid states out of normal domain flow.
+- One consistent contract: the implemented surface uses a unified `Parse` / `TryParse` / `Validate` shape for predictable usage across identifiers.
+- Explicit failure paths: `TryParse` and `Validate` provide non-throwing validation flows, while `Parse` is reserved for exception-based paths.
+- Framework-friendly core: `TypeConverter` support and DataAnnotations attributes are built in so the same types work in request validation and binding scenarios.
+- Practical binding support: `TryParse(string?, IFormatProvider?, out T)` is available on all targets for ASP.NET Core Minimal API route and query parameter binding without extra configuration.
+- Performance-aware validation: parsing and validation include `ReadOnlySpan<char>`-based paths for low-allocation usage.
+- Testability by design: generators produce valid and intentionally invalid values, backed by broad unit-test coverage.
+- Clear package boundaries: core parsing and validation live in the main package, while `System.Text.Json` converters are delivered in the separate `PolishIdentifiers.SystemTextJson` package.
+- Multi-target strategy: the library targets `netstandard2.0` and `net10.0`; the `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-based PESEL members.
+
+### In practice
+
+- You get one core package for parsing, validation, formatting, generation, parameter binding, and request-model validation.
+- You keep strong identifier types throughout application and domain code instead of falling back to untyped string handling.
 
 ## Scope
 
@@ -234,5 +255,71 @@ public sealed class IdentifiersController : ControllerBase
 }
 ```
 
-For route, query-string, and form binding, the types bind from a single string via `TypeConverter` / `TryParse`. For JSON request bodies, add JSON converters in your application.
+For route, query-string, and form binding, the types bind from a single string via `TypeConverter` / `TryParse`. For JSON request bodies, install the optional `PolishIdentifiers.SystemTextJson` package and register its converters.
+
+## System.Text.Json integration
+
+JSON converters for `Pesel`, `Nip`, and `Regon` are shipped in the separate `PolishIdentifiers.SystemTextJson` package. It provides `NipJsonConverter`, `PeselJsonConverter`, `RegonJsonConverter`, the `AddPolishIdentifiers()` extension method, and `PolishIdentifiersJsonOptions` for configuring NIP output formatting.
+
+Polish identifiers are always serialized as JSON strings, never numbers or objects.
+
+### Install
+
+```bash
+dotnet add package PolishIdentifiers.SystemTextJson
+```
+
+### Register and use
+
+```csharp
+using System.Text.Json;
+using PolishIdentifiers;
+
+var options = new JsonSerializerOptions().AddPolishIdentifiers(
+    new PolishIdentifiersJsonOptions
+    {
+        NipOutputFormat = NipFormat.VatEu
+    });
+
+public sealed record CompanyDto
+{
+    public string Name { get; init; } = "";
+    public Nip Nip { get; init; }
+    public Nip? OptionalNip { get; init; }
+}
+
+var company = JsonSerializer.Deserialize<CompanyDto>(
+    """{"Name":"Acme","Nip":"123-456-32-18"}""",
+    options);
+
+Console.WriteLine(company!.Nip); // 1234563218
+
+try
+{
+    JsonSerializer.Deserialize<CompanyDto>(
+        """{"Name":"Acme","Nip":"123-456-32-17"}""",
+        options);
+}
+catch (JsonException ex) when (ex.InnerException is NipValidationException nipEx)
+{
+    Console.WriteLine(nipEx.Error); // InvalidChecksum
+}
+```
+
+### Converter registration behavior
+
+> `AddPolishIdentifiers()` checks only for the presence of its own converter types (`NipJsonConverter`, `PeselJsonConverter`, `RegonJsonConverter`). If you have registered a custom converter for `Nip` of a different type, this method will still add its own `NipJsonConverter` — both converters will be present in the list. `System.Text.Json` converter resolution is determined by position in `JsonSerializerOptions.Converters`. Register your custom converter after `AddPolishIdentifiers()` if you want it to take priority, or before it if the built-in converter should win.
+
+### Error handling and privacy
+
+- `null`, numbers, objects, arrays, empty strings, and whitespace-only strings throw `JsonException` with no inner exception
+- invalid identifier values throw `JsonException` whose `InnerException` is the corresponding `*ValidationException`
+- exception messages intentionally do **not** contain raw identifier values, which helps reduce accidental exposure of GDPR/RODO-sensitive data
+- in application logs, prefer no raw PESEL/NIP/REGON value at all; if diagnostics are required, apply redaction or hashing at the application boundary
+
+### Pitfalls
+
+1. Missing JSON field for a non-nullable identifier lets `System.Text.Json` assign `default(Nip)` / `default(Pesel)` / `default(Regon)` without invoking the converter. The next serialization then throws. Use `Nip?`, `[JsonRequired]`, or required members as appropriate.
+2. A second call to `AddPolishIdentifiers()` with a different `NipOutputFormat` is ignored; the first registration wins.
+3. Custom converter ordering matters; see **Converter registration behavior** above.
 

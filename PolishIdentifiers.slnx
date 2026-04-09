@@ -5,6 +5,8 @@
     <Project Path="examples/PolishIdentifiers.Examples.Regon/PolishIdentifiers.Examples.Regon.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/PolishIdentifiers.SystemTextJson.Tests/PolishIdentifiers.SystemTextJson.Tests.csproj" />
+    <Project Path="src/PolishIdentifiers.SystemTextJson/PolishIdentifiers.SystemTextJson.csproj" />
     <Project Path="src/PolishIdentifiers.Tests/PolishIdentifiers.Tests.csproj" />
     <Project Path="src/PolishIdentifiers/PolishIdentifiers.csproj" />
   </Folder>

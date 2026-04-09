@@ -10,6 +10,8 @@ namespace PolishIdentifiers;
 /// <see cref="Pesel.TryParse(string?, out Pesel)"/>, or <see cref="Pesel.Validate(string?)"/>
 /// in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
 /// For normal application-boundary code, the typed-error overload is recommended.
+/// The exception message intentionally reports only the validation error and does not echo the raw PESEL value,
+/// which helps reduce accidental exposure in logs.
 /// </remarks>
 public class PeselValidationException : Exception
 {
