@@ -1,8 +1,6 @@
 <Solution>
   <Folder Name="/examples/">
-    <Project Path="examples/PolishIdentifiers.Examples.Nip/PolishIdentifiers.Examples.Nip.csproj" />
-    <Project Path="examples/PolishIdentifiers.Examples.Pesel/PolishIdentifiers.Examples.Pesel.csproj" />
-    <Project Path="examples/PolishIdentifiers.Examples.Regon/PolishIdentifiers.Examples.Regon.csproj" />
+    <Project Path="examples/PolishIdentifiers.Examples/PolishIdentifiers.Examples.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/PolishIdentifiers.SystemTextJson.Tests/PolishIdentifiers.SystemTextJson.Tests.csproj" />

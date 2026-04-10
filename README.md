@@ -1,9 +1,11 @@
-# PolishIdentifiers
-
 [![NuGet](https://img.shields.io/nuget/v/PolishIdentifiers.svg)](https://www.nuget.org/packages/PolishIdentifiers/)
 [![CI](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml/badge.svg)](https://github.com/PolishIdentifiers/PolishIdentifiers/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Targets: netstandard2.0 · net10.0](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net10.0-informational)
+
+# PolishIdentifiers
+
+PolishIdentifiers is a .NET library that exposes PESEL, NIP, and REGON as strong identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings plus includes their strong validation.
 
 ## Available NuGet Packages
 
@@ -11,8 +13,6 @@
 |---|---|
 | [NuGet PolishIdentifiers](https://www.nuget.org/packages/PolishIdentifiers/) | Core library - strongly typed PESEL, NIP, and REGON with validation, parsing, formatting, generators, and DataAnnotations attributes |
 | [NuGet PolishIdentifiers.SystemTextJson](https://www.nuget.org/packages/PolishIdentifiers.SystemTextJson/) | Integration package for `System.Text.Json` converters for `Pesel`, `Nip`, and `Regon` |
-
-PolishIdentifiers is a .NET library that exposes PESEL, NIP, and REGON as strong identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings plus includes their strong validation.
 
 ## Design decisions
 
