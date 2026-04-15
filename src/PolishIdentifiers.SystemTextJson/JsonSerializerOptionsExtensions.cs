@@ -33,13 +33,11 @@ public static class JsonSerializerOptionsExtensions
         if (options is null)
             throw new ArgumentNullException(nameof(options));
 
-        polishOptions ??= new PolishIdentifiersJsonOptions();
-
         if (!options.Converters.OfType<PeselJsonConverter>().Any())
             options.Converters.Add(new PeselJsonConverter());
 
         if (!options.Converters.OfType<NipJsonConverter>().Any())
-            options.Converters.Add(new NipJsonConverter(polishOptions.NipOutputFormat));
+            options.Converters.Add(new NipJsonConverter((polishOptions ?? new PolishIdentifiersJsonOptions()).NipOutputFormat));
 
         if (!options.Converters.OfType<RegonJsonConverter>().Any())
             options.Converters.Add(new RegonJsonConverter());
