@@ -11,7 +11,7 @@
 
   <PropertyGroup Label="NuGet">
     <PackageId>PolishIdentifiers</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Authors>PolishIdentifiers</Authors>
     <Copyright>Copyright (c) PolishIdentifiers Contributors</Copyright>
     <Description>.NET library for PESEL, NIP, and REGON. Strongly typed identifiers with validation, parsing, generation, structured error codes, DataAnnotations support, and span-based validation. Targets netstandard2.0 and net10.0.</Description>
@@ -21,7 +21,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>pesel nip regon dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>v2.0.0 contains two breaking changes: Nip.IssuingTaxOfficePrefix now returns string (zero-padded, e.g. "012") instead of int, and the out parameter names on TryParse overloads for Pesel, Nip, and Regon were renamed from identifier-specific names to result. It also adds TypeConverter support for Pesel, Nip, and Regon, TryParse(string?, IFormatProvider?, out T) overloads for ASP.NET Core Minimal API binding on all supported targets, and NipGenerator.Invalid.UnrecognizedFormat(). See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.1.0 adds batch generator overloads with count across PeselGenerator, NipGenerator, and RegonGenerator for both valid and invalid scenarios. Count overloads return IReadOnlyList<T> for valid values and IReadOnlyList<string> for invalid values. See CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,3 +34,5 @@
   </ItemGroup>
 
   </Project>
+
+

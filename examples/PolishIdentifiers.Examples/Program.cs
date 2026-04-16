@@ -11,6 +11,7 @@ internal static class Program
     {
         TryParse();
         Parse();
+        Generators();
         Validate();
         return 0;
     }
@@ -31,6 +32,15 @@ internal static class Program
         PeselExamples.Parse();
         RegonExamples.Parse();
         JsonConverterExamples.Run();
+        Console.WriteLine();
+    }
+
+    private static void Generators()
+    {
+        Console.WriteLine("=== Generators ===");
+        NipExamples.Generators();
+        PeselExamples.Generators();
+        RegonExamples.Generators();
         Console.WriteLine();
     }
 

@@ -11,7 +11,7 @@
 
   <PropertyGroup Label="NuGet">
     <PackageId>PolishIdentifiers.SystemTextJson</PackageId>
-    <Version>1.0.0</Version>
+    <Version>2.1.0</Version>
     <Authors>PolishIdentifiers</Authors>
     <Copyright>Copyright (c) PolishIdentifiers Contributors</Copyright>
     <Description>System.Text.Json converters for PolishIdentifiers. Adds JSON serialization support for PESEL, NIP, and REGON as strongly typed Polish formal identifiers. Targets netstandard2.0 and net10.0.</Description>
@@ -21,19 +21,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>polishidentifiers system.text.json json stj pesel nip regon dotnet csharp serialization</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>Initial release of the PolishIdentifiers.SystemTextJson integration package.
-
-Added:
-- PeselJsonConverter, NipJsonConverter, RegonJsonConverter — each reads any accepted parse representation and writes the canonical string; identifiers are always serialized as JSON strings.
-- NipJsonConverter accepts an optional NipFormat parameter (default: DigitsOnly; also Hyphenated and VatEu).
-- PolishIdentifiersJsonOptions for configuring NIP output format.
-- AddPolishIdentifiers(JsonSerializerOptions, PolishIdentifiersJsonOptions?) extension method — registers all three converters; idempotent, first registration wins.
-- Invalid token types, empty strings, and whitespace throw JsonException with no inner exception.
-- Domain-invalid values throw JsonException with InnerException set to the typed *ValidationException. Exception messages do not contain raw identifier values.
-- Default struct instances throw JsonException on serialization; use Nip?, Pesel?, or Regon? for optional fields.
-- Targets netstandard2.0 and net10.0.
-
-Full changelog: https://github.com/PolishIdentifiers/PolishIdentifiers/blob/main/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.1.0 version alignment release. No functional changes in the System.Text.Json converter package surface; see CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,3 +37,5 @@ Full changelog: https://github.com/PolishIdentifiers/PolishIdentifiers/blob/main
   </ItemGroup>
 
 </Project>
+
+

@@ -1,4 +1,5 @@
 using PolishNip = global::PolishIdentifiers.Nip;
+using PolishNipGenerator = global::PolishIdentifiers.NipGenerator;
 using PolishNipFormat = global::PolishIdentifiers.NipFormat;
 
 namespace PolishIdentifiers.Examples.Nip;
@@ -32,6 +33,19 @@ internal static class NipExamples
         Console.WriteLine("NIP");
         Console.WriteLine($"Canonical: {nip}");
         Console.WriteLine($"VAT-EU: {nip.ToString(PolishNipFormat.VatEu)}");
+        Console.WriteLine();
+    }
+
+    public static void Generators()
+    {
+        var single = PolishNipGenerator.Generate();
+        var batch = PolishNipGenerator.Generate(count: 3);
+        var invalidBatch = PolishNipGenerator.Invalid.WrongChecksum(count: 3);
+
+        Console.WriteLine("NIP");
+        Console.WriteLine($"Single generated: {single}");
+        Console.WriteLine($"Batch count: {batch.Count}");
+        Console.WriteLine($"Invalid batch count: {invalidBatch.Count}");
         Console.WriteLine();
     }
 

@@ -6,8 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [PolishIdentifiers.SystemTextJson 1.0.0] - 2026-04-09
+## [2.1.0]
 
+### Added
+
+- Added generator count overloads for valid values across `PeselGenerator`, `NipGenerator`, and `RegonGenerator`.
+- Added generator count overloads for invalid scenarios across all implemented identifiers.
+
+### Changed
+
+- Count-based generator methods now return `IReadOnlyList<T>` for valid values and `IReadOnlyList<string>` for invalid values.
+- Updated generator documentation and runnable examples to include batch generation with `count`.
+- Aligned `PolishIdentifiers.SystemTextJson` package version to `2.1.0` for release consistency.
+
+## [PolishIdentifiers.SystemTextJson 1.0.0]
 ### Added
 
 - Added the optional `PolishIdentifiers.SystemTextJson` package.
@@ -15,8 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0] - 2026-04-07
-
+## [2.0.0]
 ### Breaking changes
 
 - **[Breaking]** `Nip.IssuingTaxOfficePrefix` now returns `string` instead of `int`. The value is always exactly 3 characters, zero-padded (e.g. `"012"` for a NIP beginning with `0`). Any code that stored the result in an `int`, performed numeric comparisons, or used arithmetic on this property must be updated. This is a binary-breaking change.
@@ -33,8 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Pesel`, `Nip`, and `Regon` now support broader ASP.NET Core binding scenarios, including MVC/controller binding via `TypeConverter` and Minimal API parameter binding via the new `TryParse` overloads.
 
-## [1.0.0] - 2026-03-22
-
+## [1.0.0]
 `Pesel`, `Nip`, and `Regon` are included in the package.
 
 ### Breaking changes
@@ -99,8 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated the PESEL, NIP, and REGON unit test suites to Shouldly assertions
 - Extracted shared checksum weight definitions into `PeselChecksumWeights`, `NipChecksumWeights`, and `RegonChecksumWeights` so generators and validators use the same constants
 
-## [0.2.0] - 2026-03-10
-
+## [0.2.0]
 ### Added
 
 #### `Nip` — strongly typed identifier
@@ -145,8 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.1] - 2026-03-07
-
+## [0.1.1]
 ### Breaking changes
 
 - **[Breaking]** `PeselValidationError.InvalidCharacters` is now integer value `0` and `PeselValidationError.InvalidLength` is now `1`; both values swapped relative to 0.1.0. Code that compared or stored these enum values as integers must be updated.
@@ -162,8 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Pesel.Validate` XML documentation updated to reflect the new order.
 ---
 
-## [0.1.0] - 2026-03-06
-
+## [0.1.0]
 First public release. PESEL support only.
 
 ### Added
@@ -216,10 +223,17 @@ First public release. PESEL support only.
 - `netstandard2.0` — compatible with .NET Framework 4.6.1+ and all legacy runtimes
 - `net10.0` — full modern API surface including `DateOnly`, `IParsable<T>`, `ISpanParsable<T>`
 
+[2.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/PolishIdentifiers/PolishIdentifiers/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/PolishIdentifiers/PolishIdentifiers/releases/tag/v0.1.0
+
+
+
+
+
+
 
 

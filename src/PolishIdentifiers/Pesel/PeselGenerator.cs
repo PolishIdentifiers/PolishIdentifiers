@@ -118,6 +118,132 @@ public static class PeselGenerator
     }
 #endif
 
+    // --- Valid generators producing sequences ---
+
+    /// <summary>Generates <paramref name="count"/> valid PESELs with random birth dates and genders.</summary>
+    /// <param name="count">The number of PESEL values to generate. Must be zero or greater.</param>
+    /// <returns>A read-only list of <paramref name="count"/> valid <see cref="Pesel"/> instances.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+    /// <remarks>This method is thread-safe.</remarks>
+    public static IReadOnlyList<Pesel> Generate(int count)
+    {
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+        var result = new List<Pesel>(count);
+        for (var i = 0; i < count; i++)
+            result.Add(Generate());
+        return result;
+    }
+
+    /// <summary>Generates <paramref name="count"/> valid PESELs with random birth dates and the specified gender.</summary>
+    /// <param name="gender">The gender to encode in each generated PESEL.</param>
+    /// <param name="count">The number of PESEL values to generate. Must be zero or greater.</param>
+    /// <returns>A read-only list of <paramref name="count"/> valid <see cref="Pesel"/> instances.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="gender"/> is not a supported <see cref="Gender"/> value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+    /// <remarks>This method is thread-safe.</remarks>
+    public static IReadOnlyList<Pesel> Generate(Gender gender, int count)
+    {
+        ValidateGender(gender, nameof(gender));
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+        var result = new List<Pesel>(count);
+        for (var i = 0; i < count; i++)
+            result.Add(BuildPesel(GetRandomDate(), gender));
+        return result;
+    }
+
+    /// <summary>
+    /// Generates <paramref name="count"/> valid PESELs for persons born on <paramref name="birthDate"/>, with random genders.
+    /// Only the date part (year, month, day) is used; any time component is ignored.
+    /// </summary>
+    /// <param name="birthDate">The birth date to encode in each generated PESEL. Only the date part is used.</param>
+    /// <param name="count">The number of PESEL values to generate. Must be zero or greater.</param>
+    /// <returns>A read-only list of <paramref name="count"/> valid <see cref="Pesel"/> instances.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+    public static IReadOnlyList<Pesel> Generate(DateTime birthDate, int count)
+    {
+        ValidateBirthYear(birthDate.Year, nameof(birthDate));
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+        var result = new List<Pesel>(count);
+        for (var i = 0; i < count; i++)
+        {
+            var gender = NextInt(2) == 0 ? Gender.Male : Gender.Female;
+            result.Add(BuildPesel(birthDate, gender));
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Generates <paramref name="count"/> valid PESELs for persons born on <paramref name="birthDate"/> with the specified gender.
+    /// Only the date part (year, month, day) is used; any time component is ignored.
+    /// </summary>
+    /// <param name="gender">The gender to encode in each generated PESEL.</param>
+    /// <param name="birthDate">The birth date to encode in each generated PESEL. Only the date part is used.</param>
+    /// <param name="count">The number of PESEL values to generate. Must be zero or greater.</param>
+    /// <returns>A read-only list of <paramref name="count"/> valid <see cref="Pesel"/> instances.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="gender"/> is not a supported <see cref="Gender"/> value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+    public static IReadOnlyList<Pesel> Generate(Gender gender, DateTime birthDate, int count)
+    {
+        ValidateBirthYear(birthDate.Year, nameof(birthDate));
+        ValidateGender(gender, nameof(gender));
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+        var result = new List<Pesel>(count);
+        for (var i = 0; i < count; i++)
+            result.Add(BuildPesel(birthDate, gender));
+        return result;
+    }
+
+#if NET10_0_OR_GREATER
+    /// <summary>
+    /// Generates <paramref name="count"/> valid PESELs for persons born on <paramref name="birthDate"/>, with random genders.
+    /// </summary>
+    /// <param name="birthDate">The birth date to encode in each generated PESEL.</param>
+    /// <param name="count">The number of PESEL values to generate. Must be zero or greater.</param>
+    /// <returns>A read-only list of <paramref name="count"/> valid <see cref="Pesel"/> instances.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+    public static IReadOnlyList<Pesel> Generate(DateOnly birthDate, int count)
+    {
+        ValidateBirthYear(birthDate.Year, nameof(birthDate));
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+        return Generate(birthDate.ToDateTime(TimeOnly.MinValue), count);
+    }
+
+    /// <summary>
+    /// Generates <paramref name="count"/> valid PESELs for persons born on <paramref name="birthDate"/> with the specified gender.
+    /// </summary>
+    /// <param name="gender">The gender to encode in each generated PESEL.</param>
+    /// <param name="birthDate">The birth date to encode in each generated PESEL.</param>
+    /// <param name="count">The number of PESEL values to generate. Must be zero or greater.</param>
+    /// <returns>A read-only list of <paramref name="count"/> valid <see cref="Pesel"/> instances.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the year is outside the PESEL-supported range of 1800–2299.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="gender"/> is not a supported <see cref="Gender"/> value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+    public static IReadOnlyList<Pesel> Generate(Gender gender, DateOnly birthDate, int count)
+    {
+        ValidateBirthYear(birthDate.Year, nameof(birthDate));
+        ValidateGender(gender, nameof(gender));
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+        return Generate(gender, birthDate.ToDateTime(TimeOnly.MinValue), count);
+    }
+#endif
+
     // --- Invalid generators (return string — Pesel.Parse would throw) ---
 
     /// <summary>
@@ -189,6 +315,74 @@ public static class PeselGenerator
             var chars = PeselGenerator.Generate().ToString().ToCharArray();
             chars[5] = 'X';
             return new string(chars);
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> PESEL strings, each with a wrong check digit.
+        /// Every element triggers <see cref="PeselValidationError.InvalidChecksum"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing checksum validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> WrongChecksum(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(WrongChecksum());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> PESEL strings, each with an impossible date.
+        /// Every element triggers <see cref="PeselValidationError.InvalidDate"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing date validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> WrongDate(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(WrongDate());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> digit-only PESEL strings, each with an invalid length.
+        /// Every element triggers <see cref="PeselValidationError.InvalidLength"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing length validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> WrongLength(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(WrongLength());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> PESEL strings, each containing a non-digit character.
+        /// Every element triggers <see cref="PeselValidationError.InvalidCharacters"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing character validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> NonNumeric(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(NonNumeric());
+            return result;
         }
 
         private static string AppendRandomDigits(string value, int count)

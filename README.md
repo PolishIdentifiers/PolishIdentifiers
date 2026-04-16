@@ -62,6 +62,8 @@ The `net10.0` build adds `IParsable<T>`, `ISpanParsable<T>`, and `DateOnly`-base
 
 ## Generators
 
+Each generator can produce a single identifier or generate multiple identifiers at once with the `count` parameter. Batch overloads return `IReadOnlyList<T>` for valid identifiers and `IReadOnlyList<string>` for intentionally invalid generator outputs.
+
 <table>
     <thead>
         <tr>
@@ -225,6 +227,16 @@ Console.WriteLine(regon); // e.g. 12345678512347
 string badPesel = PeselGenerator.Invalid.WrongChecksum();
 string badNip   = NipGenerator.Invalid.WrongChecksum();
 string badRegon = RegonGenerator.Invalid.WrongChecksumRegon9();
+
+// Generate N identifiers at once — returns IReadOnlyList<T>
+IReadOnlyList<Pesel> pesels = PeselGenerator.Generate(Gender.Female, new DateTime(1990, 6, 15), count: 10);
+IReadOnlyList<Nip>   nips   = NipGenerator.Generate(count: 10);
+IReadOnlyList<Regon> regons = RegonGenerator.Generate(RegonKind.Regon9, count: 10);
+
+// Same for invalid batches
+IReadOnlyList<string> badPesels = PeselGenerator.Invalid.WrongChecksum(count: 10);
+IReadOnlyList<string> badNips   = NipGenerator.Invalid.WrongChecksum(count: 10);
+IReadOnlyList<string> badRegons = RegonGenerator.Invalid.WrongChecksumRegon9(count: 10);
 ```
 
 ### MVC / Controllers
