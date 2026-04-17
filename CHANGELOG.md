@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated generator documentation and runnable examples to include batch generation with `count`.
 - Aligned `PolishIdentifiers.SystemTextJson` package version to `2.1.0` for release consistency.
 
-## [PolishIdentifiers.SystemTextJson 1.0.0]
+## [PolishIdentifiers.SystemTextJson 2.1.0]
 ### Added
 
 - Added the optional `PolishIdentifiers.SystemTextJson` package.

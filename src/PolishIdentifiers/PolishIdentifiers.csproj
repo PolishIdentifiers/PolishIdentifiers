@@ -21,7 +21,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>pesel nip regon dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>v2.1.0 adds batch generator overloads with count across PeselGenerator, NipGenerator, and RegonGenerator for both valid and invalid scenarios. Count overloads return IReadOnlyList<T> for valid values and IReadOnlyList<string> for invalid values. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.1.0 adds batch generator overloads with count across PeselGenerator, NipGenerator, and RegonGenerator for both valid and invalid scenarios. Count overloads return IReadOnlyList&lt;T&gt; for valid values and IReadOnlyList&lt;string&gt; for invalid values. See CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -15,7 +15,8 @@ public class NipJsonConverterTests
     private const string InvalidNipChecksum = "1234563217";
     private const string InvalidNipChars = "12345XXXXX";
     private const string InvalidNipLength = "123456";
-    private const string UnrecognizedFormatNip = "NL1234563218";
+    private const string InvalidCharactersNip2 = "NL1234563218";
+    private const string UnrecognizedFormatNip = "PL-1234563218";
     private const string EmptyNip = "";
     private const string WhitespaceOnlyNip = "   ";
 
@@ -176,14 +177,25 @@ public class NipJsonConverterTests
     }
 
     [Fact]
-    public void Read_UnrecognizedFormat_ThrowsJsonExceptionWithInvalidCharactersInner()
+    public void Read_InvalidCharacters2_ThrowsJsonExceptionWithInvalidCharactersInner()
+    {
+        var options = new JsonSerializerOptions().AddPolishIdentifiers();
+
+        var ex = Should.Throw<JsonException>(() => JsonSerializer.Deserialize<NipDto>($$"""{"Nip":"{{InvalidCharactersNip2}}"}""", options));
+        var nipEx = ex.InnerException.ShouldBeOfType<NipValidationException>();
+
+        nipEx.Error.ShouldBe(NipValidationError.InvalidCharacters);
+    }
+
+    [Fact]
+    public void Read_UnrecognizedFormat_ThrowsJsonExceptionWithUnrecognizedFormatInner()
     {
         var options = new JsonSerializerOptions().AddPolishIdentifiers();
 
         var ex = Should.Throw<JsonException>(() => JsonSerializer.Deserialize<NipDto>($$"""{"Nip":"{{UnrecognizedFormatNip}}"}""", options));
         var nipEx = ex.InnerException.ShouldBeOfType<NipValidationException>();
 
-        nipEx.Error.ShouldBe(NipValidationError.InvalidCharacters);
+        nipEx.Error.ShouldBe(NipValidationError.UnrecognizedFormat);
     }
 
     [Fact]

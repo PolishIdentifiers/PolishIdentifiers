@@ -227,6 +227,26 @@ public class NipDataAnnotationsTests
         attribute.IsValid(12345).ShouldBeFalse();
     }
 
+    [Fact]
+    public void ValidNipAttribute_ParsedNullableNipStruct_IsValid()
+    {
+        Nip? value = Nip.Parse(ValidNip);
+
+        var result = new ValidNipAttribute().GetValidationResult(value, new ValidationContext(new object()));
+
+        result.ShouldBe(DataAnnotationsValidationResult.Success);
+    }
+
+    [Fact]
+    public void ValidNipAttribute_NullNullableNipStruct_IsValid()
+    {
+        Nip? value = null;
+
+        var result = new ValidNipAttribute().GetValidationResult(value, new ValidationContext(new object()));
+
+        result.ShouldBe(DataAnnotationsValidationResult.Success);
+    }
+
     private static bool TryValidate(object instance, out List<DataAnnotationsValidationResult> results)
     {
         var context = new ValidationContext(instance);

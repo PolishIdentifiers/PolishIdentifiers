@@ -284,4 +284,24 @@ public class RegonDataAnnotationsTests
 
         result.ShouldBe(DataAnnotationsValidationResult.Success);
     }
+
+    [Fact]
+    public void ValidRegonAttribute_ParsedNullableRegonStruct_IsValid()
+    {
+        Regon? value = Regon.Parse(ValidRegon9);
+
+        var result = new ValidRegonAttribute().GetValidationResult(value, new ValidationContext(new object()));
+
+        result.ShouldBe(DataAnnotationsValidationResult.Success);
+    }
+
+    [Fact]
+    public void ValidRegonAttribute_NullNullableRegonStruct_IsValid()
+    {
+        Regon? value = null;
+
+        var result = new ValidRegonAttribute().GetValidationResult(value, new ValidationContext(new object()));
+
+        result.ShouldBe(DataAnnotationsValidationResult.Success);
+    }
 }
