@@ -69,6 +69,7 @@ Important implementation notes:
 - use [`ToString()`](#method-tostring) or [`ToString(NipFormat.DigitsOnly)`](#method-tostring-nipformat) for canonical storage and wire formats
 - use [`ToString(NipFormat.Hyphenated)`](#method-tostring-nipformat) when you need a conventional human-readable display form
 - use [`ToString(NipFormat.VatEu)`](#method-tostring-nipformat) when you need the `PL`-prefixed VAT-EU form
+- avoid logging the full NIP value in application diagnostics; prefer the validation error, a record key, or explicit redaction outside the library
 
 ```csharp
 using PolishIdentifiers;

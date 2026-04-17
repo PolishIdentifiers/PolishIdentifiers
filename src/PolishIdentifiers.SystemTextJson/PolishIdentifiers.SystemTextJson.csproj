@@ -10,29 +10,32 @@
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet">
-    <PackageId>PolishIdentifiers</PackageId>
+    <PackageId>PolishIdentifiers.SystemTextJson</PackageId>
     <Version>2.1.0</Version>
     <Authors>PolishIdentifiers</Authors>
     <Copyright>Copyright (c) PolishIdentifiers Contributors</Copyright>
-    <Description>.NET library for PESEL, NIP, and REGON. Strongly typed identifiers with validation, parsing, generation, structured error codes, DataAnnotations support, and span-based validation. Targets netstandard2.0 and net10.0.</Description>
+    <Description>System.Text.Json converters for PolishIdentifiers. Adds JSON serialization support for PESEL, NIP, and REGON as strongly typed Polish formal identifiers. Targets netstandard2.0 and net10.0.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/PolishIdentifiers/PolishIdentifiers</PackageProjectUrl>
     <RepositoryUrl>https://github.com/PolishIdentifiers/PolishIdentifiers</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>pesel nip regon dotnet csharp validation polish poland strongly-typed netstandard data-annotations</PackageTags>
+    <PackageTags>polishidentifiers system.text.json json stj pesel nip regon dotnet csharp serialization</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>v2.1.0 adds batch generator overloads with count across PeselGenerator, NipGenerator, and RegonGenerator for both valid and invalid scenarios. Count overloads return IReadOnlyList&lt;T&gt; for valid values and IReadOnlyList&lt;string&gt; for invalid values. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.1.0 version alignment release. No functional changes in the System.Text.Json converter package surface; see CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PolishIdentifiers\PolishIdentifiers.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
-  </Project>
+</Project>
 
 

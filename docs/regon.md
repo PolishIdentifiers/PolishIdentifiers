@@ -73,8 +73,9 @@ Important implementation notes:
 
 `Regon` has canonical output only.
 
-- use [`ToString()`](#method-tostring) for storage, logging, and wire formats
+- use [`ToString()`](#method-tostring) for canonical storage and wire formats
 - use [`ToString("D9", null)`](#method-tostring-format) or [`ToString("D14", null)`](#method-tostring-format) only when an API explicitly expects an `IFormattable` format token and you already know the variant
+- avoid logging the full REGON value in application diagnostics; prefer the validation error, a record key, or explicit redaction outside the library
 - there are no public display-format variants comparable to `NipFormat`
 
 ## Persistence

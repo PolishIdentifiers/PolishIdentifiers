@@ -9,6 +9,8 @@ namespace PolishIdentifiers;
 /// <see cref="Nip.TryParse(string?, out Nip)"/>, or <see cref="Nip.Validate(string?)"/>
 /// in performance-sensitive or high-volume scenarios to avoid the cost of exception handling.
 /// For normal application-boundary code, the typed-error overload is recommended.
+/// The exception message intentionally reports only the validation error and does not echo the raw NIP value,
+/// which helps reduce accidental exposure in logs.
 /// </remarks>
 public class NipValidationException : Exception
 {

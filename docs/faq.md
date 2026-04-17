@@ -61,6 +61,14 @@ No such guarantee is made.
 
 Generators produce values that satisfy the public structural rules of the type. They should not be treated as proof that a value is assigned in the real world.
 
+## Can I log PESEL, NIP, or REGON values?
+
+Treat them as sensitive identifier data. In application logs and exception handling, avoid emitting the full raw value.
+
+Prefer the typed validation error (`InvalidLength`, `InvalidChecksum`, and so on), a row number, or a correlation ID. If your auditing requirements still need value-level tracing, apply redaction or hashing at the application boundary rather than logging the full identifier.
+
+The library follows the same principle: its identifier-related exception messages intentionally avoid echoing the raw PESEL/NIP/REGON string.
+
 ## What does default mean for these structs?
 
 The default value of an identifier struct is not the same thing as a successfully parsed identifier.
@@ -115,10 +123,10 @@ var seen = new HashSet<Nip>();
 foreach (var raw in importedNipValues)
 {
     if (!Nip.TryParse(raw, out var nip, out _))
-        continue; // log or accumulate the error
+        continue; // count or accumulate the error without echoing the raw identifier
 
     if (!seen.Add(nip))
-        Console.WriteLine($"Duplicate NIP: {nip}");
+        Console.WriteLine("Duplicate NIP detected.");
 }
 ```
 
@@ -133,11 +141,11 @@ using PolishIdentifiers;
 
 string[] importedNipValues = { "1234563218", "44051401459", "invalid" };
 
-foreach (var raw in importedNipValues)
+for (var i = 0; i < importedNipValues.Length; i++)
 {
-    var result = Nip.Validate(raw);
+    var result = Nip.Validate(importedNipValues[i]);
     if (!result.IsValid)
-        Console.WriteLine($"Invalid NIP '{raw}': {result.Error}");
+        Console.WriteLine($"Invalid NIP at import position {i}: {result.Error}");
 }
 ```
 

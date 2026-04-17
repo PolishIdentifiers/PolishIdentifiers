@@ -244,4 +244,166 @@ public class RegonGeneratorTests
 
         invalidValue.Count(c => c < '0' || c > '9').ShouldBe(1);
     }
+
+    // --- Generate(RegonKind, int count) ---
+
+    [Fact]
+    public void Generate_WithRegon9KindAndCount_ReturnsExactCount()
+    {
+        var results = RegonGenerator.Generate(RegonKind.Regon9, count: 10);
+
+        results.Count.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Generate_WithRegon14KindAndCount_ReturnsExactCount()
+    {
+        var results = RegonGenerator.Generate(RegonKind.Regon14, count: 10);
+
+        results.Count.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Generate_WithRegon9KindAndCount_AllElementsAreValid()
+    {
+        var results = RegonGenerator.Generate(RegonKind.Regon9, count: 20);
+
+        results.ShouldAllBe(r => Regon.Validate(r.ToString()).IsValid);
+    }
+
+    [Fact]
+    public void Generate_WithRegon14KindAndCount_AllElementsAreValid()
+    {
+        var results = RegonGenerator.Generate(RegonKind.Regon14, count: 20);
+
+        results.ShouldAllBe(r => Regon.Validate(r.ToString()).IsValid);
+    }
+
+    [Fact]
+    public void Generate_WithRegon9KindAndCount_AllElementsHaveRegon9Kind()
+    {
+        var results = RegonGenerator.Generate(RegonKind.Regon9, count: 10);
+
+        results.ShouldAllBe(r => r.Kind == RegonKind.Regon9);
+    }
+
+    [Fact]
+    public void Generate_WithRegon14KindAndCount_AllElementsHaveRegon14Kind()
+    {
+        var results = RegonGenerator.Generate(RegonKind.Regon14, count: 10);
+
+        results.ShouldAllBe(r => r.Kind == RegonKind.Regon14);
+    }
+
+    [Fact]
+    public void Generate_WithKindAndCount0_ReturnsEmpty()
+    {
+        RegonGenerator.Generate(RegonKind.Regon9, count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Generate_WithKindAndNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => RegonGenerator.Generate(RegonKind.Regon9, count: -1));
+    }
+
+    [Fact]
+    public void Generate_WithUnsupportedKindAndAnyCount_ThrowsEagerly()
+    {
+        var invalidKind = (RegonKind)999;
+
+        Should.Throw<ArgumentOutOfRangeException>(() => RegonGenerator.Generate(invalidKind, count: 5));
+    }
+
+    // --- Invalid.WrongChecksumRegon9(int count) ---
+
+    [Fact]
+    public void Invalid_WrongChecksumRegon9_WithCount_AllYieldInvalidChecksum()
+    {
+        var results = RegonGenerator.Invalid.WrongChecksumRegon9(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Regon.Validate(s).Error == RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksumRegon9_WithCount0_ReturnsEmpty()
+    {
+        RegonGenerator.Invalid.WrongChecksumRegon9(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksumRegon9_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => RegonGenerator.Invalid.WrongChecksumRegon9(count: -1));
+    }
+
+    // --- Invalid.WrongChecksumRegon14(int count) ---
+
+    [Fact]
+    public void Invalid_WrongChecksumRegon14_WithCount_AllYieldInvalidChecksum()
+    {
+        var results = RegonGenerator.Invalid.WrongChecksumRegon14(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Regon.Validate(s).Error == RegonValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksumRegon14_WithCount0_ReturnsEmpty()
+    {
+        RegonGenerator.Invalid.WrongChecksumRegon14(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksumRegon14_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => RegonGenerator.Invalid.WrongChecksumRegon14(count: -1));
+    }
+
+    // --- Invalid.WrongLength(int count) ---
+
+    [Fact]
+    public void Invalid_WrongLength_WithCount_AllYieldInvalidLength()
+    {
+        var results = RegonGenerator.Invalid.WrongLength(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Regon.Validate(s).Error == RegonValidationError.InvalidLength);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_WithCount0_ReturnsEmpty()
+    {
+        RegonGenerator.Invalid.WrongLength(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => RegonGenerator.Invalid.WrongLength(count: -1));
+    }
+
+    // --- Invalid.NonNumeric(int count) ---
+
+    [Fact]
+    public void Invalid_NonNumeric_WithCount_AllYieldInvalidCharacters()
+    {
+        var results = RegonGenerator.Invalid.NonNumeric(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Regon.Validate(s).Error == RegonValidationError.InvalidCharacters);
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_WithCount0_ReturnsEmpty()
+    {
+        RegonGenerator.Invalid.NonNumeric(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => RegonGenerator.Invalid.NonNumeric(count: -1));
+    }
 }

@@ -166,7 +166,7 @@ public class NipValidationTests
         result.Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
 
-    // --- Validation order: characters → length → checksum ---
+    // --- Validation order: characters → length → format → checksum ---
 
     [Fact]
     public void Validate_InvalidCharactersTakesPriorityOverInvalidLength()

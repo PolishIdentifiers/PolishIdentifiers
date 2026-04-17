@@ -354,4 +354,226 @@ public class PeselGeneratorTests
         DateOnly.FromDateTime(fromDateOnly.BirthDate).ShouldBe(DateOnly.FromDateTime(fromDateTime.BirthDate));
     }
 #endif
+
+    // --- Generate(int count) ---
+
+    [Fact]
+    public void Generate_WithCount_ReturnsExactCount()
+    {
+        var results = PeselGenerator.Generate(count: 10);
+
+        results.Count.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Generate_WithCount_AllElementsAreValid()
+    {
+        var results = PeselGenerator.Generate(count: 20);
+
+        results.ShouldAllBe(p => Pesel.Validate(p.ToString()).IsValid);
+    }
+
+    [Fact]
+    public void Generate_WithCount0_ReturnsEmpty()
+    {
+        var results = PeselGenerator.Generate(count: 0);
+
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Generate_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(count: -1));
+    }
+
+    // --- Generate(Gender, int count) ---
+
+    [Fact]
+    public void Generate_WithGenderAndCount_AllElementsHaveCorrectGender()
+    {
+        var results = PeselGenerator.Generate(Gender.Male, count: 15);
+
+        results.Count.ShouldBe(15);
+        results.ShouldAllBe(p => p.Gender == Gender.Male);
+    }
+
+    [Fact]
+    public void Generate_WithGenderAndCount_UnsupportedGender_ThrowsEagerly()
+    {
+        var invalidGender = (Gender)999;
+
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(invalidGender, count: 5));
+    }
+
+    [Fact]
+    public void Generate_WithGenderAndCount0_ReturnsEmpty()
+    {
+        var results = PeselGenerator.Generate(Gender.Female, count: 0);
+
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Generate_WithGenderAndNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(Gender.Male, count: -1));
+    }
+
+    // --- Generate(DateTime, int count) ---
+
+    [Fact]
+    public void Generate_WithBirthDateAndCount_AllElementsHaveCorrectDate()
+    {
+        var date = new DateTime(1990, 5, 14);
+
+        var results = PeselGenerator.Generate(date, count: 10);
+
+        results.Count.ShouldBe(10);
+        results.ShouldAllBe(p => p.BirthDate == date);
+    }
+
+    [Fact]
+    public void Generate_WithBirthDateAndCount_InvalidYear_ThrowsEagerly()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(new DateTime(1799, 1, 1), count: 5));
+    }
+
+    [Fact]
+    public void Generate_WithBirthDateAndNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(new DateTime(1990, 5, 14), count: -1));
+    }
+
+    // --- Generate(Gender, DateTime, int count) ---
+
+    [Fact]
+    public void Generate_WithGenderAndBirthDateAndCount_AllElementsHaveCorrectGenderAndDate()
+    {
+        var date = new DateTime(1985, 11, 3);
+
+        var results = PeselGenerator.Generate(Gender.Female, date, count: 10);
+
+        results.Count.ShouldBe(10);
+        results.ShouldAllBe(p => p.Gender == Gender.Female && p.BirthDate == date);
+    }
+
+    [Fact]
+    public void Generate_WithGenderAndBirthDateAndCount_InvalidYear_ThrowsEagerly()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(Gender.Male, new DateTime(1799, 1, 1), count: 5));
+    }
+
+    [Fact]
+    public void Generate_WithGenderAndBirthDateAndCount_UnsupportedGender_ThrowsEagerly()
+    {
+        var invalidGender = (Gender)999;
+
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(invalidGender, new DateTime(1990, 5, 14), count: 5));
+    }
+
+    [Fact]
+    public void Generate_WithGenderAndBirthDateAndNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Generate(Gender.Male, new DateTime(1990, 5, 14), count: -1));
+    }
+
+    // --- Invalid.WrongChecksum(int count) ---
+
+    [Fact]
+    public void Invalid_WrongChecksum_WithCount_ReturnsExactCount()
+    {
+        var results = PeselGenerator.Invalid.WrongChecksum(count: 10);
+
+        results.Count.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksum_WithCount_AllYieldInvalidChecksum()
+    {
+        var results = PeselGenerator.Invalid.WrongChecksum(count: 20);
+
+        results.ShouldAllBe(s => Pesel.Validate(s).Error == PeselValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksum_WithCount0_ReturnsEmpty()
+    {
+        PeselGenerator.Invalid.WrongChecksum(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksum_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Invalid.WrongChecksum(count: -1));
+    }
+
+    // --- Invalid.WrongDate(int count) ---
+
+    [Fact]
+    public void Invalid_WrongDate_WithCount_AllYieldInvalidDate()
+    {
+        var results = PeselGenerator.Invalid.WrongDate(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Pesel.Validate(s).Error == PeselValidationError.InvalidDate);
+    }
+
+    [Fact]
+    public void Invalid_WrongDate_WithCount0_ReturnsEmpty()
+    {
+        PeselGenerator.Invalid.WrongDate(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_WrongDate_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Invalid.WrongDate(count: -1));
+    }
+
+    // --- Invalid.WrongLength(int count) ---
+
+    [Fact]
+    public void Invalid_WrongLength_WithCount_AllYieldInvalidLength()
+    {
+        var results = PeselGenerator.Invalid.WrongLength(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Pesel.Validate(s).Error == PeselValidationError.InvalidLength);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_WithCount0_ReturnsEmpty()
+    {
+        PeselGenerator.Invalid.WrongLength(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Invalid.WrongLength(count: -1));
+    }
+
+    // --- Invalid.NonNumeric(int count) ---
+
+    [Fact]
+    public void Invalid_NonNumeric_WithCount_AllYieldInvalidCharacters()
+    {
+        var results = PeselGenerator.Invalid.NonNumeric(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Pesel.Validate(s).Error == PeselValidationError.InvalidCharacters);
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_WithCount0_ReturnsEmpty()
+    {
+        PeselGenerator.Invalid.NonNumeric(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => PeselGenerator.Invalid.NonNumeric(count: -1));
+    }
 }

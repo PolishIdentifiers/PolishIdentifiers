@@ -62,6 +62,21 @@ public static class NipGenerator
         return new Nip(value);
     }
 
+    /// <summary>Generates <paramref name="count"/> valid NIPs.</summary>
+    /// <param name="count">The number of NIP values to generate. Must be zero or greater.</param>
+    /// <returns>A read-only list of <paramref name="count"/> valid <see cref="Nip"/> instances.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+    /// <remarks>This method is thread-safe.</remarks>
+    public static IReadOnlyList<Nip> Generate(int count)
+    {
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+        var result = new List<Nip>(count);
+        for (var i = 0; i < count; i++)
+            result.Add(Generate());
+        return result;
+    }
+
 
     // --- Invalid generators (return string — Nip.Parse would throw) ---
 
@@ -123,6 +138,75 @@ public static class NipGenerator
         {
             var nip = NipGenerator.Generate().ToString();
             return "PL-" + nip;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> NIP strings, each with a wrong check digit.
+        /// Every element triggers <see cref="NipValidationError.InvalidChecksum"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing checksum validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> WrongChecksum(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(WrongChecksum());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> digit-only NIP strings, each with an invalid length.
+        /// Every element triggers <see cref="NipValidationError.InvalidLength"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing length validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> WrongLength(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(WrongLength());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> NIP strings, each containing a non-digit character.
+        /// Every element triggers <see cref="NipValidationError.InvalidCharacters"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing character validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> NonNumeric(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(NonNumeric());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> NIP strings, each using only valid NIP characters
+        /// but not matching any documented NIP text representation.
+        /// Every element triggers <see cref="NipValidationError.UnrecognizedFormat"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing format recognition only.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> UnrecognizedFormat(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(UnrecognizedFormat());
+            return result;
         }
 
         private static string AppendRandomDigits(string value, int count)

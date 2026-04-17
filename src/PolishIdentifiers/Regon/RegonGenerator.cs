@@ -45,6 +45,25 @@ public static class RegonGenerator
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported REGON kind.")
         };
 
+    /// <summary>Generates <paramref name="count"/> valid REGONs of the specified kind.</summary>
+    /// <param name="kind">The kind of REGON to generate: <see cref="RegonKind.Regon9"/> (9 digits) or <see cref="RegonKind.Regon14"/> (14 digits).</param>
+    /// <param name="count">The number of REGON values to generate. Must be zero or greater.</param>
+    /// <returns>A read-only list of <paramref name="count"/> valid <see cref="Regon"/> instances with the requested <see cref="Regon.Kind"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="kind"/> is not a supported <see cref="RegonKind"/> value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+    /// <remarks>This method is thread-safe.</remarks>
+    public static IReadOnlyList<Regon> Generate(RegonKind kind, int count)
+    {
+        if (kind is not RegonKind.Regon9 and not RegonKind.Regon14)
+            throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported REGON kind.");
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+        var result = new List<Regon>(count);
+        for (var i = 0; i < count; i++)
+            result.Add(Generate(kind));
+        return result;
+    }
+
     private static Regon GenerateRegon9() => GenerateRegon9Core(out _);
 
     private static Regon GenerateRegon9Core(out int[] digits)
@@ -157,6 +176,75 @@ public static class RegonGenerator
             var pos = NextInt(chars.Length);
             chars[pos] = 'X';
             return new string(chars);
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> REGON-9 strings, each with a wrong check digit.
+        /// Every element triggers <see cref="RegonValidationError.InvalidChecksum"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing checksum validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> WrongChecksumRegon9(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(WrongChecksumRegon9());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> REGON-14 strings, each with a valid embedded
+        /// REGON-9 base but a wrong final check digit.
+        /// Every element triggers <see cref="RegonValidationError.InvalidChecksum"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing checksum validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> WrongChecksumRegon14(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(WrongChecksumRegon14());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> digit-only REGON strings, each with an invalid length.
+        /// Every element triggers <see cref="RegonValidationError.InvalidLength"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing length validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> WrongLength(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(WrongLength());
+            return result;
+        }
+
+        /// <summary>
+        /// Generates a sequence of <paramref name="count"/> REGON-9 strings, each containing a non-digit character.
+        /// Every element triggers <see cref="RegonValidationError.InvalidCharacters"/>.
+        /// </summary>
+        /// <param name="count">The number of strings to generate. Must be zero or greater.</param>
+        /// <returns>A read-only list of <paramref name="count"/> strings, each failing character validation.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        public static IReadOnlyList<string> NonNumeric(int count)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be zero or greater.");
+            var result = new List<string>(count);
+            for (var i = 0; i < count; i++)
+                result.Add(NonNumeric());
+            return result;
         }
 
         private static string AppendRandomDigits(string value, int count)

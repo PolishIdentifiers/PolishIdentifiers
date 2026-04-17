@@ -168,4 +168,126 @@ public class NipGeneratorTests
 
         Nip.Validate(NipWithWrappedCheckDigit).Error.ShouldBe(NipValidationError.InvalidChecksum);
     }
+
+    // --- Generate(int count) ---
+
+    [Fact]
+    public void Generate_WithCount_ReturnsExactCount()
+    {
+        var results = NipGenerator.Generate(count: 10);
+
+        results.Count.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Generate_WithCount_AllElementsAreValid()
+    {
+        var results = NipGenerator.Generate(count: 20);
+
+        results.ShouldAllBe(n => Nip.Validate(n.ToString()).IsValid);
+    }
+
+    [Fact]
+    public void Generate_WithCount0_ReturnsEmpty()
+    {
+        NipGenerator.Generate(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Generate_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => NipGenerator.Generate(count: -1));
+    }
+
+    // --- Invalid.WrongChecksum(int count) ---
+
+    [Fact]
+    public void Invalid_WrongChecksum_WithCount_AllYieldInvalidChecksum()
+    {
+        var results = NipGenerator.Invalid.WrongChecksum(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidChecksum);
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksum_WithCount0_ReturnsEmpty()
+    {
+        NipGenerator.Invalid.WrongChecksum(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_WrongChecksum_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => NipGenerator.Invalid.WrongChecksum(count: -1));
+    }
+
+    // --- Invalid.WrongLength(int count) ---
+
+    [Fact]
+    public void Invalid_WrongLength_WithCount_AllYieldInvalidLength()
+    {
+        var results = NipGenerator.Invalid.WrongLength(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidLength);
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_WithCount0_ReturnsEmpty()
+    {
+        NipGenerator.Invalid.WrongLength(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_WrongLength_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => NipGenerator.Invalid.WrongLength(count: -1));
+    }
+
+    // --- Invalid.NonNumeric(int count) ---
+
+    [Fact]
+    public void Invalid_NonNumeric_WithCount_AllYieldInvalidCharacters()
+    {
+        var results = NipGenerator.Invalid.NonNumeric(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.InvalidCharacters);
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_WithCount0_ReturnsEmpty()
+    {
+        NipGenerator.Invalid.NonNumeric(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_NonNumeric_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => NipGenerator.Invalid.NonNumeric(count: -1));
+    }
+
+    // --- Invalid.UnrecognizedFormat(int count) ---
+
+    [Fact]
+    public void Invalid_UnrecognizedFormat_WithCount_AllYieldUnrecognizedFormat()
+    {
+        var results = NipGenerator.Invalid.UnrecognizedFormat(count: 20);
+
+        results.Count.ShouldBe(20);
+        results.ShouldAllBe(s => Nip.Validate(s).Error == NipValidationError.UnrecognizedFormat);
+    }
+
+    [Fact]
+    public void Invalid_UnrecognizedFormat_WithCount0_ReturnsEmpty()
+    {
+        NipGenerator.Invalid.UnrecognizedFormat(count: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Invalid_UnrecognizedFormat_WithNegativeCount_ThrowsArgumentOutOfRangeException()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => NipGenerator.Invalid.UnrecognizedFormat(count: -1));
+    }
 }
