@@ -3,6 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Targets: netstandard2.0 · net10.0](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net10.0-informational)
 
+![PolishIdentifiers logo](https://raw.githubusercontent.com/PolishIdentifiers/PolishIdentifiers/main/assets/branding/logo-small.png)
+
 # PolishIdentifiers
 
 PolishIdentifiers is a .NET library that exposes PESEL, NIP, and REGON as strong identifier types (`Pesel`, `Nip`, `Regon`) instead of raw strings plus includes their strong validation.

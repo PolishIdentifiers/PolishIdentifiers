@@ -20,12 +20,14 @@
     <RepositoryUrl>https://github.com/PolishIdentifiers/PolishIdentifiers</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>polishidentifiers system.text.json json stj pesel nip regon dotnet csharp serialization</PackageTags>
+    <PackageIcon>assets/branding/logo-small.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>v2.1.0 version alignment release. No functional changes in the System.Text.Json converter package surface; see CHANGELOG.md for details.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\assets\branding\logo-small.png" Pack="true" PackagePath="assets\branding\" />
   </ItemGroup>
 
   <ItemGroup>

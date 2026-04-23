@@ -1,3 +1,5 @@
+![PolishIdentifiers logo](https://raw.githubusercontent.com/PolishIdentifiers/PolishIdentifiers/main/assets/branding/logo-small.png)
+
 # PolishIdentifiers.SystemTextJson
 
 `PolishIdentifiers.SystemTextJson` adds `System.Text.Json` support for the strong identifier types from `PolishIdentifiers`.
